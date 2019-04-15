@@ -205,7 +205,7 @@ def getAggDataset(url, netcdf=False):
         if (netcdf):
             d = nc.Dataset(data_url, 'r')
         else:
-            d = xr.open_dataset(data_url, decode_cf=False)
+            d = xr.open_dataset(data_url, decode_times=False, decode_cf=True)
     except (IOError, AttributeError) as e:
         print("Error in Opening dataset from url:",data_url)
         pprint(e.args)
