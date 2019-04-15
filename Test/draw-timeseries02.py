@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# xarray version
+
 import sys
 sys.path.append('.')
 sys.path.append('..')
 from ESGFSearch import fields_default, getCatURLs, getAggDataset
 from pprint import pprint
-import netCDF4 as nc
-from os.path import basename
+import xarray as xr
 import matplotlib.pyplot as plt
 
 
@@ -16,7 +17,7 @@ if (__name__ == '__main__'):
     ### setup for search API.
     params_update = {
         # 'source_id': 'MIROC6',
-        'source_id': 'MRI-ESM2-0',
+        # 'source_id': 'MRI-ESM2-0',
         # 'source_id': 'CNRM-CM6-1',
         # 'source_id': 'CNRM-ESM2-1',
         # 'source_id': 'IPSL-CM6A-LR',    #<- not found error for aggregation dataset
@@ -25,7 +26,7 @@ if (__name__ == '__main__'):
         # 'source_id': 'CESM2',
         # 'source_id': 'E3SM-1-0',
         # 'source_id': 'GFDL-CM4',
-        # 'source_id': 'BCC-CSM2-MR',
+        'source_id': 'BCC-CSM2-MR',
         # 'source_id': 'CESM2-WACCM',
         # 'source_id': 'EC-Earth3-LR',
         # 'source_id':'MIROC6,MRI-ESM2-0, CNRM-CM6-1',
@@ -65,7 +66,9 @@ if (__name__ == '__main__'):
     for d in datasets:
         label = d.source_id+':'+d.experiment_id+':'+d.variant_label
         print(label)
-        times = nc.num2date(d['time'], d['time'].units)
+        # times = nc.num2date(d['time'], d['time'].units)
+        times = d['time']
+        print(type(times))
         values = d['tas'].sel(lon=0, lat=0, method='nearest')
 
         try:
