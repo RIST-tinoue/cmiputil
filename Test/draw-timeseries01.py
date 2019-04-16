@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# xarray, mfdataset version
+
 import sys
+from cftime import num2date
+from pprint import pprint
+import matplotlib.pyplot as plt
 sys.path.append('.')
 sys.path.append('..')
 from ESGFSearch import fields_default, getCatURLs, getDataset
-from pprint import pprint
-import netCDF4 as nc
-from os.path import basename
-import matplotlib.pyplot as plt
 
 
 if (__name__ == '__main__'):
 
-    ### setup for search API.
+    # setup for search API.
     params_update = {
         # 'source_id': 'MIROC6',
-        'source_id': 'MRI-ESM2-0',
+        # 'source_id': 'MRI-ESM2-0',
         # 'source_id': 'CNRM-CM6-1',
         # 'source_id': 'CNRM-ESM2-1',
         # 'source_id': 'IPSL-CM6A-LR',    #<- not found error for aggregation dataset
@@ -25,7 +26,7 @@ if (__name__ == '__main__'):
         # 'source_id': 'CESM2',
         # 'source_id': 'E3SM-1-0',
         # 'source_id': 'GFDL-CM4',
-        # 'source_id': 'BCC-CSM2-MR',
+        'source_id': 'BCC-CSM2-MR',
         # 'source_id': 'CESM2-WACCM',
         # 'source_id': 'EC-Earth3-LR',
         # 'source_id':'MIROC6,MRI-ESM2-0, CNRM-CM6-1',
@@ -39,24 +40,24 @@ if (__name__ == '__main__'):
     params = fields_default
     params.update(params_update)
     print('Search params(keywords and facets):')
-    pprint(params) 
+    pprint(params)
 
-    ### Do search, return list of catalog URLs
+    # Do search, return list of catalog URLs
     urls = getCatURLs(params)
 
-    ### get Catalog, then Aggregated datasets.
+    # get Catalog, then Aggregated datasets.
     datasets = []
     for url in urls:
-        print("Processing Catalog:",url)
-        d = getDataset(url, netcdf=True)
+        print("Processing Catalog:", url)
+        d = getDataset(url, aggregate=False, netcdf=False)
         if (d is not None):
             datasets.append(d)
     print('Num of datasets:', len(datasets))
-    if (len(datasets) == 0 ):  # nothing found
+    if (len(datasets) == 0):  # nothing found
         raise Exception('Nothing found')
-        
-    ### draw timeseries of each dataset
-    fig = plt.figure()
+
+    # draw timeseries of each dataset
+    fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
     ax.set_title('tas')
     ax.set_xlabel('time')
@@ -65,18 +66,15 @@ if (__name__ == '__main__'):
     for d in datasets:
         label = d.source_id+':'+d.experiment_id+':'+d.variant_label
         print(label)
-        times = nc.num2date(d['time'], d['time'].units)
+        times = num2date(d['time'][:], d['time'].units)
         values = d['tas'].sel(lon=0, lat=0, method='nearest')
 
         try:
             ax.plot(times, values, label=label)
             ax.legend()
         except RuntimeError as e:
-            print('Skip error:',e.args)
+            print('Skip error:', e.args)
             continue
+    print('Ready to show plot...')
     plt.show()
     print('Done.')
-    # sys.exit(0)
-
-
-
