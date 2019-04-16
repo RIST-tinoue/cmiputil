@@ -150,6 +150,8 @@ def getDataset(url, aggregate=True, netcdf=False):
         raise e
 
     if (aggregate):
+        if (DEBUG):
+            print('DBG:Aggregate=True')
         # construct base url
         data_url = cat.base_tds_url
         for s in cat.services[:]:
@@ -180,7 +182,8 @@ def getDataset(url, aggregate=True, netcdf=False):
             print("  from url:", data_url)
             return None
     else:
-        print('DBG:Aggregate=False')
+        if (DEBUG):
+            print('DBG:Aggregate=False')
         urls = [x.access_urls['OpenDAPServer']
                 for x in cat.datasets.values()
                 if 'OpenDAPServer' in x.access_urls]
