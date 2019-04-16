@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 DEBUG = False
 VERBOSE = False
 
+class NotFoundError(Exception):
+    pass
+
 # defaults
 search_service = 'http://esgf-node.llnl.gov/esg-search/'
 # search_service = 'http://esgf-data.dkrz.de/esg-search/'
@@ -97,8 +100,8 @@ def getCatURLs(fields, base_url=None):
     if (DEBUG):
         print('Num found:',result['response']['numFound'])
     if (result['response']['numFound'] == 0):
-        print('GetCatURLs: Nothing found.')
-        return []
+        raise NotFoundError('GetCatURLs: No catalog found.')
+
 
     if (DEBUG):
         pprint(result['response']['docs']) #dbg
@@ -205,21 +208,16 @@ def getAggDataset(url, netcdf=False):
         if (netcdf):
             d = nc.Dataset(data_url, 'r')
         else:
-            d = xr.open_dataset(data_url, decode_times=False, decode_cf=True)
+            d = xr.open_dataset(data_url, decode_times=False, decode_cf = False)
+    except ValueError as e:
+        print(e.args)
+        raise e
     except (IOError, AttributeError) as e:
-        print("Error in Opening dataset from url:",data_url)
-        pprint(e.args)
+        print("Error in Opening dataset:", e.args)
+        print("  from url:",data_url)
         return None
 
     return d
-
-
-def calcGMean(d):
-
-    return None
-
-
-
 
 
 if (__name__ == '__main__'):
@@ -230,17 +228,17 @@ if (__name__ == '__main__'):
     params_update = {
         # 'source_id': 'MIROC6',
         # 'source_id': 'MRI-ESM2-0',
-        # 'source_id': 'CNRM-CM6-1',
-        # 'source_id': 'CNRM-ESM2-1',
-        # 'source_id': 'IPSL-CM6A-LR',    #<- not found error for aggregation dataset
-        # 'source_id': 'GISS-E2-1-G',
-        # 'source_id': 'CanESM5',
-        # 'source_id': 'CESM2',
-        # 'source_id': 'E3SM-1-0',
-        # 'source_id': 'GFDL-CM4',
-        # 'source_id': 'BCC-CSM2-MR',
-        # 'source_id': 'CESM2-WACCM',
-        # 'source_id': 'EC-Earth3-LR',
+        # 'source_id': 'CNRM-CM6-1',    #<- Catalog not found
+        # 'source_id': 'CNRM-ESM2-1',    #<- Catalog not found
+        # 'source_id': 'IPSL-CM6A-LR',    #<- Couldn't resolve host name
+        # 'source_id': 'GISS-E2-1-G',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        # 'source_id': 'CanESM5',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        # 'source_id': 'CESM2',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        # 'source_id': 'E3SM-1-0',  #<- Catalog not found
+        # 'source_id': 'GFDL-CM4',  #<- Catalog not found
+        # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        # 'source_id': 'CESM2-WACCM',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        # 'source_id': 'EC-Earth3-LR',  #<- Catalog not found
         # 'experiment_id': 'piControl, abrupt-4xCO2',
         'experiment_id': 'historical',
         'variant_label': 'r1i1p1f1',
@@ -254,9 +252,14 @@ if (__name__ == '__main__'):
 
 
     ### Do search.
-    urls = getCatURLs(params)
-    print('Catalog Search Result:',len(urls))
-    # pprint(urls)
+    try:
+        urls = getCatURLs(params)
+    except NotFoundError as e:
+        print('### No Catalog found, sorry.')
+        raise e
+    finally:
+        print('Catalog Search Result:',len(urls))
+        # pprint(urls)
 
 
 
@@ -264,15 +267,12 @@ if (__name__ == '__main__'):
     datasets = []
     for url in urls:
         print("Processing Catalog:",url)
-
-        d = getAggDataset(url)
-        # d = getDataset(url)
+        d = getAggDataset(url, netcdf=False)
         if (d is not None):
             datasets.append(d)
     print('Num of datasets:', len(datasets))
     if (len(datasets) == 0 ):  # nothing found
-        # return False
-        raise Exception
+        raise NotFoundError('No datasets found')
 
     ### draw timeseries of each dataset
     fig = plt.figure(figsize=(16,8))
@@ -281,10 +281,12 @@ if (__name__ == '__main__'):
     ax.set_xlabel('time')
     ax.set_ylabel('K')
 
+    import cftime
     for d in datasets:
         label = d.source_id+': '+d.experiment_id+': '+d.variant_label
         print(label)
-        times = nc.num2date(d['time'], d['time'].units)
+        # d = xr.decode_cf(d)
+        times = cftime.num2date(d['time'], d['time'].units)
         values = d['tas'].sel(lon=0, lat=0, method='nearest')
 
         try:
