@@ -18,8 +18,10 @@ import matplotlib.pyplot as plt
 DEBUG = True
 VERBOSE = False
 
+
 class NotFoundError(Exception):
     pass
+
 
 # defaults
 search_service = 'http://esgf-node.llnl.gov/esg-search/'
@@ -62,7 +64,6 @@ fields_default.update(facet_defaults)
 #     # print(f'[{name}] done in {time.time() - t0:.0f} s')
 
 
-
 def getCatURLs(fields, base_url=None):
     """
     Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
@@ -89,36 +90,33 @@ def getCatURLs(fields, base_url=None):
         print(e.args)
         raise e
         return []
-    if ( r.status != 200):
-        print('Bad Status:',r.status)
+    if (r.status != 200):
+        print('Bad Status:', r.status)
         print(r.data.decode())
         return []
     # don't know why but returned are bytes, not str.
     result = json.loads(r.data.decode())
 
-
     if (DEBUG):
-        print('Num found:',result['response']['numFound'])
+        print('Num found:', result['response']['numFound'])
     if (result['response']['numFound'] == 0):
         raise NotFoundError('GetCatURLs: No catalog found.')
 
-
     if (DEBUG):
-        pprint(result['response']['docs']) #dbg
-
+        pprint(result['response']['docs'])
 
     urls = []
     for r in result['response']['docs']:
         for l in r['url']:
-            (url,mime,service) = l.split('|')
+            (url, mime, service) = l.split('|')
             if (DEBUG):
-                print(service,':',url)
+                print(service, ':', url)
             # select TDS catalog
             if (service == 'THREDDS'):
                 urls.append(url)
 
     if (VERBOSE):
-        print('Num of catalogs found:',len(urls))
+        print('Num of catalogs found:', len(urls))
 
     return urls
 
@@ -143,16 +141,15 @@ def getDataset(url, aggregate=True, netcdf=False):
 
     """
     if (VERBOSE):
-        print("Processing Catalog:",url)
+        print("Processing Catalog:", url)
 
     try:
         cat = TDSCatalog(url)
     except Exception as e:
-        print('Error in siphon.TDSCatalog():',e.args)
+        print('Error in siphon.TDSCatalog():', e.args)
         raise e
 
-
-    if ( aggregate ):
+    if (aggregate):
         # construct base url
         data_url = cat.base_tds_url
         for s in cat.services[:]:
@@ -167,13 +164,14 @@ def getDataset(url, aggregate=True, netcdf=False):
 
         data_url += ds.url_path
         if (VERBOSE):
-            print('URL of Aggregated dataset:',data_url)
+            print('URL of Aggregated dataset:', data_url)
 
         try:
             if (netcdf):
                 ds = nc.Dataset(data_url, 'r')
             else:
-                ds = xr.open_dataset(data_url, decode_times=False, decode_cf = False)
+                ds = xr.open_dataset(data_url,
+                                     decode_times=False, decode_cf=False)
         except ValueError as e:
             print(e.args)
             raise e
@@ -187,7 +185,7 @@ def getDataset(url, aggregate=True, netcdf=False):
                 for x in cat.datasets.values()
                 if 'OpenDAPServer' in x.access_urls]
         urls.sort()
-        
+
         if (VERBOSE):
             print("Num of files in this catalog:", len(urls))
 
@@ -200,13 +198,13 @@ def getDataset(url, aggregate=True, netcdf=False):
             else:
                 ds = xr.open_mfdataset(urls, decode_cf=False)
         except IOError as e:
-            print("Error in xr.open_mfdataset:",e.args)
-            print("  Skip",url)
+            print("Error in xr.open_mfdataset:", e.args)
+            print("  Skip", url)
             return None
 
         if (VERBOSE):
             print("Opened dataset:", basename(ds.further_info_url))
-        
+
     return ds
 
 
@@ -214,7 +212,8 @@ if (__name__ == '__main__'):
 
     # with timer('main'):
     #     main()
-    ### setup for search API.
+
+    # setup for search API.
     params_update = {
         'source_id': 'MIROC6',
         # 'source_id': 'MRI-ESM2-0',
@@ -238,34 +237,31 @@ if (__name__ == '__main__'):
     params = fields_default
     params.update(params_update)
     print('Search params(keywords and facets):')
-    pprint(params) 
+    pprint(params)
 
-
-    ### Do search.
+    # Do search.
     try:
         urls = getCatURLs(params)
     except NotFoundError as e:
         print('### No Catalog found, sorry.')
         raise e
     finally:
-        print('Catalog Search Result:',len(urls))
+        print('Catalog Search Result:', len(urls))
         # pprint(urls)
 
-
-
-    ### get Catalog, then Aggregated datasets.
+    # get Catalog, then Aggregated datasets.
     datasets = []
     for url in urls:
-        print("Processing Catalog:",url)
+        print("Processing Catalog:", url)
         d = getDataset(url, aggregate=False, netcdf=False)
         if (d is not None):
             datasets.append(d)
     print('Num of datasets:', len(datasets))
-    if (len(datasets) == 0 ):  # nothing found
+    if (len(datasets) == 0):  # nothing found
         raise NotFoundError('No datasets found')
 
-    ### draw timeseries of each dataset
-    fig = plt.figure(figsize=(16,8))
+    # draw timeseries of each dataset
+    fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
     ax.set_title('tas')
     ax.set_xlabel('time')
@@ -283,11 +279,9 @@ if (__name__ == '__main__'):
             ax.plot(times, values, label=label)
             ax.legend()
         except RuntimeError as e:
-            print('Skip error:',e.args)
+            print('Skip error:', e.args)
             continue
 
     print('Ready to plot...')
     plt.show()
     print('Done.')
-
-
