@@ -15,7 +15,7 @@ import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 import matplotlib.pyplot as plt
 
-DEBUG = True
+DEBUG = False
 VERBOSE = False
 
 
