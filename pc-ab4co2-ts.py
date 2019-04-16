@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ESGFSearch import fields_default, getCatURLs, getAggDataset, getDataset
+from ESGFSearch import fields_default, getCatURLs, getDataset
 from pprint import pprint
-import netCDF4 as nc
 from os.path import basename
+from cftime import num2date
 import matplotlib.pyplot as plt
 
 
@@ -61,7 +61,7 @@ def composeMeta(datasets):
             'branch_time': ds.branch_time_in_parent,
             't_units': t_units,
             't_size': t_size,
-            't_range': nc.num2date(times[[0,-1]],times.units)
+            't_range': num2date(times[[0,-1]],times.units)
         })
 
     return meta
@@ -75,7 +75,8 @@ if ( __name__ == '__main__'):
         # 'source_id': 'GISS-E2-1-G',
         # 'source_id': 'CanESM5',
         # 'source_id': 'CESM2',
-        'source_id': 'MIROC6,CNRM-CM6-1,CESM2',
+        # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+        'source_id': 'MIROC6,BCC-CSM2-MR',
         'experiment_id': 'piControl, abrupt-4xCO2',
         # 'experiment_id': 'historical',
         'variant_label': 'r1i1p1f1,r2i1p1f1',
@@ -95,8 +96,8 @@ if ( __name__ == '__main__'):
 
         # d = getDataset(url, netcdf=True)
         # d = getDataset(url, netcdf=False)
-        # d = getAggDataset(url,netcdf=True)
-        d = getAggDataset(url,netcdf=False)
+        d = getDataset(url,aggregate=False, netcdf=False)
+        # d = getDataset(url)
         if (d is not None):
             datasets.append(d)
 
@@ -118,7 +119,7 @@ if ( __name__ == '__main__'):
     for d in datasets:
         label = d.source_id+': '+d.experiment_id+': '+d.variant_label
         print(label)
-        times = nc.num2date(d['time'], d['time'].units)
+        times = num2date(d['time'], d['time'].units)
         values = d['tas'].sel(lon=0, lat=0, method='nearest')
 
         try:
@@ -128,6 +129,7 @@ if ( __name__ == '__main__'):
             print('Skip error:',e.args)
             continue
 
+    print('Ready to plot...')
     plt.show()
     print('Done.')
 
