@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from ESGFSearch import fields_default, getCatURLs, getDataset
+# from ESGFSearch import fields_default, getCatURLs, getDataset
+import ESGFSearch
 from pprint import pprint
 from os.path import basename
 from cftime import num2date
 import matplotlib.pyplot as plt
-
 
 def composeMeta(datasets):
     """
@@ -21,7 +21,7 @@ def composeMeta(datasets):
     for ds in datasets:
         # print(type(ds))
         dsname = basename(ds.further_info_url)
-        print("Compose meta info for:",dsname)
+        print("Compose meta info for:", dsname)
         try:
             var = ds[ds.variable_id]
         except IndexError:
@@ -48,8 +48,7 @@ def composeMeta(datasets):
         except AttributeError:
             var_id = var.id
 
-
-        meta.setdefault(ds.experiment_id,[]).append({
+        meta.setdefault(ds.experiment_id, []).append({
             # No filepath() or path related attributes in xarray.dataset.
             # 'file': ds.filepath(),
             'source': ds.source_id,
@@ -61,13 +60,13 @@ def composeMeta(datasets):
             'branch_time': ds.branch_time_in_parent,
             't_units': t_units,
             't_size': t_size,
-            't_range': num2date(times[[0,-1]],times.units)
+            't_range': num2date(times[[0, -1]], times.units)
         })
 
     return meta
 
 
-if ( __name__ == '__main__'):
+if (__name__ == '__main__'):
     params_update = {
         # 'source_id': 'MIROC6',
         # 'source_id': 'CNRM-CM6-1',
@@ -83,34 +82,34 @@ if ( __name__ == '__main__'):
         'variable': 'tas',
     }
 
-    params = fields_default
+    params = ESGFSearch.fields_default
     params.update(params_update)
     print('Search params(keywords and facets):')
-    pprint(params) # dbg
+    pprint(params) 
 
-    urls = getCatURLs(params)
+    urls = ESGFSearch.getCatURLs(params)
 
     datasets = []
     for url in urls:
-        print("Processing Catalog:",url)
+        print("Processing Catalog:", url)
 
         # d = getDataset(url, netcdf=True)
         # d = getDataset(url, netcdf=False)
-        d = getDataset(url,aggregate=False, netcdf=False)
+        d = ESGFSearch.getDataset(url, aggregate=False, netcdf=False)
         # d = getDataset(url)
         if (d is not None):
             datasets.append(d)
 
     # pprint(datasets)
 
-    if (len(datasets) > 0 ):
+    if (len(datasets) > 0):
         meta = {}
         meta = composeMeta(datasets)
         print('meta info:')
         pprint(meta)
 
-    ### draw timeseries of each dataset
-    fig = plt.figure(figsize=(16,8))
+    # draw timeseries of each dataset
+    fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
     ax.set_title('tas')
     ax.set_xlabel('time')
@@ -126,12 +125,9 @@ if ( __name__ == '__main__'):
             ax.plot(times, values, label=label)
             ax.legend()
         except RuntimeError as e:
-            print('Skip error:',e.args)
+            print('Skip error:', e.args)
             continue
 
     print('Ready to plot...')
     plt.show()
     print('Done.')
-
-
-
