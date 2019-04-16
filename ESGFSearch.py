@@ -15,7 +15,7 @@ import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 import matplotlib.pyplot as plt
 
-DEBUG = False
+DEBUG = True
 VERBOSE = False
 
 class NotFoundError(Exception):
@@ -123,61 +123,24 @@ def getCatURLs(fields, base_url=None):
     return urls
 
 
-def getDataset(url, netcdf=False):
-    """
-    From given url of TDS catalog, open catalog and get all urls of files in it,
+def getDataset(url, aggregate=True, netcdf=False):
+    """From given url of TDS catalog, open catalog and get all urls of files in it,
     open as xarray.mfdataset and return it.
 
-    Seems to be better to use getAggDataset() if available.
+    get Aggregated Dataset from catarog URL.
+
+    If `aggregate` is True(default), access aggregated dataset, else
+    access all of files listed in the catalog.
 
     Parameters:
     url : url of TDS catalog
 
     Returns:
     ds : xarray.mfdataset, or None if unable to open
-    """
-    if (VERBOSE):
-        print("Processing Catalog:",url)
 
-    try:
-        cat = TDSCatalog(url)
-    except Exception as e:
-        print('Error in siphon.TDSCatalog():')
-        pprint(e.args)
-        return None
-
-    urls = [x.access_urls['OpenDAPServer']
-            for x in cat.datasets.values()
-            if 'OpenDAPServer' in x.access_urls]
-
-    if (VERBOSE):
-        print("Num of files in this catalog:", len(urls))
-
-    if (DEBUG):
-        pprint(urls)
-
-    try:
-        if (netcdf):
-            ds = nc.MFDataset(urls)
-        else:
-            ds = xr.open_mfdataset(urls, decode_cf=False)
-    except IOError as e:
-        print("Error in xr.open_mfdataset: ")
-        pprint(e.args)
-        print("skip",url)
-        return None
-
-    if (VERBOSE):
-        print("Opened dataset:", basename(ds.further_info_url))
-
-    return ds
-
-
-def getAggDataset(url, netcdf=False):
-    """
-    get Aggregated Dataset from catarog URL.
 
     return Opened xarray dataset.
+
     """
     if (VERBOSE):
         print("Processing Catalog:",url)
@@ -185,39 +148,66 @@ def getAggDataset(url, netcdf=False):
     try:
         cat = TDSCatalog(url)
     except Exception as e:
-        print('Error in siphon.TDSCatalog():')
-        pprint(dir(e))
-        return None
-
-    data_url = cat.base_tds_url
-    for s in cat.services[:]:
-        if (s.service_type == 'OpenDAP'):
-            data_url += s.base
-            break
-
-    # url of Aggregated dataset
-    ds = cat.datasets[-1]
-    if (DEBUG):
-        pprint(vars(ds))
-
-    data_url += ds.url_path
-    if (VERBOSE):
-        print('URL of Aggregated dataset:',data_url)
-
-    try:
-        if (netcdf):
-            d = nc.Dataset(data_url, 'r')
-        else:
-            d = xr.open_dataset(data_url, decode_times=False, decode_cf = False)
-    except ValueError as e:
-        print(e.args)
+        print('Error in siphon.TDSCatalog():',e.args)
         raise e
-    except (IOError, AttributeError) as e:
-        print("Error in Opening dataset:", e.args)
-        print("  from url:",data_url)
-        return None
 
-    return d
+
+    if ( aggregate ):
+        # construct base url
+        data_url = cat.base_tds_url
+        for s in cat.services[:]:
+            if (s.service_type == 'OpenDAP'):
+                data_url += s.base
+                break
+
+        # url of Aggregated dataset
+        ds = cat.datasets[-1]   # Is this universal ?
+        if (DEBUG):
+            pprint(vars(ds))
+
+        data_url += ds.url_path
+        if (VERBOSE):
+            print('URL of Aggregated dataset:',data_url)
+
+        try:
+            if (netcdf):
+                ds = nc.Dataset(data_url, 'r')
+            else:
+                ds = xr.open_dataset(data_url, decode_times=False, decode_cf = False)
+        except ValueError as e:
+            print(e.args)
+            raise e
+        except (IOError, AttributeError) as e:
+            print("Error in Opening dataset:", e.args)
+            print("  from url:", data_url)
+            return None
+    else:
+        print('DBG:Aggregate=False')
+        urls = [x.access_urls['OpenDAPServer']
+                for x in cat.datasets.values()
+                if 'OpenDAPServer' in x.access_urls]
+        urls.sort()
+        
+        if (VERBOSE):
+            print("Num of files in this catalog:", len(urls))
+
+        if (DEBUG):
+            pprint(urls)
+
+        try:
+            if (netcdf):
+                ds = nc.MFDataset(urls)
+            else:
+                ds = xr.open_mfdataset(urls, decode_cf=False)
+        except IOError as e:
+            print("Error in xr.open_mfdataset:",e.args)
+            print("  Skip",url)
+            return None
+
+        if (VERBOSE):
+            print("Opened dataset:", basename(ds.further_info_url))
+        
+    return ds
 
 
 if (__name__ == '__main__'):
@@ -226,7 +216,7 @@ if (__name__ == '__main__'):
     #     main()
     ### setup for search API.
     params_update = {
-        # 'source_id': 'MIROC6',
+        'source_id': 'MIROC6',
         # 'source_id': 'MRI-ESM2-0',
         # 'source_id': 'CNRM-CM6-1',    #<- Catalog not found
         # 'source_id': 'CNRM-ESM2-1',    #<- Catalog not found
@@ -267,7 +257,7 @@ if (__name__ == '__main__'):
     datasets = []
     for url in urls:
         print("Processing Catalog:",url)
-        d = getAggDataset(url, netcdf=False)
+        d = getDataset(url, aggregate=False, netcdf=False)
         if (d is not None):
             datasets.append(d)
     print('Num of datasets:', len(datasets))
@@ -296,6 +286,7 @@ if (__name__ == '__main__'):
             print('Skip error:',e.args)
             continue
 
+    print('Ready to plot...')
     plt.show()
     print('Done.')
 
