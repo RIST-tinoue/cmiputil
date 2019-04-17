@@ -9,7 +9,7 @@ from pprint import pprint
 import matplotlib.pyplot as plt
 sys.path.append('.')
 sys.path.append('..')
-from ESGFSearch import fields_default, getCatURLs, getDataset
+from esgfsearch import fields_default, getCatURLs, getDataset
 
 
 if (__name__ == '__main__'):
