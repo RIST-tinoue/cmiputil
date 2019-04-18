@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# coding:utf-8
-
-"""Handling Data Reference Syntax (DRS):
+#coding:utf-8
+"""CMIP6 Data Reference Syntax (DRS):
 
 (Excerpt from http://goo.gl/v1drZl)
 
@@ -19,8 +18,13 @@ source_id        (CMIP5: "model")           see CMIP6_source_id.json
 experiment_id    (CMIP5: "experiment")      see CMIP6_experiment_id.json
 variable_id      (CMIP5: "variable name")   see data request
 table_id         (CMIP5: "table_id")        see CMIP6_table_id.json
-variant_label    (CMIP5: "ensemble member") construct from realization, initialization, physics, and forcing indices
-version          (CMIP5: "version number")  indicating approximate date of model output file. (This is the only DRS element that is not stored as a global attribute.)
+variant_label    (CMIP5: "ensemble member") construct from realization,
+                                            initialization, physics, and
+                                            forcing indices
+version          (CMIP5: "version number")  indicating approximate date of
+                                            model output file. (This is the
+                                            only DRS element that is not stored
+                                            as a global attribute.)
 
 We need additional components in CMIP6 to accommodate the more complex
 structure:
@@ -65,8 +69,10 @@ file name = <variable_id>_<table_id>_<source_id>_<experiment_id >_<member_id>_<g
 
 For time-invariant fields, the last segment (time_range) above is omitted.
 
-Example when there is no sub-experiment: tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc
-Example with a sub-experiment:   pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
+Example when there is no sub-experiment:
+  tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc
+Example with a sub-experiment:
+  pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
 
 All strings appearing in the file name are constructed using only the following
 characters: a-z, A-Z, 0-9, and the hyphen ("-"), except the hyphen must not
@@ -75,16 +81,18 @@ the template.
 
 Note that the last segment of the file name indicates the time-range spanned by
 the data in the file, and is omitted when inappropriate (e.g., if a variable is
-“fixed” for all time).  The format for this segment is as in CMIP5
-(see http://cmip-pcmdi.llnl.gov/cmip5/docs/cmip5_data_reference_syntax.pdf):
+“fixed” for all time).  The format for this segment is as in CMIP5 (see
+http://cmip-pcmdi.llnl.gov/cmip5/docs/cmip5_data_reference_syntax.pdf):
 
 The <time_range> is a string generated consistent with the following:
 
 If frequency = “fx” then
   <time_range>=””
 else
-  <time_range> = N1-N2 where N1 and N2 are integers of the form ‘yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]’ (expressed as a string,where where ‘yyyy’, ‘MM’, ‘dd’, ‘hh’ ‘mm’ and ‘ss’ are integer year, month, day, hour, minute, and second, respectively)
-endif
+  <time_range> = N1-N2 where N1 and N2 are integers of the form
+‘yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]’ (expressed as a string,where where ‘yyyy’,
+‘MM’, ‘dd’, ‘hh’ ‘mm’ and ‘ss’ are integer year, month, day, hour, minute, and
+second, respectively) endif
 
 where <suffix> is defined as follows:
   if the variable identified by variable_id has a time dimension with a “climatology” attribute then
@@ -107,46 +115,48 @@ Directory structure = <mip_era>/
                                 <member_id>/
                                   <table_id>/
                                     <variable_id>/
-                                      <grid_label>/  
+                                      <grid_label>/
                                         <version>
 Note:
 
 - <version> has the form “vYYYYMMDD” (e.g., “v20160314”), indicating a
 representative date for the version.  Note that filescontained in a single
-<version> subdirectory at the end of the directory path should represent all the
-available time-samplesreported from the simulation; a time-series can be split
-across several files, but all the files must be found in the samesubdirectory.
-This implies that <version> will not generally be the actual date that all files
-in the subdirectory were written orpublished.
+<version> subdirectory at the end of the directory path should represent all
+the available time-samplesreported from the simulation; a time-series can be
+split across several files, but all the files must be found in the
+samesubdirectory.  This implies that <version> will not generally be the actual
+date that all files in the subdirectory were written orpublished.
 
 - If multiple activities are listed in the global attribute, the first one is
 used in the directory structure.
 
-
-Example when there is no sub-experiment:   CMIP6/CMIP/NOAA-GFDL/GFDL-CM4/1pctCO2/r1i1p1f1/Amon/tas/gn/v20150322
-Example with a sub-experiment:     CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
+Example when there is no sub-experiment:
+     CMIP6/CMIP/NOAA-GFDL/GFDL-CM4/1pctCO2/r1i1p1f1/Amon/tas/gn/v20150322
+Example with a sub-experiment:
+     CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
 """
+import os.path
+
+
 
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
 __date__ = '2019/04/16'
 
-
 sample_attrs = {
-    'activity_id' : 'CMIP',
-    'experiment_id':'piControl',
-    'grid_label':'gn',
-    'institution_id' : 'MIROC',
+    'activity_id': 'CMIP',
+    'experiment_id': 'piControl',
+    'grid_label': 'gn',
+    'institution_id': 'MIROC',
     'source_id': 'MIROC6',
     'table_id': 'Amon',
-    'time_range':None,
-    'variable_id' : 'tas',
+    'time_range': None,
+    'variable_id': 'tas',
     'variant_label': 'r1i1p1f1',
-    'version':'v20190308',
-}
+    'version': 'v20190308'}
 sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc"
-sample_dname = "CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308"
-
+sample_dname = "CMIP6/CMIP/MIROC/MIROC6/piControl/"\
+               "r1i1p1f1/Amon/tas/gn/v20190308"
 
 sample_attrs_w_subexp = {
     'activity_id': 'DCPP',
@@ -160,13 +170,15 @@ sample_attrs_w_subexp = {
     'variable_id': 'rsdscs',
     'variant_label': 'r1i1p1f1',
     'version': 'v20190110'}
-sample_fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc'
-sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110'
+sample_fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'\
+                        '_s1920-r1i1p1f1_gr_192001-201412.nc'
+sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
+                        's1920-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
-import os.path
+
 class DRS:
-    """This class contains attributes necessary to construct filename and directory
-    name follows CMIP6 DRS (Data Reference Syntax).
+    """This class contains attributes necessary to construct filename and
+    directory name follows CMIP6 DRS (Data Reference Syntax).
 
     Class members are:
     - variable_id
@@ -187,10 +199,10 @@ class DRS:
     Note that member_id is not able to set directly, this is set by
     sub_experiment_id (omittable) and variant_label.
 
-    See ​http://goo.gl/v1drZl for details about DRS as well as CMIP6 global attributes, etc.
-
-
+    See http://goo.gl/v1drZl for details about DRS as well as CMIP6 global
+    attributes, etc.
     """
+
     def __init__(self, **kw):
         self.variable_id = None
         self.table_id = None
@@ -209,7 +221,6 @@ class DRS:
         self.source_id = None
 
         self.set(**kw)
-
 
     def __repr__(self):
         tmpl = ("drs.DRS("
@@ -240,21 +251,20 @@ class DRS:
             self.time_range,
             self.version)
 
-
     def __str__(self):
-        tmpl = ("=================================\n"
-                "mip_era={!a}\n"
-                "activity_id={!a}\n"
-                "institution_id={!a}\n"
-                "variable_id={!a}\n"
-                "table_id={!a}\n"
-                "source_id={!a}\n"
-                "experiment_id={!a}\n"
-                "sub_experiment_id={!a}\n"
-                "variant_label={!a}\n"
-                "grid_label={!a}\n"
-                "time_range={!a}\n"
-                "version={!a}\n"
+        tmpl = ("========== DRS instance ==========\n"
+                "mip_era        : {!a}\n"
+                "activity_id    : {!a}\n"
+                "institution_id : {!a}\n"
+                "variable_id    : {!a}\n"
+                "table_id       : {!a}\n"
+                "source_id      : {!a}\n"
+                "experiment_id  : {!a}\n"
+                "sub_experiment_id: {!a}\n"
+                "variant_label  : {!a}\n"
+                "grid_label     : {!a}\n"
+                "time_range     : {!a}\n"
+                "version        : {!a}\n"
                 "=================================\n")
 
         return tmpl.format(
@@ -270,7 +280,6 @@ class DRS:
             self.grid_label,
             self.time_range,
             self.version)
-
 
     def set(self, mip_era=None, activity_id=None, institution_id=None,
             variable_id=None, table_id=None, source_id=None,
@@ -309,10 +318,9 @@ class DRS:
 
         return self
 
-
     def fileName(self):
         """
-        f = <variable_id>_<table_id>_<source_id>_<experiment_id >_<member_id>_<grid_label>[_<time_range>].nc
+        Construct filename from instance members.
         """
 
         if (self.time_range is None):
@@ -337,7 +345,6 @@ class DRS:
 
         return f
 
-
     def dirName(self, prefix=None):
 
         # TODO: error check
@@ -356,12 +363,15 @@ class DRS:
             d = os.path.join(prefix, d)
         return d
 
-
     def splitFileName(self, fname):
         fbase, fext = os.path.splitext(fname)
 
-        (variable_id, table_id, source_id, experiment_id, member_id, grid_label)\
-        = os.path.basename(fbase).split('_',5)
+        (variable_id,
+         table_id,
+         source_id,
+         experiment_id,
+         member_id,
+         grid_label) = os.path.basename(fbase).split('_', 5)
 
         try:
             (grid_label, time_range) = grid_label.split('_')
@@ -374,21 +384,19 @@ class DRS:
             variant_label = member_id
             sub_experiment_id = None
 
-        res = {'variable_id' : variable_id,
-                'table_id' : table_id,
-                'source_id' : source_id,
-                'experiment_id' : experiment_id,
-                'variant_label' : variant_label,
-                'grid_label' : grid_label,
-                'time_range' : time_range,
-                'sub_experiment_id' : sub_experiment_id}
+        res = {'variable_id': variable_id,
+               'table_id': table_id,
+               'source_id': source_id,
+               'experiment_id': experiment_id,
+               'variant_label': variant_label,
+               'grid_label': grid_label,
+               'time_range': time_range,
+               'sub_experiment_id': sub_experiment_id}
         self.set(**res)
 
         return res
 
-
     def splitDirName(self, dname):
-
         (dname, version) = os.path.split(dname)
         (dname, grid_label) = os.path.split(dname)
         (dname, variable_id) = os.path.split(dname)
@@ -408,21 +416,20 @@ class DRS:
 
         # TODO: prefix should be a member of this class ??
         res = {
-            'mip_era' : mip_era,
-            'activity_id' : activity_id,
-            'institution_id' : institution_id,
-            'source_id' : source_id,
-            'experiment_id' : experiment_id,
-            'sub_experiment_id' : sub_experiment_id,
-            'variant_label' : variant_label,
-            'table_id' : table_id,
-            'variable_id' : variable_id,
-            'grid_label' : grid_label,
-            'version': version   }
+            'mip_era': mip_era,
+            'activity_id': activity_id,
+            'institution_id': institution_id,
+            'source_id': source_id,
+            'experiment_id': experiment_id,
+            'sub_experiment_id': sub_experiment_id,
+            'variant_label': variant_label,
+            'table_id': table_id,
+            'variable_id': variable_id,
+            'grid_label': grid_label,
+            'version': version}
         self.set(**res)
         res["prefix"] = prefix
         return res
-
 
 
 if __name__ == "__main__":
@@ -432,5 +439,7 @@ if __name__ == "__main__":
     d = drs.DRS(**drs.sample_attrs)
     print('attributes:')
     pprint(vars(d))
-    print("dirname:",d.dirName())
-    print("filename:",d.fileName())
+    print("dirname:", d.dirName())
+    print("filename:", d.fileName())
+
+    print(d)
