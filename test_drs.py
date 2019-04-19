@@ -22,7 +22,7 @@ class DRS_Test(unittest.TestCase):
             'grid_label': 'gr',
             'institution_id': 'IPSL',
             'source_id': 'IPSL-CM6A-LR',
-            'sub_experiment_id': 's1920',
+            'sub_experiment_id': 's1950',
             'table_id': 'Amon',
             'time_range': '192001-201412',
             'variable_id': 'rsdscs',
@@ -122,11 +122,11 @@ class DRS_Test(unittest.TestCase):
 
     def test_splitFileName03(self):
         """Split fname with `sub_experiment_id`"""
-        fname = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc'
+        fname = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
         ref = {'experiment_id': 'dcppC-atl-pacemaker',
                'grid_label': 'gr',
                'source_id': 'IPSL-CM6A-LR',
-               'sub_experiment_id': 's1920',
+               'sub_experiment_id': 's1950',
                'table_id': 'Amon',
                'time_range': '192001-201412',
                'variable_id': 'rsdscs',
@@ -149,7 +149,7 @@ class DRS_Test(unittest.TestCase):
     def test_dirNameUseClass02(self):
         """Construct dirname with sub_experiment_id by class method."""
 
-        ref = "CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110"
+        ref = "CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110"
         res = DRS(**self.ga_w_sub).dirName()
 
         self.assertEqual(ref, res)

@@ -135,8 +135,9 @@ Example when there is no sub-experiment:
 Example with a sub-experiment:
      CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
 """
-import os.path
 
+from convoc import ConVoc
+import os.path
 
 
 __author__ = 'T.Inoue'
@@ -164,16 +165,16 @@ sample_attrs_w_subexp = {
     'grid_label': 'gr',
     'institution_id': 'IPSL',
     'source_id': 'IPSL-CM6A-LR',
-    'sub_experiment_id': 's1920',
+    'sub_experiment_id': 's1950',
     'table_id': 'Amon',
     'time_range': '192001-201412',
     'variable_id': 'rsdscs',
     'variant_label': 'r1i1p1f1',
     'version': 'v20190110'}
 sample_fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'\
-                        '_s1920-r1i1p1f1_gr_192001-201412.nc'
+                        '_s1950-r1i1p1f1_gr_192001-201412.nc'
 sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
-                        's1920-r1i1p1f1/Amon/rsdscs/gr/v20190110'
+                        's1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
 
 class DRS:
@@ -220,7 +221,9 @@ class DRS:
         self.institution_id = None
         self.source_id = None
 
+        self.cvs = ConVoc()
         self.set(**kw)
+
 
     def __repr__(self):
         tmpl = ("drs.DRS("
@@ -289,19 +292,27 @@ class DRS:
         if (mip_era):
             self.mip_era = mip_era
         if (activity_id):
-            self.activity_id = activity_id
+            if self.cvs.checkCV(activity_id, 'activity_id'):
+                self.activity_id = activity_id
         if (institution_id):
-            self.institution_id = institution_id
+            if self.cvs.checkCV(institution_id, 'institution_id'):
+                self.institution_id = institution_id
         if (variable_id):
             self.variable_id = variable_id
         if (table_id):
-            self.table_id = table_id
+            if self.cvs.checkCV(table_id, 'table_id'):
+                self.table_id = table_id
         if (source_id):
-            self.source_id = source_id
+            if self.cvs.checkCV(source_id, 'source_id'):
+                self.source_id = source_id
         if (experiment_id):
-            self.experiment_id = experiment_id
+            if self.cvs.checkCV(experiment_id, 'experiment_id'):
+                self.experiment_id = experiment_id
         if (sub_experiment_id):
-            self.sub_experiment_id = sub_experiment_id
+            if self.cvs.checkCV(sub_experiment_id, 'sub_experiment_id'):
+                self.sub_experiment_id = sub_experiment_id
+            else:
+                print('Invalid sub_experiment_id:',sub_experiment_id)
         if (variant_label):
             self.variant_label = variant_label
         if (grid_label):
