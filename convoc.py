@@ -4,35 +4,46 @@
 """
 Access CMIP6 Controlled Vocabularies.
 
-
+You should clone CMIP6 CVs from github
 """
 
 import os.path
+import json
+from pprint import pprint
 
-DEFAULT_CV_DIR = "./:./CMIP6_CVs:~/Data/CMIP6/CMIP6_CVs"
+DEFAULT_CVPATH = "./:./CMIP6_CVs:~/Data/CMIP6/CMIP6_CVs"
 
-def getCVDir():
+def getCVPaths(paths=None):
     """
     Return list of directories for searching CV json files.
 
-    Directories taken from the environment variable `CV_DIR`, which is
-    a colon separated strings.
+    Directories taken from the environment variable `CVPATH`, which is
+    a string of paths joined by ':'.
+
+    If `CVPATH` is not set, `convoc.DEFAULT_CVPATH` is used.
+
+    If `paths` given, it is used instead of CVPATH.
 
     Non-existent directories are omitted silently.
 
     You have to specify '.' explicitly.
 
+    Note that the order is meaningful.
+
     Parameters
     ---------
-      None
+      paths(optional) : str, paths joined by ':'
 
     Returns
     -------
-      List of strings
+      List of str
 
     """
-    
-    cvd = os.environ.get('CV_DIR',DEFAULT_CV_DIR).split(':')
+
+    if (paths is None):
+        cvd = os.environ.get('CVPATH',DEFAULT_CVPATH).split(':')
+    else:
+        cvd = paths.split(':')
     # print(cvd)
     cvd = [os.path.expandvars(d) for d in cvd]
     # print(cvd)
@@ -42,8 +53,22 @@ def getCVDir():
     return cvd
 
 
-def openCVFile(attr):
-    dirs = getCVDir()
+def getCV(attr):
+    """
+    Return CV of given `attr` as a dict.
+
+    `attr` must be valid and it's json file must be in CVPATH.
+
+    Parameters
+    ----------
+      attr : str
+
+    Returns
+    -------
+      dict : whole CV key-values
+    """
+
+    dirs = getCVPaths()
     file = 'CMIP6_'+attr+'.json'
 
     fname = None
@@ -53,19 +78,58 @@ def openCVFile(attr):
             fname = f
             break
 
-    if (fname):
-        fd = open(fname, 'r')
+    # TODO: should raise some exception if no file found.
+    cv = None
+    if fname is None:
+        cv = None
     else:
-        fd = None
+        with open(fname, 'r') as f:
+            cv = json.load(f)
 
-    return fd
+    return cv
+
+
+def checkCV(value, attr):
+    """
+    Check if given `value` is in CV `attr`.
+
+    Parameters
+    ----------
+      attr : str
+      value : str
+
+    Returns
+    -------
+      logical
+    """
+
+    # TODO: should cache json file?
+    cv = getCV(attr)
+    if cv is None:
+        res = False
+    else:
+        res = value in cv[attr]
+    return res
+
+
+
 
 
 if (__name__ == '__main__'):
 
-    paths = getCVDir()
-    print(paths)
-    
-    fd = openCVFile('source_id')
-    print(fd)
+    paths = getCVPaths()
+    print(type(paths),type(paths[0]),paths[0])
 
+    source_id = getCV('source_id')
+    print(len(source_id))
+
+
+    attr = 'source_id'
+    value = 'MIROC-ES2H'
+
+    print(checkCV(value, attr))
+
+    attr = 'experiment_id'
+    value = 'piControl'
+
+    print(checkCV(value, attr))
