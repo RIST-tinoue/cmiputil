@@ -45,18 +45,34 @@ class ConVoc:
     """
 
     DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs"
+    CV_Attribs = (
+        'activity_id',
+        'experiment_id',
+        'frequency',
+        'grid_label',
+        'institution_id',
+        'license',
+        'nominal_resolution',
+        'realm',
+        'required_global_attributes',
+        'source_id',
+        'source_type',
+        'sub_experiment_id',
+        'table_id',
+    )
+
 
     def __init__(self, paths=None):
         """
         Initialize self.
 
-        See setCVPaths() for arguments.
+        See setSearchPath() for arguments.
         """
 
-        self.setCVPaths(paths)
+        self.setSearchPath(paths)
         pass
 
-    def setCVPaths(self, paths=None):
+    def setSearchPath(self, paths=None):
         """
         Set search path for CV json files.
 
@@ -97,13 +113,13 @@ class ConVoc:
         else:
             raise InvalidCVPathError('No valid CVPATH set.')
 
-    def getCVPaths(self):
+    def getSearchPath(self):
         """
         Return search paths for CV.
         """
         return self.cvpath
 
-    def setCVAttr(self, attr):
+    def setAttr(self, attr):
         """
         Read CV json file for `attr` and set as a member of self.
 
@@ -117,7 +133,7 @@ class ConVoc:
         """
 
         if (attr in dir(self)):
-            # print('dbg:setCVAttr:attr already set:',attr)
+            # print('dbg:setAttr:attr already set:',attr)
             return None
 
         file = 'CMIP6_'+attr+'.json'
@@ -135,7 +151,7 @@ class ConVoc:
         with open(fpath, 'r') as f:
             setattr(self, attr, json.load(f))
 
-    def getCVAttr(self, attr):
+    def getAttr(self, attr):
         """
         Return CV of given `attr` as a dict.
 
@@ -150,10 +166,10 @@ class ConVoc:
           dict : whole CV key-values
         """
 
-        self.setCVAttr(attr)
+        self.setAttr(attr)
         return getattr(self, attr)[attr]
 
-    def checkCVKey(self, key, attr):
+    def checkKey(self, key, attr):
         """
         Check if given `key` is in CV `attr`.
 
@@ -167,14 +183,10 @@ class ConVoc:
           logical
         """
 
-        try:
-            cv = self.getCVAttr(attr)
-        except InvalidCVAttribError:
-            return False
-
+        cv = self.getAttr(attr)
         return key in cv
 
-    def getCVValue(self, key, attr):
+    def getValue(self, key, attr):
         """
         Return value for `key` of CV attribute `attr`.
 
@@ -185,7 +197,7 @@ class ConVoc:
         """
 
         try:
-            res = self.getCVAttr(attr)[key]
+            res = self.getAttr(attr)[key]
         except TypeError:   # This attribute has only keys.
             res = None
         return res
@@ -195,47 +207,47 @@ if (__name__ == '__main__'):
 
     cvs = ConVoc()
 
-    print(cvs.getCVPaths())
+    print(cvs.getSearchPath())
 
-    source_id = cvs.getCVAttr('source_id')
+    source_id = cvs.getAttr('source_id')
     print('len(source_id):', len(source_id))
 
     # 'source_id' has set above
     attr = 'source_id'
     key = 'MIROC-ES2H'
-    print(key, attr, cvs.checkCVKey(key, attr))
+    print(key, attr, cvs.checkKey(key, attr))
 
     # 'experiment_id' has not set yet
     attr = 'experiment_id'
     key = 'historical'
-    print(key, attr, cvs.checkCVKey(key, attr))
+    print(key, attr, cvs.checkKey(key, attr))
     print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
 
-    pprint(cvs.getCVValue(key, attr))
+    pprint(cvs.getValue(key, attr))
 
     # activity_id
     attr = 'activity_id'
     key = 'CMIP'
-    print(key, attr, cvs.checkCVKey(key, attr))
+    print(key, attr, cvs.checkKey(key, attr))
     print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
 
-    pprint(cvs.getCVValue(key, attr))
+    pprint(cvs.getValue(key, attr))
 
     attr = 'hoge_id'  # will raise exception
     try:
-        cv = cvs.getCVAttr(attr)
+        cv = cvs.getAttr(attr)
     except InvalidCVAttribError as e:
         print("Excepted Error raised:", e)
 
     # table_id has only keys, no value.
     attr = 'table_id'
     key = 'Amon'
-    cv = cvs.getCVAttr(attr)
-    print(key, attr, cvs.checkCVKey(key, attr))
-    print(cvs.getCVValue(key, attr))  # should be None
+    cv = cvs.getAttr(attr)
+    print(key, attr, cvs.checkKey(key, attr))
+    print(cvs.getValue(key, attr))  # should be None
 
     attr = 'realm'
     key = 'atmos'
 
-    print(key, attr, cvs.checkCVKey(key, attr))
-    print(key, attr, cvs.getCVValue(key, attr))
+    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.getValue(key, attr))
