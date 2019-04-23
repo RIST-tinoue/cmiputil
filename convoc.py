@@ -45,7 +45,7 @@ class ConVoc:
     """
 
     DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs"
-    CV_Attribs = (
+    managedAttribs = (
         'activity_id',
         'experiment_id',
         'frequency',
