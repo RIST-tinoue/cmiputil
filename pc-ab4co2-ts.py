@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # from ESGFSearch import fields_default, getCatURLs, getDataset
-import ESGFSearch
+import esgfsearch
 from pprint import pprint
 from os.path import basename
 from cftime import num2date
@@ -82,12 +82,12 @@ if (__name__ == '__main__'):
         'variable': 'tas',
     }
 
-    params = ESGFSearch.fields_default
+    params = esgfsearch.fields_default
     params.update(params_update)
     print('Search params(keywords and facets):')
     pprint(params) 
 
-    urls = ESGFSearch.getCatURLs(params)
+    urls = esgfsearch.getCatURLs(params)
 
     datasets = []
     for url in urls:
@@ -95,7 +95,7 @@ if (__name__ == '__main__'):
 
         # d = getDataset(url, netcdf=True)
         # d = getDataset(url, netcdf=False)
-        d = ESGFSearch.getDataset(url, aggregate=False, netcdf=False)
+        d = esgfsearch.getDataset(url, aggregate=False, netcdf=False)
         # d = getDataset(url)
         if (d is not None):
             datasets.append(d)
