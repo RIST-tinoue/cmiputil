@@ -11,7 +11,6 @@ class DRS_Test(unittest.TestCase):
             'institution_id' : 'MIROC',
             'source_id': 'MIROC6',
             'table_id': 'Amon',
-            'time_range':None,
             'variable_id' : 'tas',
             'variant_label': 'r1i1p1f1',
             'version':'v20190308',
@@ -34,7 +33,7 @@ class DRS_Test(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @unittest.expectedFailure
+    @unittest.skip('To be implemented')
     def testRepl(self):
         d0 = DRS(**self.ga)
         line = repr(d0)
@@ -53,7 +52,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_fileNameUseClass01(self):
-        """Construct filename by class method."""
+        "Construct filename by class method."
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
         res = DRS(**self.ga).fileName()
@@ -62,7 +61,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_fileNameUseClass11(self):
-        """Construct filename by class method, with `time_range`."""
+        "Construct filename by class method, with `time_range`."
         self.ga['time_range'] = '185001-194912'
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
 
@@ -71,8 +70,19 @@ class DRS_Test(unittest.TestCase):
         self.assertEqual(ref, res)
 
 
+    def test_fileNameUseClass21(self):
+        "invalid attribute, expect AttributeError."
+        self.ga['table_id'] = 'invalid'
+        ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
+
+        with self.assertRaises(AttributeError):
+            res = DRS(**self.ga).fileName()
+            self.assertEqual(ref, res)
+
+
+
     def test_fileNameUseInstance01(self):
-        """Construct filename by instance method, reusing one instance."""
+        "Construct filename by instance method, reusing one instance."
         variants = ['r1i1p1f1', 'r2i1p1f1', 'r3i1p1f1']
         ref = ['tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc',
                'tas_Amon_MIROC6_piControl_r2i1p1f1_gn.nc',
@@ -87,7 +97,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_splitFileName01(self):
-        """Split fname without `time_range`"""
+        "Split fname without `time_range`"
         fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
@@ -104,7 +114,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_splitFileName02(self):
-        """Split fname with `time_range`"""
+        "Split fname with `time_range`"
         fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
@@ -121,7 +131,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_splitFileName03(self):
-        """Split fname with `sub_experiment_id`"""
+        "Split fname with `sub_experiment_id`"
         fname = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
         ref = {'experiment_id': 'dcppC-atl-pacemaker',
                'grid_label': 'gr',
@@ -139,7 +149,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_dirNameUseClass01(self):
-        """Construct dirname by class method."""
+        "Construct dirname by class method."
         ref = "CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308"
         res = DRS(**self.ga).dirName()
 
@@ -147,7 +157,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_dirNameUseClass02(self):
-        """Construct dirname with sub_experiment_id by class method."""
+        "Construct dirname with sub_experiment_id by class method."
 
         ref = "CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110"
         res = DRS(**self.ga_w_sub).dirName()
@@ -156,7 +166,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_dirNameUseInstance01(self):
-        """Construct dirname by istance method, reusing one instance."""
+        "Construct dirname by istance method, reusing one instance."
         variants = ['r1i1p1f1', 'r2i1p1f1', 'r3i1p1f1']
         ref = ['CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308',
                'CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/Amon/tas/gn/v20190308',
@@ -170,7 +180,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_splitDirName01(self):
-        """Split dirname without prefix"""
+        "Split dirname without prefix"
         dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
         ref = {'activity_id': 'CMIP',
                'experiment_id': 'piControl',
@@ -190,7 +200,7 @@ class DRS_Test(unittest.TestCase):
 
 
     def test_splitDirName02(self):
-        """Split dirname with prefix"""
+        "Split dirname with prefix"
         dname = '/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
         ref = {'activity_id': 'CMIP',
                'experiment_id': 'piControl',

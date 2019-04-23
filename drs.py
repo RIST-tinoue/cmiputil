@@ -4,66 +4,7 @@
 
 (Excerpt from http://goo.gl/v1drZl)
 
-Data Reference Syntax (DRS) components:
-
-The DRS identifies experiments, simulations, ensembles of experiments, and
-atomic datasets.  Some of the DRS components are used, for example,to construct
-file names, directory structures, the further_info_url, and in facets of some
-search tools.  The following components are needed for CMIP6 (along with their
-CMIP5 counterparts):
-
-activity_id*     (CMIP5: "activity")        see CMIP6_activity_id.json
-institution_id   (CMIP5: "institute")       see CMIP6_institution_id.json
-source_id        (CMIP5: "model")           see CMIP6_source_id.json
-experiment_id    (CMIP5: "experiment")      see CMIP6_experiment_id.json
-variable_id      (CMIP5: "variable name")   see data request
-table_id         (CMIP5: "table_id")        see CMIP6_table_id.json
-variant_label    (CMIP5: "ensemble member") construct from realization,
-                                            initialization, physics, and
-                                            forcing indices
-version          (CMIP5: "version number")  indicating approximate date of
-                                            model output file. (This is the
-                                            only DRS element that is not stored
-                                            as a global attribute.)
-
-We need additional components in CMIP6 to accommodate the more complex
-structure:
-
-sub_experiment_id (set to "none" for most experiments)                                 see CMIP6_sub_experiment_id.json
-grid_label        (needed to distinguish the same field stored on more than one grid)  see CMIP6_grid_label.json
-mip_era           (needed to distinguish CMIP5 experiments and datasets from CMIP6.)   set to “CMIP6”
-member_id         a compound construction from sub_experiment_id and variant_label     see below for further information
-
-As in CMIP5, we also define additional DRS elements because they can be helpful
-in providing data discovery services:
-
-frequency     (CMIP5: "frequency")        see CMIP6_frequency.json
-realm*        (CMIP5: "modeling realm")   see CMIP6_realm.json
-product       (CMIP5: "product")          set to “model-output” in CMIP6
-nominal_resolution                        see CMIP6_nominal_resolution.json and Appendix 2
-source_type*                              see CMIP6_source_type.json
-
-The DRS elements marked with an asterisk (*) are associated with
-global attributes that may be space-separated lists of values.  Only
-the first item in a list is recognized by the DRS, but in faceted
-searches all listed items will be recognized.
-
 File name template:
-
-Before constructing file names and directory structures, it is useful to define
-a member_id, which can be used to distinguish among different simulations
-belonging to a root experiment.  The member_id is constructed from the
-sub_experiment_id and variant_label using the following algorithm:
-
-
-if sub_experiment_id = “none”
-  member_id = <variant_label>
-else
-  member_id = <sub_experiment_id>-<variant_label>
-endif
-
-With this segment defined, the file name can be constructed consistent with the
-following template:
 
 file name = <variable_id>_<table_id>_<source_id>_<experiment_id >_<member_id>_<grid_label>[_<time_range>].nc
 
@@ -74,15 +15,23 @@ Example when there is no sub-experiment:
 Example with a sub-experiment:
   pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
 
+
 All strings appearing in the file name are constructed using only the following
 characters: a-z, A-Z, 0-9, and the hyphen ("-"), except the hyphen must not
 appear in variable_id.  Underscores are prohibited throughout except as shown in
 the template.
 
-Note that the last segment of the file name indicates the time-range spanned by
-the data in the file, and is omitted when inappropriate (e.g., if a variable is
-“fixed” for all time).  The format for this segment is as in CMIP5 (see
-http://cmip-pcmdi.llnl.gov/cmip5/docs/cmip5_data_reference_syntax.pdf):
+
+The member_id is constructed from the
+sub_experiment_id and variant_label using the following algorithm:
+
+
+if sub_experiment_id = “none”
+  member_id = <variant_label>
+else
+  member_id = <sub_experiment_id>-<variant_label>
+endif
+
 
 The <time_range> is a string generated consistent with the following:
 
@@ -134,15 +83,25 @@ Example when there is no sub-experiment:
      CMIP6/CMIP/NOAA-GFDL/GFDL-CM4/1pctCO2/r1i1p1f1/Amon/tas/gn/v20150322
 Example with a sub-experiment:
      CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
+
 """
 
 from convoc import ConVoc
 import os.path
-
+from pprint import pprint
 
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
 __date__ = '2019/04/16'
+
+class DRSError(Exception):
+    "Base exception class for DRS."
+    pass
+
+
+class InvalidDRSAttribError(DRSError):
+    "Error for invalid attribute as a component DRS"
+
 
 sample_attrs = {
     'activity_id': 'CMIP',
@@ -151,10 +110,11 @@ sample_attrs = {
     'institution_id': 'MIROC',
     'source_id': 'MIROC6',
     'table_id': 'Amon',
-    'time_range': None,
     'variable_id': 'tas',
     'variant_label': 'r1i1p1f1',
-    'version': 'v20190308'}
+    'version': 'v20190308',
+    'non_necessary_attribute': 'hoge'
+}
 sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc"
 sample_dname = "CMIP6/CMIP/MIROC/MIROC6/piControl/"\
                "r1i1p1f1/Amon/tas/gn/v20190308"
@@ -181,7 +141,7 @@ class DRS:
     """This class contains attributes necessary to construct filename and
     directory name follows CMIP6 DRS (Data Reference Syntax).
 
-    Class members are:
+    Instance member variables are:
     - variable_id
     - table_id
     - source_id
@@ -203,25 +163,26 @@ class DRS:
     See http://goo.gl/v1drZl for details about DRS as well as CMIP6 global
     attributes, etc.
     """
+    requiredAttribs = (
+        'activity_id',
+        'experiment_id',
+        'grid_label',
+        'institution_id',
+        'member_id',
+        'mip_era',
+        'source_id',
+        'sub_experiment_id',
+        'table_id',
+        'time_range',
+        'variable_id',
+        'variant_label',
+        'version',
+        )
+
 
     def __init__(self, **kw):
-        self.variable_id = None
-        self.table_id = None
-        self.source_id = None
-        self.experiment_id = None
-        self.grid_label = None
-        self.time_range = None
-        self.version = None
-        self.sub_experiment_id = None
-        self.variant_label = None
-        self.member_id = None
-
-        self.mip_era = 'CMIP6'
-        self.activity_id = None
-        self.institution_id = None
-        self.source_id = None
-
         self.cvs = ConVoc()
+        self.mip_era = 'CMIP6'
         self.set(**kw)
 
 
@@ -241,18 +202,19 @@ class DRS:
                 "version={!a})")
 
         return tmpl.format(
-            self.mip_era,
-            self.activity_id,
-            self.institution_id,
-            self.variable_id,
-            self.table_id,
-            self.source_id,
-            self.experiment_id,
-            self.sub_experiment_id,
-            self.variant_label,
-            self.grid_label,
-            self.time_range,
-            self.version)
+            getattr(self,'mip_era'),
+            getattr(self,'activity_id'),
+            getattr(self,'institution_id'),
+            getattr(self,'variable_id'),
+            getattr(self,'table_id'),
+            getattr(self,'source_id'),
+            getattr(self,'experiment_id'),
+            getattr(self,'sub_experiment_id'),
+            getattr(self,'variant_label'),
+            getattr(self,'grid_label'),
+            getattr(self,'time_range'),
+            getattr(self,'version')
+            )
 
     def __str__(self):
         tmpl = ("========== DRS instance ==========\n"
@@ -265,67 +227,95 @@ class DRS:
                 "experiment_id  : {!a}\n"
                 "sub_experiment_id: {!a}\n"
                 "variant_label  : {!a}\n"
+                "member_id      : {!a}\n"
                 "grid_label     : {!a}\n"
                 "time_range     : {!a}\n"
                 "version        : {!a}\n"
                 "=================================\n")
 
         return tmpl.format(
-            self.mip_era,
-            self.activity_id,
-            self.institution_id,
-            self.variable_id,
-            self.table_id,
-            self.source_id,
-            self.experiment_id,
-            self.sub_experiment_id,
-            self.variant_label,
-            self.grid_label,
-            self.time_range,
-            self.version)
+            getattr(self,'mip_era', None),
+            getattr(self,'activity_id', None),
+            getattr(self,'institution_id', None),
+            getattr(self,'variable_id', None),
+            getattr(self,'table_id', None),
+            getattr(self,'source_id', None),
+            getattr(self,'experiment_id', None),
+            getattr(self,'sub_experiment_id', None),
+            getattr(self,'variant_label', None),
+            getattr(self,'member_id', None),
+            getattr(self,'grid_label', None),
+            getattr(self,'time_range', None),
+            getattr(self,'version', None)
+            )
 
-    def set(self, mip_era=None, activity_id=None, institution_id=None,
-            variable_id=None, table_id=None, source_id=None,
-            experiment_id=None, sub_experiment_id=None, variant_label=None,
-            grid_label=None, time_range=None, version=None):
+    def check_time_range(self, value):
+        # must be 'YYYYMMDD-YYYYMMDD', use regex.
+        return value is not None
 
-        if (mip_era):
-            self.mip_era = mip_era
-        if (activity_id):
-            if self.cvs.checkCV(activity_id, 'activity_id'):
-                self.activity_id = activity_id
-        if (institution_id):
-            if self.cvs.checkCV(institution_id, 'institution_id'):
-                self.institution_id = institution_id
-        if (variable_id):
-            self.variable_id = variable_id
-        if (table_id):
-            if self.cvs.checkCV(table_id, 'table_id'):
-                self.table_id = table_id
-        if (source_id):
-            if self.cvs.checkCV(source_id, 'source_id'):
-                self.source_id = source_id
-        if (experiment_id):
-            if self.cvs.checkCV(experiment_id, 'experiment_id'):
-                self.experiment_id = experiment_id
-        if (sub_experiment_id):
-            if self.cvs.checkCV(sub_experiment_id, 'sub_experiment_id'):
-                self.sub_experiment_id = sub_experiment_id
-            else:
-                print('Invalid sub_experiment_id:',sub_experiment_id)
-        if (variant_label):
-            self.variant_label = variant_label
-        if (grid_label):
-            self.grid_label = grid_label
-        if (time_range):
-            self.time_range = time_range
-        if (version):
-            self.version = version
+    def check_version(self, value):
+        # must be 'vYYYYMMDD', use regex.
+        return True
 
-        if self.sub_experiment_id is None:
-            self.member_id = self.variant_label
+    def check_variable_id(self, value):
+        # Is there any method to check ?
+        return True
+
+    def check_variant_label(self, value):
+        # TODO: must be r{i}i{i}p{i}f{i}, use regex.
+        return True
+
+    def checkAttribs(self, value, attr):
+        "Check `value` is valid for the attribute `attr`"
+        if attr == 'time_range':
+            return self.check_time_range(value)
+        elif attr == 'version':
+            return self.check_version(value)
+        elif attr == 'variable_id':
+            return self.check_variable_id(value)
+        elif attr == 'variant_label':
+            return self.check_variant_label(value)
+        elif attr == 'mip_era':
+            return True
         else:
-            self.member_id = self.sub_experiment_id+'-'+self.variant_label
+            raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
+
+
+
+    def set(self, **argv):
+        """
+        Set attributes as members of self, if attribute is in
+        `self.requiredAttribs`.
+
+        Missing attributes in argv are selft unset as members.
+
+        Unnecessary attributes are neglected.
+
+        Each of attributes must pass ConVoc.checkKey() or DRS.checkAttribs().
+        """
+
+        attribs =[a for a in argv.keys() if a in self.requiredAttribs]
+        cvattrs     = [ a for a in attribs if a in self.cvs.managedAttribs]
+        non_cvattrs = [ a for a in attribs if a not in self.cvs.managedAttribs]
+
+        for attr in cvattrs:
+            if (self.cvs.checkKey(argv[attr], attr)):
+                setattr(self, attr, argv[attr])
+
+        for attr in non_cvattrs:
+            if (self.checkAttribs(argv[attr],attr)):
+                setattr(self, attr, argv[attr])
+
+        if ('variant_label' in dir(self)):
+            if ('sub_experiment_id' in dir(self)):
+                self.member_id = argv['sub_experiment_id'] \
+                                 + '-' \
+                                 + argv['variant_label']
+            else:
+                self.member_id = argv['variant_label']
+
+        # How to check all necessary members are set.
+        # pprint([(k, k in dir(self)) for k in self.requiredAttribs])
 
         return self
 
@@ -334,16 +324,7 @@ class DRS:
         Construct filename from instance members.
         """
 
-        if (self.time_range is None):
-            f = "{}_{}_{}_{}_{}_{}.nc".format(
-                self.variable_id,
-                self.table_id,
-                self.source_id,
-                self.experiment_id,
-                self.member_id,
-                self.grid_label
-            )
-        else:
+        if ('time_range' in dir(self)):
             f = "{}_{}_{}_{}_{}_{}_{}.nc".format(
                 self.variable_id,
                 self.table_id,
@@ -352,6 +333,15 @@ class DRS:
                 self.member_id,
                 self.grid_label,
                 self.time_range,
+            )
+        else:
+            f = "{}_{}_{}_{}_{}_{}.nc".format(
+                self.variable_id,
+                self.table_id,
+                self.source_id,
+                self.experiment_id,
+                self.member_id,
+                self.grid_label
             )
 
         return f
@@ -447,10 +437,25 @@ if __name__ == "__main__":
     import drs
     from pprint import pprint
 
+    # w/o time_range
     d = drs.DRS(**drs.sample_attrs)
-    print('attributes:')
-    pprint(vars(d))
+    print(d)
     print("dirname:", d.dirName())
     print("filename:", d.fileName())
 
+    d = drs.DRS(**drs.sample_attrs_w_subexp)
     print(d)
+    print("dirname:", d.dirName())
+    print("filename:", d.fileName())
+
+    # print(d)
+
+    # attrs = drs.sample_attrs
+    # # attrs.update({'table_id':'invalid'})
+    # pprint(attrs)
+    # d = drs.DRS(**attrs)
+    # print(d)
+
+    # print(d.fileName())
+    # print(d.dirName())
+    
