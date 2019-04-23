@@ -15,10 +15,6 @@ import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 import matplotlib.pyplot as plt
 
-DEBUG = False
-VERBOSE = False
-
-
 class NotFoundError(Exception):
     pass
 
@@ -97,26 +93,16 @@ def getCatURLs(fields, base_url=None):
     # don't know why but returned are bytes, not str.
     result = json.loads(r.data.decode())
 
-    if (DEBUG):
-        print('Num found:', result['response']['numFound'])
     if (result['response']['numFound'] == 0):
         raise NotFoundError('GetCatURLs: No catalog found.')
-
-    if (DEBUG):
-        pprint(result['response']['docs'])
 
     urls = []
     for r in result['response']['docs']:
         for l in r['url']:
             (url, mime, service) = l.split('|')
-            if (DEBUG):
-                print(service, ':', url)
             # select TDS catalog
             if (service == 'THREDDS'):
                 urls.append(url)
-
-    if (VERBOSE):
-        print('Num of catalogs found:', len(urls))
 
     return urls
 
@@ -140,9 +126,6 @@ def getDataset(url, aggregate=True, netcdf=False):
     return Opened xarray dataset.
 
     """
-    if (VERBOSE):
-        print("Processing Catalog:", url)
-
     try:
         cat = TDSCatalog(url)
     except Exception as e:
@@ -150,8 +133,6 @@ def getDataset(url, aggregate=True, netcdf=False):
         raise e
 
     if (aggregate):
-        if (DEBUG):
-            print('DBG:Aggregate=True')
         # construct base url
         data_url = cat.base_tds_url
         for s in cat.services[:]:
@@ -161,13 +142,8 @@ def getDataset(url, aggregate=True, netcdf=False):
 
         # url of Aggregated dataset
         ds = cat.datasets[-1]   # Is this universal ?
-        if (DEBUG):
-            pprint(vars(ds))
 
         data_url += ds.url_path
-        if (VERBOSE):
-            print('URL of Aggregated dataset:', data_url)
-
         try:
             if (netcdf):
                 ds = nc.Dataset(data_url, 'r')
@@ -182,18 +158,10 @@ def getDataset(url, aggregate=True, netcdf=False):
             print("  from url:", data_url)
             return None
     else:
-        if (DEBUG):
-            print('DBG:Aggregate=False')
         urls = [x.access_urls['OpenDAPServer']
                 for x in cat.datasets.values()
                 if 'OpenDAPServer' in x.access_urls]
         urls.sort()
-
-        if (VERBOSE):
-            print("Num of files in this catalog:", len(urls))
-
-        if (DEBUG):
-            pprint(urls)
 
         try:
             if (netcdf):
@@ -204,9 +172,6 @@ def getDataset(url, aggregate=True, netcdf=False):
             print("Error in xr.open_mfdataset:", e.args)
             print("  Skip", url)
             return None
-
-        if (VERBOSE):
-            print("Opened dataset:", basename(ds.further_info_url))
 
     return ds
 
