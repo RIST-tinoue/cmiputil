@@ -224,6 +224,8 @@ class DRS:
 
     def checkAttrib(self, value, attr):
         "Check `value` is valid for the attribute `attr`"
+        if attr in ConVoc().managedAttribs:
+            return ConVoc().isValid4Attr(value, attr)
         if attr == 'time_range':
             return self.check_time_range(value)
         elif attr == 'version':
@@ -246,7 +248,7 @@ class DRS:
 
         Unnecessary attributes are neglected.
 
-        Each of attributes must pass ConVoc.checkKey() or DRS.checkAttrib().
+        Each of attributes must pass ConVoc.isValid4Attr() or DRS.checkAttrib().
         """
 
         attribs =[a for a in argv.keys() if a in self.requiredAttribs]
@@ -254,7 +256,7 @@ class DRS:
         non_cvattrs = [ a for a in attribs if a not in self.cvs.managedAttribs]
 
         for attr in cvattrs:
-            if (self.cvs.checkKey(argv[attr], attr)):
+            if (self.cvs.isValid4Attr(argv[attr], attr)):
                 setattr(self, attr, argv[attr])
 
         for attr in non_cvattrs:

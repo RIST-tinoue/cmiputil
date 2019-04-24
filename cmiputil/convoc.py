@@ -169,7 +169,7 @@ class ConVoc:
         self.setAttr(attr)
         return getattr(self, attr)[attr]
 
-    def checkKey(self, key, attr):
+    def isValid4Attr(self, key, attr):
         """
         Check if given `key` is in CV `attr`.
 
@@ -215,12 +215,12 @@ if (__name__ == '__main__'):
     # 'source_id' has set above
     attr = 'source_id'
     key = 'MIROC-ES2H'
-    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.isValid4Attr(key, attr))
 
     # 'experiment_id' has not set yet
     attr = 'experiment_id'
     key = 'historical'
-    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.isValid4Attr(key, attr))
     print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
 
     pprint(cvs.getValue(key, attr))
@@ -228,7 +228,7 @@ if (__name__ == '__main__'):
     # activity_id
     attr = 'activity_id'
     key = 'CMIP'
-    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.isValid4Attr(key, attr))
     print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
 
     pprint(cvs.getValue(key, attr))
@@ -243,11 +243,11 @@ if (__name__ == '__main__'):
     attr = 'table_id'
     key = 'Amon'
     cv = cvs.getAttr(attr)
-    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.isValid4Attr(key, attr))
     print(cvs.getValue(key, attr))  # should be None
 
     attr = 'realm'
     key = 'atmos'
 
-    print(key, attr, cvs.checkKey(key, attr))
+    print(key, attr, cvs.isValid4Attr(key, attr))
     print(key, attr, cvs.getValue(key, attr))

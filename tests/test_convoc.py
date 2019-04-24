@@ -95,29 +95,29 @@ class ConVoc_Test(unittest.TestCase):
             self.assertTrue(k in cv)
 
     @unittest.skipUnless(os.environ.get('CVPATH'), 'since CVPATH not defined')
-    def test_03_checkKey01(self):
+    def test_03_isValid4Attr01(self):
         "Check actual activity_id CV."
         attr = 'activity_id'
         key = 'CMIP'
 
-        res = convoc.ConVoc().checkKey(key, attr)
+        res = convoc.ConVoc().isValid4Attr(key, attr)
         self.assertTrue(res)
 
-    def test_03_checkKey02(self):
+    def test_03_isValid4Attr02(self):
         "Invalid CV attribute, expect InvalidCVAttribError"
         attr = 'invalid_attr'
         key = "CMIP"
 
         with self.assertRaises(convoc.InvalidCVAttribError):
-            res = convoc.ConVoc().checkKey(key, attr)
+            res = convoc.ConVoc().isValid4Attr(key, attr)
             self.assertFalse(res)
 
-    def test_03_checkKey03(self):
+    def test_03_isValid4Attr03(self):
         "Invalid key for valid CV"
         attr = 'activity_id'
         key = 'invalid_key'
 
-        res = convoc.ConVoc().checkKey(key, attr)
+        res = convoc.ConVoc().isValid4Attr(key, attr)
         self.assertFalse(res)
 
     @unittest.skipUnless(os.environ.get('CVPATH'), 'since CVPATH not defined')
