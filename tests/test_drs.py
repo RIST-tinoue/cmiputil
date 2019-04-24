@@ -180,9 +180,7 @@ class DRS_Test(unittest.TestCase):
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
                'source_id': 'MIROC6',
-               'sub_experiment_id': None,
                'table_id': 'Amon',
-               'time_range': None,
                'variable_id': 'tas',
                'variant_label': 'r1i1p1f1'}
 
@@ -196,7 +194,6 @@ class DRS_Test(unittest.TestCase):
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
                'source_id': 'MIROC6',
-               'sub_experiment_id': None,
                'table_id': 'Amon',
                'time_range': '185001-194912',
                'variable_id': 'tas',
@@ -264,7 +261,6 @@ class DRS_Test(unittest.TestCase):
                'institution_id': 'MIROC',
                'mip_era': 'CMIP6',
                'source_id': 'MIROC6',
-               'sub_experiment_id': None,
                'table_id': 'Amon',
                'variable_id': 'tas',
                'variant_label': 'r1i1p1f1',
@@ -285,7 +281,6 @@ class DRS_Test(unittest.TestCase):
                'mip_era': 'CMIP6',
                'prefix': '/work/data/CMIP6',
                'source_id': 'MIROC6',
-               'sub_experiment_id': None,
                'table_id': 'Amon',
                'variable_id': 'tas',
                'variant_label': 'r1i1p1f1',

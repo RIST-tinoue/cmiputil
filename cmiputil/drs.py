@@ -88,6 +88,7 @@ Example with a sub-experiment:
 
 from cmiputil.convoc import ConVoc
 import os.path
+from pprint import pprint
 
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
@@ -200,38 +201,6 @@ class DRS:
                for k in DRS.requiredAttribs if k in dir(self)]
         res = "\n".join(res)
         return res
-
-        # tmpl = ("========== DRS instance ==========\n"
-        #         "mip_era        : {!a}\n"
-        #         "activity_id    : {!a}\n"
-        #         "institution_id : {!a}\n"
-        #         "variable_id    : {!a}\n"
-        #         "table_id       : {!a}\n"
-        #         "source_id      : {!a}\n"
-        #         "experiment_id  : {!a}\n"
-        #         "sub_experiment_id: {!a}\n"
-        #         "variant_label  : {!a}\n"
-        #         "member_id      : {!a}\n"
-        #         "grid_label     : {!a}\n"
-        #         "time_range     : {!a}\n"
-        #         "version        : {!a}\n"
-        #         "=================================\n")
-
-        # return tmpl.format(
-        #     getattr(self,'mip_era', None),
-        #     getattr(self,'activity_id', None),
-        #     getattr(self,'institution_id', None),
-        #     getattr(self,'variable_id', None),
-        #     getattr(self,'table_id', None),
-        #     getattr(self,'source_id', None),
-        #     getattr(self,'experiment_id', None),
-        #     getattr(self,'sub_experiment_id', None),
-        #     getattr(self,'variant_label', None),
-        #     getattr(self,'member_id', None),
-        #     getattr(self,'grid_label', None),
-        #     getattr(self,'time_range', None),
-        #     getattr(self,'version', None)
-        #     )
 
     def getAttribs(self):
         "Return current attributes."
@@ -366,22 +335,21 @@ class DRS:
         try:
             (grid_label, time_range) = grid_label.split('_')
         except ValueError:
-            time_range = None
-
+            # time_range = None
+            pass
+        
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
             variant_label = member_id
-            sub_experiment_id = None
+            # sub_experiment_id = None
 
-        res = {'variable_id': variable_id,
-               'table_id': table_id,
-               'source_id': source_id,
-               'experiment_id': experiment_id,
-               'variant_label': variant_label,
-               'grid_label': grid_label,
-               'time_range': time_range,
-               'sub_experiment_id': sub_experiment_id}
+        res = {}
+        for k in DRS.requiredAttribs:
+            try:
+                res[k] = eval(k)
+            except NameError:
+                pass
         self.set(**res)
 
         return res
@@ -402,21 +370,27 @@ class DRS:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
             variant_label = member_id
-            sub_experiment_id = None
+            # sub_experiment_id = None
 
-        # TODO: prefix should be a member of this class ??
-        res = {
-            'mip_era': mip_era,
-            'activity_id': activity_id,
-            'institution_id': institution_id,
-            'source_id': source_id,
-            'experiment_id': experiment_id,
-            'sub_experiment_id': sub_experiment_id,
-            'variant_label': variant_label,
-            'table_id': table_id,
-            'variable_id': variable_id,
-            'grid_label': grid_label,
-            'version': version}
+        res = {}
+        for k in DRS.requiredAttribs:
+            try:
+                res[k] = eval(k)
+            except NameError:
+                pass
+        # # TODO: prefix should be a member of this class ??
+        # res = {
+        #     'mip_era': mip_era,
+        #     'activity_id': activity_id,
+        #     'institution_id': institution_id,
+        #     'source_id': source_id,
+        #     'experiment_id': experiment_id,
+        #     'sub_experiment_id': sub_experiment_id,
+        #     'variant_label': variant_label,
+        #     'table_id': table_id,
+        #     'variable_id': variable_id,
+        #     'grid_label': grid_label,
+        #     'version': version}
         self.set(**res)
         res["prefix"] = prefix
         return res
@@ -457,7 +431,7 @@ if __name__ == "__main__":
         print(d.fileName())
     except AttributeError:
         import traceback
-        print("Exception raised:")
+        print("expected Exception raised:")
         traceback.print_exc()
 
     print("=== calling drs.DRS.dirName()...")
@@ -465,7 +439,15 @@ if __name__ == "__main__":
         print(d.dirName())
     except AttributeError:
         import traceback
-        print("Exception raised:")
+        print("expected Exception raised:")
         traceback.print_exc()
 
 
+    print("="*30)
+    fname= "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+    print(fname)
+    d = drs.DRS()
+    res = d.splitFileName(fname)
+    print(res)
+
+    print("="*30)
