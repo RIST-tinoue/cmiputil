@@ -1,9 +1,10 @@
-from cmiputil.drs import DRS
+from cmiputil import drs
 import unittest
 from pprint import pprint
+
+
 class DRS_Test(unittest.TestCase):
     def setUp(self):
-        DRS.DEBUG = False
         self.ga = {
             'activity_id' : 'CMIP',
             'experiment_id':'piControl',
@@ -27,45 +28,124 @@ class DRS_Test(unittest.TestCase):
             'variable_id': 'rsdscs',
             'variant_label': 'r1i1p1f1',
             'version': 'v20190110'}
-        # print(self.ga)
+
+        self.fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
+        self.fname_wo_trange = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        self.fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
         pass
 
     def tearDown(self):
         pass
 
-    @unittest.skip('To be implemented')
-    def testRepl(self):
-        d0 = DRS(**self.ga)
-        line = repr(d0)
-        # print(line)
-        d1=eval(line)
-        # print(type(d0))
-        # print(type(d1))
-        self.assertTrue(d0 == d1)
+    def test_repr01(self):
+        "repr() constructed from dict"
+        ref = "drs.DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', variable_id='tas', variant_label='r1i1p1f1', version='v20190308')"
+
+        d0 = drs.DRS(**self.ga)
+        res = repr(d0)
+        self.assertEqual(ref, res)
+        d1 = eval(res)
+        self.assertEqual(type(d0), type(d1))
+        res = [(getattr(d0, k) == getattr(d1, k))
+                for k in drs.DRS.requiredAttribs
+                if k in dir(d0)]
+        self.assertTrue(all(res))
+
+    def test_repr02(self):
+        "repr() constructed from dict with sub_experiment_id"
+        ref = "drs.DRS(activity_id='DCPP', experiment_id='dcppC-atl-pacemaker', grid_label='gr', institution_id='IPSL', mip_era='CMIP6', source_id='IPSL-CM6A-LR', sub_experiment_id='s1950', table_id='Amon', time_range='192001-201412', variable_id='rsdscs', variant_label='r1i1p1f1', version='v20190110')"
+
+        d0 = drs.DRS(**self.ga_w_sub)
+        res = repr(d0)
+        self.assertEqual(ref, res)
+        d1 = eval(res)
+        self.assertEqual(type(d0), type(d1))
+        res = [(getattr(d0, k) == getattr(d1, k))
+                for k in drs.DRS.requiredAttribs
+                if k in dir(d0)]
+        self.assertTrue(all(res))
+
+    def test_repr03(self):
+        "repr() constructed from filename"
+        ref = "drs.DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='185001-194912', variable_id='tas', variant_label='r1i1p1f1')"
+
+        d0 = drs.DRS(self.fname)
+        res = repr(d0)
+        self.assertEqual(ref, res)
+        d1 = eval(res)
+        self.assertEqual(type(d0), type(d1))
+        res = [(getattr(d0, k) == getattr(d1, k))
+                for k in drs.DRS.requiredAttribs
+                if k in dir(d0)]
+        self.assertTrue(all(res))
+
+    def test_str01(self):
+        "str() constructed from dict"
+        ref = ("activity_id: 'CMIP'\n"
+               "experiment_id: 'piControl'\n"
+               "grid_label: 'gn'\n"
+               "institution_id: 'MIROC'\n"
+               "mip_era: 'CMIP6'\n"
+               "source_id: 'MIROC6'\n"
+               "table_id: 'Amon'\n"
+               "variable_id: 'tas'\n"
+               "variant_label: 'r1i1p1f1'\n"
+               "version: 'v20190308'")
+        d0 = drs.DRS(**self.ga)
+        res = str(d0)
+        self.assertEqual(ref, res)
+
+    def test_str02(self):
+        "str() constructed from dict with sub_experiment_id"
+        ref = ("activity_id: 'DCPP'\n"
+               "experiment_id: 'dcppC-atl-pacemaker'\n"
+               "grid_label: 'gr'\n"
+               "institution_id: 'IPSL'\n"
+               "mip_era: 'CMIP6'\n"
+               "source_id: 'IPSL-CM6A-LR'\n"
+               "sub_experiment_id: 's1950'\n"
+               "table_id: 'Amon'\n"
+               "time_range: '192001-201412'\n"
+               "variable_id: 'rsdscs'\n"
+               "variant_label: 'r1i1p1f1'\n"
+               "version: 'v20190110'")
+        d0 = drs.DRS(**self.ga_w_sub)
+        res = str(d0)
+        self.assertEqual(ref, res)
 
 
-    @unittest.skip('To be implemented')
-    def testStr(self):
-        d0 = DRS(**self.ga)
-        line = str(d0)
-        print(line)
-
+    def test_str03(self):
+        "str() constructed from filename"
+        ref = (
+            "activity_id: 'DCPP'\n"
+            "experiment_id: 'dcppC-atl-pacemaker'\n"
+            "grid_label: 'gr'\n"
+            "institution_id: 'IPSL'\n"
+            "mip_era: 'CMIP6'\n"
+            "source_id: 'IPSL-CM6A-LR'\n"
+            "sub_experiment_id: 's1950'\n"
+            "table_id: 'Amon'\n"
+            "time_range: '192001-201412'\n"
+            "variable_id: 'rsdscs'\n"
+            "variant_label: 'r1i1p1f1'\n"
+            "version: 'v20190110'")
+        d0 = drs.DRS(**self.ga_w_sub)
+        res = str(d0)
+        self.assertEqual(ref, res)
 
     def test_fileNameUseClass01(self):
         "Construct filename by class method."
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
-        res = DRS(**self.ga).fileName()
-
+        res = drs.DRS(**self.ga).fileName()
         self.assertEqual(ref, res)
-
 
     def test_fileNameUseClass11(self):
         "Construct filename by class method, with `time_range`."
         self.ga['time_range'] = '185001-194912'
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
 
-        res = DRS(**self.ga).fileName()
+        res = drs.DRS(**self.ga).fileName()
 
         self.assertEqual(ref, res)
 
@@ -76,9 +156,8 @@ class DRS_Test(unittest.TestCase):
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
 
         with self.assertRaises(AttributeError):
-            res = DRS(**self.ga).fileName()
+            res = drs.DRS(**self.ga).fileName()
             self.assertEqual(ref, res)
-
 
 
     def test_fileNameUseInstance01(self):
@@ -88,17 +167,16 @@ class DRS_Test(unittest.TestCase):
                'tas_Amon_MIROC6_piControl_r2i1p1f1_gn.nc',
                'tas_Amon_MIROC6_piControl_r3i1p1f1_gn.nc']
 
-        drs = DRS(**self.ga)
-        res = [drs.set(variant_label=v).fileName()
+        d = drs.DRS(**self.ga)
+        res = [d.set(variant_label=v).fileName()
                for v in variants]
-
         self.assertEqual(ref, res)
 
 
 
     def test_splitFileName01(self):
         "Split fname without `time_range`"
-        fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        fname = self.fname_wo_trange
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
                'source_id': 'MIROC6',
@@ -108,14 +186,13 @@ class DRS_Test(unittest.TestCase):
                'variable_id': 'tas',
                'variant_label': 'r1i1p1f1'}
 
-        res = DRS().splitFileName(fname)
-        # pprint(res)
+        res = drs.DRS().splitFileName(fname)
         self.assertEqual(ref, res)
 
 
     def test_splitFileName02(self):
         "Split fname with `time_range`"
-        fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
+        fname = self.fname
         ref = {'experiment_id': 'piControl',
                'grid_label': 'gn',
                'source_id': 'MIROC6',
@@ -125,14 +202,14 @@ class DRS_Test(unittest.TestCase):
                'variable_id': 'tas',
                'variant_label': 'r1i1p1f1'}
 
-        res = DRS().splitFileName(fname)
-        # pprint(res)
+        res = drs.DRS().splitFileName(fname)
         self.assertEqual(ref, res)
 
 
     def test_splitFileName03(self):
         "Split fname with `sub_experiment_id`"
-        fname = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+        fname = self.fname_w_subexp
+
         ref = {'experiment_id': 'dcppC-atl-pacemaker',
                'grid_label': 'gr',
                'source_id': 'IPSL-CM6A-LR',
@@ -142,8 +219,7 @@ class DRS_Test(unittest.TestCase):
                'variable_id': 'rsdscs',
                'variant_label': 'r1i1p1f1'}
 
-        res = DRS().splitFileName(fname)
-        # pprint(res)
+        res = drs.DRS().splitFileName(fname)
         self.assertEqual(ref, res)
 
 
@@ -151,7 +227,7 @@ class DRS_Test(unittest.TestCase):
     def test_dirNameUseClass01(self):
         "Construct dirname by class method."
         ref = "CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308"
-        res = DRS(**self.ga).dirName()
+        res = drs.DRS(**self.ga).dirName()
 
         self.assertEqual(ref, res)
 
@@ -160,7 +236,7 @@ class DRS_Test(unittest.TestCase):
         "Construct dirname with sub_experiment_id by class method."
 
         ref = "CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110"
-        res = DRS(**self.ga_w_sub).dirName()
+        res = drs.DRS(**self.ga_w_sub).dirName()
 
         self.assertEqual(ref, res)
 
@@ -172,8 +248,8 @@ class DRS_Test(unittest.TestCase):
                'CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/Amon/tas/gn/v20190308',
                'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/Amon/tas/gn/v20190308']
 
-        drs = DRS(**self.ga)
-        res = [drs.set(variant_label=v).dirName()
+        d = drs.DRS(**self.ga)
+        res = [d.set(variant_label=v).dirName()
                for v in variants]
 
         self.assertEqual(ref, res)
@@ -194,7 +270,7 @@ class DRS_Test(unittest.TestCase):
                'variant_label': 'r1i1p1f1',
                'version': 'v20190308',
                'prefix': '' }
-        res = DRS().splitDirName(dname)
+        res = drs.DRS().splitDirName(dname)
 
         self.assertEqual(ref, res)
 
@@ -215,16 +291,51 @@ class DRS_Test(unittest.TestCase):
                'variant_label': 'r1i1p1f1',
                'version': 'v20190308'}
 
-        res = DRS().splitDirName(dname)
+        res = drs.DRS().splitDirName(dname)
         self.assertEqual(ref, res)
 
-        
+    def test_init_w_file01(self):
+        "Constructor with filename."
+        fname = self.fname
+        ref =  {
+            'experiment_id': 'piControl',
+            'grid_label': 'gn',
+            'member_id': 'r1i1p1f1',
+            'mip_era': 'CMIP6',
+            'source_id': 'MIROC6',
+            'table_id': 'Amon',
+            'time_range': '185001-194912',
+            'variable_id': 'tas',
+            'variant_label': 'r1i1p1f1'}
+
+        d = drs.DRS(file=fname)
+        res = {a:getattr(d,a) for a in ref.keys()}
+        self.assertEqual(ref, res)
+        with self.assertRaises(AttributeError):
+            v = d.activity_id
+
+    def test_getAttribs01(self):
+        "construct from dict"
+        ref = {}
+        d = drs.DRS(**self.ga)
+        ref = self.ga
+        ref['mip_era'] = 'CMIP6'
+        res = d.getAttribs()
+        self.assertEqual(ref, res)
+
+    def test_getAttribs02(self):
+        "construct from filename"
+        ref = {}
+        d = drs.DRS(**self.ga)
+        ref = self.ga
+        ref['mip_era'] = 'CMIP6'
+        res = d.getAttribs()
+        self.assertEqual(ref, res)
+
 def main():
-    print('calling unittest:')
     unittest.main()
 
 
 if __name__ == "__main__":
     main()
 
-    

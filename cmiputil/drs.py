@@ -167,7 +167,6 @@ class DRS:
         'experiment_id',
         'grid_label',
         'institution_id',
-        'member_id',
         'mip_era',
         'source_id',
         'sub_experiment_id',
@@ -179,92 +178,82 @@ class DRS:
         )
 
 
-    def __init__(self, **kw):
+    def __init__(self, file=None, **kw):
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
-        self.set(**kw)
+
+        if (file is not None):
+            attrs = self.splitFileName(file)
+            self.set(**attrs)
+        else:
+            self.set(**kw)
 
 
     def __repr__(self):
-        tmpl = ("drs.DRS("
-                "mip_era={!a}, "
-                "activity_id={!a}, "
-                "institution_id={!a}, "
-                "variable_id={!a}, "
-                "table_id={!a},"
-                "source_id={!a},"
-                "experiment_id={!a},"
-                "sub_experiment_id={!a},"
-                "variant_label={!a},"
-                "grid_label={!a},"
-                "time_range={!a},"
-                "version={!a})")
-
-        return tmpl.format(
-            getattr(self,'mip_era'),
-            getattr(self,'activity_id'),
-            getattr(self,'institution_id'),
-            getattr(self,'variable_id'),
-            getattr(self,'table_id'),
-            getattr(self,'source_id'),
-            getattr(self,'experiment_id'),
-            getattr(self,'sub_experiment_id'),
-            getattr(self,'variant_label'),
-            getattr(self,'grid_label'),
-            getattr(self,'time_range'),
-            getattr(self,'version')
-            )
+        res = ["{}={!a}".format(k,getattr(self,k)) 
+               for k in DRS.requiredAttribs if k in dir(self)]
+        res = 'drs.DRS(' + ', '.join(res) + ')'
+        return res
 
     def __str__(self):
-        tmpl = ("========== DRS instance ==========\n"
-                "mip_era        : {!a}\n"
-                "activity_id    : {!a}\n"
-                "institution_id : {!a}\n"
-                "variable_id    : {!a}\n"
-                "table_id       : {!a}\n"
-                "source_id      : {!a}\n"
-                "experiment_id  : {!a}\n"
-                "sub_experiment_id: {!a}\n"
-                "variant_label  : {!a}\n"
-                "member_id      : {!a}\n"
-                "grid_label     : {!a}\n"
-                "time_range     : {!a}\n"
-                "version        : {!a}\n"
-                "=================================\n")
+        res = ["{}: {!a}".format(k,getattr(self,k)) 
+               for k in DRS.requiredAttribs if k in dir(self)]
+        res = "\n".join(res)
+        return res
 
-        return tmpl.format(
-            getattr(self,'mip_era', None),
-            getattr(self,'activity_id', None),
-            getattr(self,'institution_id', None),
-            getattr(self,'variable_id', None),
-            getattr(self,'table_id', None),
-            getattr(self,'source_id', None),
-            getattr(self,'experiment_id', None),
-            getattr(self,'sub_experiment_id', None),
-            getattr(self,'variant_label', None),
-            getattr(self,'member_id', None),
-            getattr(self,'grid_label', None),
-            getattr(self,'time_range', None),
-            getattr(self,'version', None)
-            )
+        # tmpl = ("========== DRS instance ==========\n"
+        #         "mip_era        : {!a}\n"
+        #         "activity_id    : {!a}\n"
+        #         "institution_id : {!a}\n"
+        #         "variable_id    : {!a}\n"
+        #         "table_id       : {!a}\n"
+        #         "source_id      : {!a}\n"
+        #         "experiment_id  : {!a}\n"
+        #         "sub_experiment_id: {!a}\n"
+        #         "variant_label  : {!a}\n"
+        #         "member_id      : {!a}\n"
+        #         "grid_label     : {!a}\n"
+        #         "time_range     : {!a}\n"
+        #         "version        : {!a}\n"
+        #         "=================================\n")
+
+        # return tmpl.format(
+        #     getattr(self,'mip_era', None),
+        #     getattr(self,'activity_id', None),
+        #     getattr(self,'institution_id', None),
+        #     getattr(self,'variable_id', None),
+        #     getattr(self,'table_id', None),
+        #     getattr(self,'source_id', None),
+        #     getattr(self,'experiment_id', None),
+        #     getattr(self,'sub_experiment_id', None),
+        #     getattr(self,'variant_label', None),
+        #     getattr(self,'member_id', None),
+        #     getattr(self,'grid_label', None),
+        #     getattr(self,'time_range', None),
+        #     getattr(self,'version', None)
+        #     )
+
+    def getAttribs(self):
+        "Return current attributes."
+        return {k:getattr(self,k) for k in DRS.requiredAttribs if k in dir(self)}
 
     def check_time_range(self, value):
-        # must be 'YYYYMMDD-YYYYMMDD', use regex.
+        # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
         return value is not None
 
     def check_version(self, value):
-        # must be 'vYYYYMMDD', use regex.
-        return True
+        # TODO: must be 'vYYYYMMDD', use regex.
+        return value is not None
 
     def check_variable_id(self, value):
-        # Is there any method to check ?
-        return True
+        # TODO: Is there any method to check ?
+        return value is not None
 
     def check_variant_label(self, value):
         # TODO: must be r{i}i{i}p{i}f{i}, use regex.
-        return True
+        return value is not None
 
-    def checkAttribs(self, value, attr):
+    def checkAttrib(self, value, attr):
         "Check `value` is valid for the attribute `attr`"
         if attr == 'time_range':
             return self.check_time_range(value)
@@ -279,8 +268,6 @@ class DRS:
         else:
             raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
 
-
-
     def set(self, **argv):
         """
         Set attributes as members of self, if attribute is in
@@ -290,7 +277,7 @@ class DRS:
 
         Unnecessary attributes are neglected.
 
-        Each of attributes must pass ConVoc.checkKey() or DRS.checkAttribs().
+        Each of attributes must pass ConVoc.checkKey() or DRS.checkAttrib().
         """
 
         attribs =[a for a in argv.keys() if a in self.requiredAttribs]
@@ -302,7 +289,7 @@ class DRS:
                 setattr(self, attr, argv[attr])
 
         for attr in non_cvattrs:
-            if (self.checkAttribs(argv[attr],attr)):
+            if (self.checkAttrib(argv[attr],attr)):
                 setattr(self, attr, argv[attr])
 
         if ('variant_label' in dir(self)):
@@ -323,24 +310,27 @@ class DRS:
         Construct filename from instance members.
         """
 
+        tmpl_w_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
+        tmpl_wo_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
+
         if ('time_range' in dir(self)):
-            f = "{}_{}_{}_{}_{}_{}_{}.nc".format(
-                self.variable_id,
-                self.table_id,
-                self.source_id,
-                self.experiment_id,
-                self.member_id,
-                self.grid_label,
-                self.time_range,
+            f = tmpl_w_time.format(
+                var = self.variable_id,
+                tab = self.table_id,
+                src = self.source_id,
+                exp = self.experiment_id,
+                mem = self.member_id,
+                grd = self.grid_label,
+                tim = self.time_range,
             )
         else:
-            f = "{}_{}_{}_{}_{}_{}.nc".format(
-                self.variable_id,
-                self.table_id,
-                self.source_id,
-                self.experiment_id,
-                self.member_id,
-                self.grid_label
+            f = tmpl_wo_time.format(
+                var = self.variable_id,
+                tab = self.table_id,
+                src = self.source_id,
+                exp = self.experiment_id,
+                mem = self.member_id,
+                grd = self.grid_label,
             )
 
         return f
@@ -433,28 +423,49 @@ class DRS:
 
 
 if __name__ == "__main__":
-    import drs
+    from cmiputil import drs
     from pprint import pprint
 
-    # w/o time_range
+    print("== DRS from dict w/o time_range ==")
     d = drs.DRS(**drs.sample_attrs)
     print(d)
     print("dirname:", d.dirName())
     print("filename:", d.fileName())
+    print("="*30+"\n")
 
+
+
+    print("== DRS from dict w/ sub_experiment_id ==")
     d = drs.DRS(**drs.sample_attrs_w_subexp)
     print(d)
-    print("dirname:", d.dirName())
-    print("filename:", d.fileName())
+    print("dirname(): ", d.dirName())
+    print("filename(): ", d.fileName())
+    print("="*30+"\n")
 
     # print(d)
 
-    # attrs = drs.sample_attrs
-    # # attrs.update({'table_id':'invalid'})
-    # pprint(attrs)
-    # d = drs.DRS(**attrs)
-    # print(d)
+    print("== dict with **invalid** `table_id`")
+    attrs = drs.sample_attrs
+    attrs.update({'table_id':'invalid'})
+    pprint(attrs)
+    print("== DRS from this dict ==")
+    d = drs.DRS(**attrs)
+    print(d)
+    print("== Note that `table_id` is not defined above, causes AttributeError below. ==")
+    print("=== calling drs.DRS.fileName()...")
+    try:
+        print(d.fileName())
+    except AttributeError:
+        import traceback
+        print("Exception raised:")
+        traceback.print_exc()
 
-    # print(d.fileName())
-    # print(d.dirName())
-    
+    print("=== calling drs.DRS.dirName()...")
+    try:
+        print(d.dirName())
+    except AttributeError:
+        import traceback
+        print("Exception raised:")
+        traceback.print_exc()
+
+
