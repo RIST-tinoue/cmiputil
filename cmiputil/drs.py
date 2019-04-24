@@ -222,7 +222,7 @@ class DRS:
         # TODO: must be r{i}i{i}p{i}f{i}, use regex.
         return value is not None
 
-    def checkAttrib(self, value, attr):
+    def isValid4Attr(self, value, attr):
         "Check `value` is valid for the attribute `attr`"
         if attr in ConVoc().managedAttribs:
             return ConVoc().isValid4Attr(value, attr)
@@ -248,7 +248,7 @@ class DRS:
 
         Unnecessary attributes are neglected.
 
-        Each of attributes must pass ConVoc.isValid4Attr() or DRS.checkAttrib().
+        Each of attributes must pass ConVoc.isValid4Attr() or DRS.isValid4Attr().
         """
 
         attribs =[a for a in argv.keys() if a in self.requiredAttribs]
@@ -260,7 +260,7 @@ class DRS:
                 setattr(self, attr, argv[attr])
 
         for attr in non_cvattrs:
-            if (self.checkAttrib(argv[attr],attr)):
+            if (self.isValid4Attr(argv[attr],attr)):
                 setattr(self, attr, argv[attr])
 
         if ('variant_label' in dir(self)):
