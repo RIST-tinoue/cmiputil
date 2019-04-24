@@ -86,9 +86,8 @@ Example with a sub-experiment:
 
 """
 
-from convoc import ConVoc
+from cmiputil.convoc import ConVoc
 import os.path
-from pprint import pprint
 
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
@@ -315,7 +314,7 @@ class DRS:
                 self.member_id = argv['variant_label']
 
         # How to check all necessary members are set.
-        # pprint([(k, k in dir(self)) for k in self.requiredAttribs])
+        # print([(k, k in dir(self)) for k in self.requiredAttribs])
 
         return self
 

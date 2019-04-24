@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import convoc
+from cmiputil import convoc
 import unittest
 import os
 

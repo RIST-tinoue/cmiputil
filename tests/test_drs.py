@@ -1,4 +1,4 @@
-from drs import DRS
+from cmiputil.drs import DRS
 import unittest
 from pprint import pprint
 class DRS_Test(unittest.TestCase):
