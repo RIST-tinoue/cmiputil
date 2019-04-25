@@ -87,7 +87,7 @@ Example with a sub-experiment:
 """
 
 from cmiputil.convoc import ConVoc
-import os.path
+from pathlib import PurePath
 from pprint import pprint
 
 __author__ = 'T.Inoue'
@@ -309,12 +309,12 @@ class DRS:
                 grd = self.grid_label,
             )
 
-        return f
+        return str(f)
 
     def dirName(self, prefix=None):
 
         # TODO: error check
-        d = os.path.join(
+        d = PurePath(
            self.mip_era,
            self.activity_id,
            self.institution_id,
@@ -326,18 +326,16 @@ class DRS:
            self.grid_label,
            self.version)
         if (prefix):
-            d = os.path.join(prefix, d)
-        return d + os.sep
+            d = prefix / d
+        return str(d)
 
     def splitFileName(self, fname):
-        fbase, fext = os.path.splitext(fname)
-
         (variable_id,
          table_id,
          source_id,
          experiment_id,
          member_id,
-         grid_label) = os.path.basename(fbase).split('_', 5)
+         grid_label) = PurePath(fname).stem.split('_', 5)
 
         try:
             (grid_label, time_range) = grid_label.split('_')
@@ -362,17 +360,17 @@ class DRS:
         return res
 
     def splitDirName(self, dname):
-        (dname, version) = os.path.split(dname)
-        (dname, grid_label) = os.path.split(dname)
-        (dname, variable_id) = os.path.split(dname)
-        (dname, table_id) = os.path.split(dname)
-        (dname, member_id) = os.path.split(dname)
-        (dname, experiment_id) = os.path.split(dname)
-        (dname, source_id) = os.path.split(dname)
-        (dname, institution_id) = os.path.split(dname)
-        (dname, activity_id) = os.path.split(dname)
-        (prefix, mip_era) = os.path.split(dname)
-
+        d = PurePath(dname)
+        (version,
+         grid_label,
+         variable_id,
+         table_id,
+         member_id,
+         experiment_id,
+         source_id,
+         institution_id,
+         activity_id,
+         mip_era) = d.parts[-1:-11:-1]
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
@@ -386,7 +384,10 @@ class DRS:
             except NameError:
                 pass
         self.set(**res)
-        res["prefix"] = prefix
+        if (len(d.parts) > 10):
+            res["prefix"] = str(PurePath(*d.parts[:-10]))
+        else:
+            res["prefix"] = ''
         return res
 
     def isValidPath(self, path, directory=False, separated=False):
@@ -401,7 +402,7 @@ class DRS:
 
         Parameter
         ---------
-        `path` : `str`
+        `path` : `path-like`
         `directory` : `logical`
 
         Return
@@ -409,20 +410,20 @@ class DRS:
         `logical` or `dict` if `separated`
 
         """
-
+        p = PurePath(path)
         if (directory):
             fname = None
-            dname = path
+            dname = p
         else:
-            fname = os.path.basename(path)
-            dname = os.path.dirname(path)
+            fname = p.name
+            dname = p.parent
 
         if (fname):
             f_attr = self.splitFileName(fname)
             f_res = {a:self.isValid4Attr(f_attr[a],a) for a in f_attr if a in DRS.requiredAttribs}
         else:
             f_res = True
-        if (dname):
+        if (dname != PurePath('.')):
             d_attr = self.splitDirName(dname)
             d_res = {a:self.isValid4Attr(d_attr[a],a) for a in d_attr if a in DRS.requiredAttribs}
         else:
@@ -489,29 +490,39 @@ if __name__ == "__main__":
         print(fname)
         d = drs.DRS()
         res = d.splitFileName(fname)
-        print(res)
+        pprint(res)
         print("="*30+"\n")
 
     def ex05():
+        print("== ex05: splitDirName")
+        dname = '/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+        dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+        print(dname)
+        d = drs.DRS()
+        res = d.splitDirName(dname)
+        pprint(res)
+        print("="*30+"\n")
+
+    def ex06():
         url = "http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc"
-        fname = os.path.basename(url)
-        dname = os.path.dirname(url)
+        fname = PurePath(url).name   #os.path.basename(url)
+        dname = PurePath(url).parent #os.path.dirname(url)
 
 
         print("== ex05: isValidPath?")
 
-        res = drs.DRS().isValidPath(url, separated=True)
         print('url:', url)
+        res = drs.DRS().isValidPath(url, separated=True)
         pprint(res)
         print(all(res))
 
-        res = drs.DRS().isValidPath(fname, separated=True)
         print('fname:', fname)
+        res = drs.DRS().isValidPath(fname, separated=True)
         pprint(res)
         print(all(res))
 
-        res = drs.DRS().isValidPath(dname, directory=True, separated=True)
         print('dname:',dname)
+        res = drs.DRS().isValidPath(dname, directory=True, separated=True)
         pprint(res)
         print(all(res))
 
@@ -524,5 +535,7 @@ if __name__ == "__main__":
         ex03()
         ex04()
         ex05()
+        ex06()
 
+        
     main()
