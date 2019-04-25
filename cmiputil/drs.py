@@ -69,12 +69,12 @@ Directory structure = <mip_era>/
 Note:
 
 - <version> has the form “vYYYYMMDD” (e.g., “v20160314”), indicating a
-representative date for the version.  Note that filescontained in a single
+representative date for the version.  Note that files contained in a single
 <version> subdirectory at the end of the directory path should represent all
-the available time-samplesreported from the simulation; a time-series can be
+the available time-samples reported from the simulation; a time-series can be
 split across several files, but all the files must be found in the
-samesubdirectory.  This implies that <version> will not generally be the actual
-date that all files in the subdirectory were written orpublished.
+same subdirectory.  This implies that <version> will not generally be the actual
+date that all files in the subdirectory were written or published.
 
 - If multiple activities are listed in the global attribute, the first one is
 used in the directory structure.
@@ -183,7 +183,7 @@ class DRS:
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
 
-        if (file is not None):
+        if (file):
             attrs = self.splitFileName(file)
             self.set(**attrs)
         else:
@@ -206,36 +206,41 @@ class DRS:
         "Return current attributes."
         return {k:getattr(self,k) for k in DRS.requiredAttribs if k in dir(self)}
 
-    def check_time_range(self, value):
+    def _check_time_range(self, value):
         # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
         return value is not None
 
-    def check_version(self, value):
+    def _check_version(self, value):
         # TODO: must be 'vYYYYMMDD', use regex.
         return value is not None
 
-    def check_variable_id(self, value):
+    def _check_variable_id(self, value):
         # TODO: Is there any method to check ?
         return value is not None
 
-    def check_variant_label(self, value):
+    def _check_variant_label(self, value):
         # TODO: must be r{i}i{i}p{i}f{i}, use regex.
         return value is not None
 
     def isValid4Attr(self, value, attr):
         "Check `value` is valid for the attribute `attr`"
-        if attr in ConVoc().managedAttribs:
+        if attr == 'sub_experiment_id':
+            # TODO:
+            # Currently, values of sub_experiment_id is only 's1920', which is not in CVs.
+            # So avoid check tentatively
+            return value == 's1920'
+        elif attr in ConVoc().managedAttribs:
             return ConVoc().isValid4Attr(value, attr)
-        if attr == 'time_range':
-            return self.check_time_range(value)
+        elif attr == 'time_range':
+            return self._check_time_range(value)
         elif attr == 'version':
-            return self.check_version(value)
+            return self._check_version(value)
         elif attr == 'variable_id':
-            return self.check_variable_id(value)
+            return self._check_variable_id(value)
         elif attr == 'variant_label':
-            return self.check_variant_label(value)
+            return self._check_variant_label(value)
         elif attr == 'mip_era':
-            return True
+            return (value.lower() == 'cmip6')
         else:
             raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
 
@@ -322,7 +327,7 @@ class DRS:
            self.version)
         if (prefix):
             d = os.path.join(prefix, d)
-        return d
+        return d + os.sep
 
     def splitFileName(self, fname):
         fbase, fext = os.path.splitext(fname)
@@ -380,76 +385,144 @@ class DRS:
                 res[k] = eval(k)
             except NameError:
                 pass
-        # # TODO: prefix should be a member of this class ??
-        # res = {
-        #     'mip_era': mip_era,
-        #     'activity_id': activity_id,
-        #     'institution_id': institution_id,
-        #     'source_id': source_id,
-        #     'experiment_id': experiment_id,
-        #     'sub_experiment_id': sub_experiment_id,
-        #     'variant_label': variant_label,
-        #     'table_id': table_id,
-        #     'variable_id': variable_id,
-        #     'grid_label': grid_label,
-        #     'version': version}
         self.set(**res)
         res["prefix"] = prefix
         return res
+
+    def isValidPath(self, path, directory=False, separated=False):
+        """
+        Check if given `path` is composed of DRS-valid attributes.
+        
+        `path` may be a URL obtained by ESGF Search function.
+
+        If `directory` == True, ensure `path` is a directory, even if that ends with '/' or not.
+
+        If `separate` == True, return dict that each attributes are valid or not.
+
+        Parameter
+        ---------
+        `path` : `str`
+        `directory` : `logical`
+
+        Return
+        ------
+        `logical` or `dict` if `separated`
+
+        """
+
+        if (directory):
+            fname = None
+            dname = path
+        else:
+            fname = os.path.basename(path)
+            dname = os.path.dirname(path)
+
+        if (fname):
+            f_attr = self.splitFileName(fname)
+            f_res = {a:self.isValid4Attr(f_attr[a],a) for a in f_attr if a in DRS.requiredAttribs}
+        else:
+            f_res = True
+        if (dname):
+            d_attr = self.splitDirName(dname)
+            d_res = {a:self.isValid4Attr(d_attr[a],a) for a in d_attr if a in DRS.requiredAttribs}
+        else:
+            d_res = True
+
+        if separated:
+            return f_res, d_res
+        else:
+            return all((f_res, d_res))
 
 
 if __name__ == "__main__":
     from cmiputil import drs
     from pprint import pprint
 
-    print("== DRS from dict w/o time_range ==")
-    d = drs.DRS(**drs.sample_attrs)
-    print(d)
-    print("dirname:", d.dirName())
-    print("filename:", d.fileName())
-    print("="*30+"\n")
+    def ex01():
+        print("==ex01: DRS from dict w/o time_range ==")
+        d = drs.DRS(**drs.sample_attrs)
+        print(d)
+        print("dirname:", d.dirName())
+        print("filename:", d.fileName())
+        print("="*30+"\n")
 
 
+    def ex02():
+        print("==ex02: DRS from dict w/ sub_experiment_id ==")
+        d = drs.DRS(**drs.sample_attrs_w_subexp)
+        print(d)
+        print("dirname(): ", d.dirName())
+        print("filename(): ", d.fileName())
+        print("="*30+"\n")
 
-    print("== DRS from dict w/ sub_experiment_id ==")
-    d = drs.DRS(**drs.sample_attrs_w_subexp)
-    print(d)
-    print("dirname(): ", d.dirName())
-    print("filename(): ", d.fileName())
-    print("="*30+"\n")
+        # print(d)
 
-    # print(d)
-
-    print("== dict with **invalid** `table_id`")
-    attrs = drs.sample_attrs
-    attrs.update({'table_id':'invalid'})
-    pprint(attrs)
-    print("== DRS from this dict ==")
-    d = drs.DRS(**attrs)
-    print(d)
-    print("== Note that `table_id` is not defined above, causes AttributeError below. ==")
-    print("=== calling drs.DRS.fileName()...")
-    try:
-        print(d.fileName())
-    except AttributeError:
-        import traceback
-        print("expected Exception raised:")
-        traceback.print_exc()
-
-    print("=== calling drs.DRS.dirName()...")
-    try:
-        print(d.dirName())
-    except AttributeError:
-        import traceback
-        print("expected Exception raised:")
-        traceback.print_exc()
+    def ex03():
+        print("==ex03: dict with **invalid** `table_id`")
+        attrs = drs.sample_attrs
+        attrs.update({'table_id':'invalid'})
+        pprint(attrs)
+        print("== DRS from this dict ==")
+        d = drs.DRS(**attrs)
+        print(d)
+        print("== Note that `table_id` is not defined above, causes AttributeError below. ==")
+        print("=== calling drs.DRS.fileName()...")
+        try:
+            print(d.fileName())
+        except AttributeError:
+            import traceback
+            print("expected Exception raised:")
+            traceback.print_exc()
+        print("=== calling drs.DRS.dirName()...")
+        try:
+            print(d.dirName())
+        except AttributeError:
+            import traceback
+            print("expected Exception raised:")
+            traceback.print_exc()
+        print("="*30+"\n")
 
 
-    print("="*30)
-    fname= "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-    print(fname)
-    d = drs.DRS()
-    res = d.splitFileName(fname)
-    print(res)
+    def ex04():
+        print("== ex04: splitFileName")
+        fname= "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+        print(fname)
+        d = drs.DRS()
+        res = d.splitFileName(fname)
+        print(res)
+        print("="*30+"\n")
 
-    print("="*30)
+    def ex05():
+        url = "http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc"
+        fname = os.path.basename(url)
+        dname = os.path.dirname(url)
+
+
+        print("== ex05: isValidPath?")
+
+        res = drs.DRS().isValidPath(url, separated=True)
+        print('url:', url)
+        pprint(res)
+        print(all(res))
+
+        res = drs.DRS().isValidPath(fname, separated=True)
+        print('fname:', fname)
+        pprint(res)
+        print(all(res))
+
+        res = drs.DRS().isValidPath(dname, directory=True, separated=True)
+        print('dname:',dname)
+        pprint(res)
+        print(all(res))
+
+        print("="*30+"\n")
+
+
+    def main():
+        ex01()
+        ex02()
+        ex03()
+        ex04()
+        ex05()
+
+    main()

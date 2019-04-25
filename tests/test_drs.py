@@ -1,7 +1,7 @@
 from cmiputil import drs
 import unittest
 from pprint import pprint
-
+from os.path import dirname, basename
 
 class DRS_Test(unittest.TestCase):
     def setUp(self):
@@ -32,6 +32,10 @@ class DRS_Test(unittest.TestCase):
         self.fname = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
         self.fname_wo_trange = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
         self.fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+        self.url = "http://esgf.nci.org.au/thredds/fileServer/replica/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/tas_Amon_MIROC6_piControl_r1i1p1f1_gn_360001-369912.nc"
+
+        self.url_w_subexp = "http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc"
+
         pass
 
     def tearDown(self):
@@ -320,12 +324,44 @@ class DRS_Test(unittest.TestCase):
 
     def test_getAttribs02(self):
         "construct from filename"
-        ref = {}
         d = drs.DRS(**self.ga)
         ref = self.ga
         ref['mip_era'] = 'CMIP6'
         res = d.getAttribs()
         self.assertEqual(ref, res)
+
+    def test_isValidPath01(self):
+        "Valid URL without sub_experiment_id"
+        res = drs.DRS().isValidPath(self.url)
+        self.assertTrue(res)
+
+    def test_isValidPath02(self):
+        "Valid URL with sub_experiment_id"
+        res = drs.DRS().isValidPath(self.url_w_subexp)
+        self.assertTrue(res)
+
+    def test_isValidPath03(self):
+        "Valid filename without sub_experiment_id"
+        res = drs.DRS().isValidPath(self.fname)
+        self.assertTrue(res)
+
+    def test_isValidPath04(self):
+        "Valid filename with sub_experiment_id"
+        res = drs.DRS().isValidPath(self.fname_w_subexp)
+        self.assertTrue(res)
+
+    def test_isValidPath05(self):
+        "Valid dirname(-like) but forget directory=True, expect ValueError"
+        with self.assertRaises(ValueError):
+            res = drs.DRS().isValidPath(dirname(self.url))
+            self.assertTrue(res)
+
+    def test_isValidPath06(self):
+        "Valid dirname(-like)"
+        res = drs.DRS().isValidPath(dirname(self.url), directory=True)
+        self.assertTrue(res)
+
+
 
 def main():
     unittest.main()
