@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-#coding:utf-8
-"""CMIP6 Data Reference Syntax (DRS):
+# coding:utf-8
 
+"""
+CMIP6 Data Reference Syntax (DRS):
 (Excerpt from http://goo.gl/v1drZl)
 
 File name template:
 
-file name = <variable_id>_<table_id>_<source_id>_<experiment_id >_<member_id>_<grid_label>[_<time_range>].nc
+    file name = <variable_id>
+                 _<table_id>
+                   _<source_id>
+                     _<experiment_id >
+                       _<member_id>
+                         _<grid_label>
+                           [_<time_range>].nc
 
-For time-invariant fields, the last segment (time_range) above is omitted.
+For time-invariant fields, the last segment (<time_range>) above is
+omitted.
+
 
 Example when there is no sub-experiment:
   tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc
@@ -16,22 +25,20 @@ Example with a sub-experiment:
   pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
 
 
-All strings appearing in the file name are constructed using only the following
-characters: a-z, A-Z, 0-9, and the hyphen ("-"), except the hyphen must not
-appear in variable_id.  Underscores are prohibited throughout except as shown in
-the template.
+All strings appearing in the file name are constructed using only the
+following characters: a-z, A-Z, 0-9, and the hyphen ("-"), except the
+hyphen must not appear in <variable_id>.  Underscores are prohibited
+throughout except as shown in the template.
 
 
-The member_id is constructed from the
-sub_experiment_id and variant_label using the following algorithm:
+The <member_id> is constructed from the <sub_experiment_id> and
+<variant_label> using the following algorithm:
 
-
-if sub_experiment_id = “none”
-  member_id = <variant_label>
+if <sub_experiment_id> = “none”
+  <member_id> = <variant_label>
 else
-  member_id = <sub_experiment_id>-<variant_label>
+  <member_id? = <sub_experiment_id>-<variant_label>
 endif
-
 
 The <time_range> is a string generated consistent with the following:
 
@@ -44,44 +51,48 @@ else
 second, respectively) endif
 
 where <suffix> is defined as follows:
-  if the variable identified by variable_id has a time dimension with a “climatology” attribute then
-     suffix = “-clim”
+  if the variable identified by variable_id has a time dimension with
+  a “climatology” attribute then
+     <suffix> = “-clim”
   else
-     suffix = “”
+     <suffix> = “”
 endif
 
 and where the precision of the time_range strings is determined by the
-“frequency” global attribute as specified in Table 2.
+<frequency> global attribute.
 
 
 Directory structure template:
 
-Directory structure = <mip_era>/
-                        <activity_id>/
-                          <institution_id>/
-                            <source_id>/
-                              <experiment_id>/
-                                <member_id>/
-                                  <table_id>/
-                                    <variable_id>/
-                                      <grid_label>/
-                                        <version>
+    Directory structure = <mip_era>/
+                            <activity_id>/
+                              <institution_id>/
+                                <source_id>/
+                                  <experiment_id>/
+                                    <member_id>/
+                                      <table_id>/
+                                        <variable_id>/
+                                          <grid_label>/
+                                            <version>
+
 Note:
 
 - <version> has the form “vYYYYMMDD” (e.g., “v20160314”), indicating a
-representative date for the version.  Note that files contained in a single
-<version> subdirectory at the end of the directory path should represent all
-the available time-samples reported from the simulation; a time-series can be
-split across several files, but all the files must be found in the
-same subdirectory.  This implies that <version> will not generally be the actual
-date that all files in the subdirectory were written or published.
+representative date for the version.  Note that files contained in a
+single <version> subdirectory at the end of the directory path should
+represent all the available time-samples reported from the simulation;
+a time-series can be split across several files, but all the files
+must be found in the same subdirectory.  This implies that <version>
+will not generally be the actual date that all files in the
+subdirectory were written or published.
 
 - If multiple activities are listed in the global attribute, the first one is
 used in the directory structure.
 
-Example when there is no sub-experiment:
+
+Example when there is no <sub-experiment>:
      CMIP6/CMIP/NOAA-GFDL/GFDL-CM4/1pctCO2/r1i1p1f1/Amon/tas/gn/v20150322
-Example with a sub-experiment:
+Example with a <sub-experiment>:
      CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
 
 """
@@ -93,6 +104,7 @@ from pprint import pprint
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
 __date__ = '2019/04/16'
+
 
 class DRSError(Exception):
     "Base exception class for DRS."
@@ -178,7 +190,6 @@ class DRS:
         'version',
         )
 
-
     def __init__(self, file=None, **kw):
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
@@ -189,22 +200,22 @@ class DRS:
         else:
             self.set(**kw)
 
-
     def __repr__(self):
-        res = ["{}={!a}".format(k,getattr(self,k)) 
+        res = ["{}={!a}".format(k, getattr(self, k))
                for k in DRS.requiredAttribs if k in dir(self)]
         res = 'drs.DRS(' + ', '.join(res) + ')'
         return res
 
     def __str__(self):
-        res = ["{}: {!a}".format(k,getattr(self,k)) 
+        res = ["{}: {!a}".format(k, getattr(self, k))
                for k in DRS.requiredAttribs if k in dir(self)]
         res = "\n".join(res)
         return res
 
     def getAttribs(self):
         "Return current attributes."
-        return {k:getattr(self,k) for k in DRS.requiredAttribs if k in dir(self)}
+        return {k: getattr(self, k)
+                for k in DRS.requiredAttribs if k in dir(self)}
 
     def _check_time_range(self, value):
         # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
@@ -226,7 +237,8 @@ class DRS:
         "Check `value` is valid for the attribute `attr`"
         if attr == 'sub_experiment_id':
             # TODO:
-            # Currently, values of sub_experiment_id is only 's1920', which is not in CVs.
+            # Currently, values of sub_experiment_id is only 's1920',
+            # which is not in CVs.
             # So avoid check tentatively
             return value == 's1920'
         elif attr in ConVoc().managedAttribs:
@@ -253,19 +265,20 @@ class DRS:
 
         Unnecessary attributes are neglected.
 
-        Each of attributes must pass ConVoc.isValid4Attr() or DRS.isValid4Attr().
+        Each of attributes must pass ConVoc.isValid4Attr() or
+        DRS.isValid4Attr().
         """
 
-        attribs =[a for a in argv.keys() if a in self.requiredAttribs]
-        cvattrs     = [ a for a in attribs if a in self.cvs.managedAttribs]
-        non_cvattrs = [ a for a in attribs if a not in self.cvs.managedAttribs]
+        attribs = [a for a in argv.keys() if a in self.requiredAttribs]
+        cvattrs = [a for a in attribs if a in self.cvs.managedAttribs]
+        non_cvattrs = [a for a in attribs if a not in self.cvs.managedAttribs]
 
         for attr in cvattrs:
             if (self.cvs.isValid4Attr(argv[attr], attr)):
                 setattr(self, attr, argv[attr])
 
         for attr in non_cvattrs:
-            if (self.isValid4Attr(argv[attr],attr)):
+            if (self.isValid4Attr(argv[attr], attr)):
                 setattr(self, attr, argv[attr])
 
         if ('variant_label' in dir(self)):
@@ -283,7 +296,7 @@ class DRS:
 
     def fileName(self):
         """
-        Construct filename from instance members.
+        Construct filename constructed by DRS from drs.DRS instance members.
         """
 
         tmpl_w_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
@@ -291,29 +304,28 @@ class DRS:
 
         if ('time_range' in dir(self)):
             f = tmpl_w_time.format(
-                var = self.variable_id,
-                tab = self.table_id,
-                src = self.source_id,
-                exp = self.experiment_id,
-                mem = self.member_id,
-                grd = self.grid_label,
-                tim = self.time_range,
+                var=self.variable_id,
+                tab=self.table_id,
+                src=self.source_id,
+                exp=self.experiment_id,
+                mem=self.member_id,
+                grd=self.grid_label,
+                tim=self.time_range,
             )
         else:
             f = tmpl_wo_time.format(
-                var = self.variable_id,
-                tab = self.table_id,
-                src = self.source_id,
-                exp = self.experiment_id,
-                mem = self.member_id,
-                grd = self.grid_label,
+                var=self.variable_id,
+                tab=self.table_id,
+                src=self.source_id,
+                exp=self.experiment_id,
+                mem=self.member_id,
+                grd=self.grid_label,
             )
 
         return str(f)
 
     def dirName(self, prefix=None):
-
-        # TODO: error check
+        """Construct directory name by DRS from drs.DRS instance members."""
         d = PurePath(
            self.mip_era,
            self.activity_id,
@@ -342,7 +354,7 @@ class DRS:
         except ValueError:
             # time_range = None
             pass
-        
+
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
@@ -393,12 +405,14 @@ class DRS:
     def isValidPath(self, path, directory=False, separated=False):
         """
         Check if given `path` is composed of DRS-valid attributes.
-        
+
         `path` may be a URL obtained by ESGF Search function.
 
-        If `directory` == True, ensure `path` is a directory, even if that ends with '/' or not.
+        If `directory` == True, ensure `path` is a directory, even if
+        that ends with '/' or not.
 
-        If `separate` == True, return dict that each attributes are valid or not.
+        If `separate` == True, return dict that each attributes are
+        valid or not.
 
         Parameter
         ---------
@@ -420,12 +434,14 @@ class DRS:
 
         if (fname):
             f_attr = self.splitFileName(fname)
-            f_res = {a:self.isValid4Attr(f_attr[a],a) for a in f_attr if a in DRS.requiredAttribs}
+            f_res = {a: self.isValid4Attr(f_attr[a], a)
+                     for a in f_attr if a in DRS.requiredAttribs}
         else:
             f_res = True
         if (dname != PurePath('.')):
             d_attr = self.splitDirName(dname)
-            d_res = {a:self.isValid4Attr(d_attr[a],a) for a in d_attr if a in DRS.requiredAttribs}
+            d_res = {a: self.isValid4Attr(d_attr[a], a)
+                     for a in d_attr if a in DRS.requiredAttribs}
         else:
             d_res = True
 
@@ -437,7 +453,6 @@ class DRS:
 
 if __name__ == "__main__":
     from cmiputil import drs
-    from pprint import pprint
 
     def ex01():
         print("==ex01: DRS from dict w/o time_range ==")
@@ -446,7 +461,6 @@ if __name__ == "__main__":
         print("dirname:", d.dirName())
         print("filename:", d.fileName())
         print("="*30+"\n")
-
 
     def ex02():
         print("==ex02: DRS from dict w/ sub_experiment_id ==")
@@ -461,12 +475,13 @@ if __name__ == "__main__":
     def ex03():
         print("==ex03: dict with **invalid** `table_id`")
         attrs = drs.sample_attrs
-        attrs.update({'table_id':'invalid'})
+        attrs.update({'table_id': 'invalid'})
         pprint(attrs)
         print("== DRS from this dict ==")
         d = drs.DRS(**attrs)
         print(d)
-        print("== Note that `table_id` is not defined above, causes AttributeError below. ==")
+        print("== Note that `table_id` is not defined above,"
+              "causes AttributeError below. ==")
         print("=== calling drs.DRS.fileName()...")
         try:
             print(d.fileName())
@@ -483,10 +498,9 @@ if __name__ == "__main__":
             traceback.print_exc()
         print("="*30+"\n")
 
-
     def ex04():
         print("== ex04: splitFileName")
-        fname= "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+        fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
         print(fname)
         d = drs.DRS()
         res = d.splitFileName(fname)
@@ -495,8 +509,10 @@ if __name__ == "__main__":
 
     def ex05():
         print("== ex05: splitDirName")
-        dname = '/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
-        dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+        dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
+                 'piControl/r1i1p1f1/Amon/tas/gn/v20190308')
+        dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
+                 'Amon/tas/gn/v20190308')
         print(dname)
         d = drs.DRS()
         res = d.splitDirName(dname)
@@ -504,10 +520,12 @@ if __name__ == "__main__":
         print("="*30+"\n")
 
     def ex06():
-        url = "http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc"
-        fname = PurePath(url).name   #os.path.basename(url)
-        dname = PurePath(url).parent #os.path.dirname(url)
-
+        url = ("http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/"
+               "IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/"
+               "gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-"
+               "pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc")
+        fname = PurePath(url).name
+        dname = PurePath(url).parent
 
         print("== ex05: isValidPath?")
 
@@ -521,13 +539,12 @@ if __name__ == "__main__":
         pprint(res)
         print(all(res))
 
-        print('dname:',dname)
+        print('dname:', dname)
         res = drs.DRS().isValidPath(dname, directory=True, separated=True)
         pprint(res)
         print(all(res))
 
         print("="*30+"\n")
-
 
     def main():
         ex01()
@@ -537,5 +554,4 @@ if __name__ == "__main__":
         ex05()
         ex06()
 
-        
     main()
