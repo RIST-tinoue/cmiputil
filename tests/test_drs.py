@@ -3,7 +3,7 @@ import unittest
 from pprint import pprint
 from os.path import dirname, basename
 
-class DRS_Test(unittest.TestCase):
+class test_DRS(unittest.TestCase):
     def setUp(self):
         self.ga = {
             'activity_id' : 'CMIP',

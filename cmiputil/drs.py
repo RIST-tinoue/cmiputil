@@ -3,10 +3,11 @@
 
 """
 CMIP6 Data Reference Syntax (DRS):
+==================================
 (Excerpt from http://goo.gl/v1drZl)
 
 File name template:
-
+------------------
     file name = <variable_id>
                  _<table_id>
                    _<source_id>
@@ -17,12 +18,6 @@ File name template:
 
 For time-invariant fields, the last segment (<time_range>) above is
 omitted.
-
-
-Example when there is no sub-experiment:
-  tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc
-Example with a sub-experiment:
-  pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
 
 
 All strings appearing in the file name are constructed using only the
@@ -61,9 +56,15 @@ endif
 and where the precision of the time_range strings is determined by the
 <frequency> global attribute.
 
+Example when there is no <sub-experiment_id>:
+  tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc
+Example with a <sub-experiment_id>:
+  pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc
+
+
 
 Directory structure template:
-
+----------------------------
     Directory structure = <mip_era>/
                             <activity_id>/
                               <institution_id>/
@@ -112,8 +113,10 @@ class DRSError(Exception):
 
 
 class InvalidDRSAttribError(DRSError):
-    "Error for invalid attribute as a component DRS"
+    "Error for invalid attribute as DRS"
 
+class InvalidPathAsDRSError(DRSError):
+    "Error for invalid path as DRS"
 
 sample_attrs = {
     'activity_id': 'CMIP',
@@ -150,10 +153,13 @@ sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
 
 
 class DRS:
-    """This class contains attributes necessary to construct filename and
-    directory name follows CMIP6 DRS (Data Reference Syntax).
+    """
+    This class contains attributes necessary to construct a file
+    name/directory name that is valid for CMIP6 DRS (Data Reference
+    Syntax).  See http://goo.gl/v1drZl for details about DRS as well
+    as CMIP6 global attributes, etc.
 
-    Instance member variables are:
+    Instance member variables of this class are:
     - variable_id
     - table_id
     - source_id
@@ -169,11 +175,11 @@ class DRS:
     - institution_id
     - source_id
 
-    Note that member_id is not able to set directly, this is set by
-    sub_experiment_id (omittable) and variant_label.
+    Note that `member_id` is not able to set directly, this is set by
+    <sub_experiment_id> (omittable) and <variant_label>.
 
-    See http://goo.gl/v1drZl for details about DRS as well as CMIP6 global
-    attributes, etc.
+    You can use the class member `drs.DRS().requiredAttribs` to know
+    necessary attributes to set a filename/dirname valid for DRS.
     """
     requiredAttribs = (
         'activity_id',
@@ -213,7 +219,14 @@ class DRS:
         return res
 
     def getAttribs(self):
-        "Return current attributes."
+        """
+        Current instance attributes.
+
+        Return
+        ------
+        dict : attirbutes
+
+        """
         return {k: getattr(self, k)
                 for k in DRS.requiredAttribs if k in dir(self)}
 
@@ -233,16 +246,29 @@ class DRS:
         # TODO: must be r{i}i{i}p{i}f{i}, use regex.
         return value is not None
 
-    def isValid4Attr(self, value, attr):
-        "Check `value` is valid for the attribute `attr`"
+    def isValidValueForAttr(self, value, attr):
+        """
+        Check `value` is valid for the attribute `attr`.
+
+        If `attr` is invalid, InvalidDRSAttribError is raised.
+
+        Parameters
+        ----------
+          value : str
+          attr : str
+        Returns:
+        --------
+          logical
+        """
+
         if attr == 'sub_experiment_id':
             # TODO:
-            # Currently, values of sub_experiment_id is only 's1920',
-            # which is not in CVs.
+            # Currently, value of <sub_experiment_id> used in
+            # published datasets is only 's1920', which is not in CVs.
             # So avoid check tentatively
-            return value == 's1920'
+            return ConVoc().isValidValueForAttr(value, attr) or value == 's1920'
         elif attr in ConVoc().managedAttribs:
-            return ConVoc().isValid4Attr(value, attr)
+            return ConVoc().isValidValueForAttr(value, attr)
         elif attr == 'time_range':
             return self._check_time_range(value)
         elif attr == 'version':
@@ -258,27 +284,30 @@ class DRS:
 
     def set(self, **argv):
         """
-        Set attributes as members of self, if attribute is in
-        `self.requiredAttribs`.
+        Set instance attributes, if attribute is in
+        `drs.DRS().requiredAttribs`.
 
-        Missing attributes in argv are selft unset as members.
+        Missing attributes in argv are left unset/untouched.
 
         Unnecessary attributes are neglected.
 
-        Each of attributes must pass ConVoc.isValid4Attr() or
-        DRS.isValid4Attr().
+        Each of attributes are checked by DRS.isValidValueForAttr().
+
+        See isValidValueForAttr() for exception.
+
+        Parameters:
+        ----------
+          argv : dict
+        Returns
+        -------
+          self.
+
         """
 
         attribs = [a for a in argv.keys() if a in self.requiredAttribs]
-        cvattrs = [a for a in attribs if a in self.cvs.managedAttribs]
-        non_cvattrs = [a for a in attribs if a not in self.cvs.managedAttribs]
 
-        for attr in cvattrs:
-            if (self.cvs.isValid4Attr(argv[attr], attr)):
-                setattr(self, attr, argv[attr])
-
-        for attr in non_cvattrs:
-            if (self.isValid4Attr(argv[attr], attr)):
+        for attr in attribs:
+            if (self.isValidValueForAttr(argv[attr], attr)):
                 setattr(self, attr, argv[attr])
 
         if ('variant_label' in dir(self)):
@@ -288,15 +317,16 @@ class DRS:
                                  + argv['variant_label']
             else:
                 self.member_id = argv['variant_label']
-
-        # How to check all necessary members are set.
-        # print([(k, k in dir(self)) for k in self.requiredAttribs])
-
         return self
+
 
     def fileName(self):
         """
-        Construct filename constructed by DRS from drs.DRS instance members.
+        Construct filename from current instance member attributes.
+
+        Return
+        ------
+        str : filename
         """
 
         tmpl_w_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
@@ -325,7 +355,20 @@ class DRS:
         return str(f)
 
     def dirName(self, prefix=None):
-        """Construct directory name by DRS from drs.DRS instance members."""
+        """
+        Construct directory name by DRS from drs.DRS instance members.
+
+        If any attributes are missing, raises AttributeError.
+
+        Parameter
+        ---------
+        prefix(optional) : path-like : prepend to the result path.
+
+        Return
+        ------
+        str : dirname
+
+        """
         d = PurePath(
            self.mip_era,
            self.activity_id,
@@ -342,6 +385,20 @@ class DRS:
         return str(d)
 
     def splitFileName(self, fname):
+        """
+        Split filename as attributes for DRS.
+
+        If `fname` is invalid for DRS, raise ValueError 
+
+        Parameters
+        ----------
+        fname : path-like
+
+        Returns:
+        --------
+          dict
+
+        """
         (variable_id,
          table_id,
          source_id,
@@ -372,24 +429,43 @@ class DRS:
         return res
 
     def splitDirName(self, dname):
+        """
+        Split given `dname` to set DRS().
+
+        if `dname` has enough elements, return `{}`.
+
+        Parameters:
+        ----------
+          dname : path-like
+        Returns:
+        --------
+          dict
+        """
+
+        res = {}
+
         d = PurePath(dname)
-        (version,
-         grid_label,
-         variable_id,
-         table_id,
-         member_id,
-         experiment_id,
-         source_id,
-         institution_id,
-         activity_id,
-         mip_era) = d.parts[-1:-11:-1]
+
+        try:
+            (version,
+             grid_label,
+             variable_id,
+             table_id,
+             member_id,
+             experiment_id,
+             source_id,
+             institution_id,
+             activity_id,
+             mip_era) = d.parts[-1:-11:-1]
+        except ValueError:
+            return res
+
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
             variant_label = member_id
             # sub_experiment_id = None
 
-        res = {}
         for k in DRS.requiredAttribs:
             try:
                 res[k] = eval(k)
@@ -421,7 +497,7 @@ class DRS:
 
         Return
         ------
-        `logical` or `dict` if `separated`
+        `logical` or `dict` of {attr:logical} if `separated`
 
         """
         p = PurePath(path)
@@ -434,13 +510,13 @@ class DRS:
 
         if (fname):
             f_attr = self.splitFileName(fname)
-            f_res = {a: self.isValid4Attr(f_attr[a], a)
+            f_res = {a: self.isValidValueForAttr(f_attr[a], a)
                      for a in f_attr if a in DRS.requiredAttribs}
         else:
             f_res = True
         if (dname != PurePath('.')):
             d_attr = self.splitDirName(dname)
-            d_res = {a: self.isValid4Attr(d_attr[a], a)
+            d_res = {a: self.isValidValueForAttr(d_attr[a], a)
                      for a in d_attr if a in DRS.requiredAttribs}
         else:
             d_res = True

@@ -25,7 +25,7 @@ __author__ = 'T.Inoue'
 __date__ = '2019/04/27'
 
 
-def relocationDir(ncfile, verstr='v00000000', prefix=None):
+def relocationPath(ncfile, verstr='v00000000', prefix=None):
     """
     Construct directory name for relocation of given file.
 
@@ -42,20 +42,50 @@ def relocationDir(ncfile, verstr='v00000000', prefix=None):
 
     with nc.Dataset(ncfile, "r") as ds:
         attrs = {a: getattr(ds, a, None) for a in drs.DRS().requiredAttribs}
-
     attrs = {a: v for a, v in attrs.items() if v != 'none'}
 
-    attrs.update(drs.DRS().splitFileName(ncfile))
+    p = Path(ncfile)
+    if (p.is_file()):
+        p = p.parent
+    print(p)
+    d_attrs = drs.DRS().splitDirName(p)
+
 
     if (getattr(attrs, 'version', None) is None):
         attrs['version'] = verstr
+    else:
+        verstr = getattr(d_attrs, 'version', None)
+        if (verstr):
+            attrs['version'] = verstr
 
-    return drs.DRS(**attrs).dirName(prefix=prefix)
+    return Path(drs.DRS(**attrs).dirName(prefix=prefix),
+                drs.DRS(**attrs).fileName())
+
+
+def validFileNameFrom(ncfile):
+    """
+    Construct filename valid as DRS from global attributes.
+
+    Parameters
+    ----------
+    ncflie : str
+
+    Return
+    ------
+    str
+    """
+
+    with nc.Dataset(ncfile,"r") as ds:
+        attrs = {a: getattr(ds, a, None) for a in drs.DRS().requiredAttribs}
+    attrs = {a: v for a, v in attrs.items() if v != 'none'}
+
+    return drs.DRS(**attrs).fileName()
+
 
 
 def doRelocateFile(s, d, overwrite=False):
     """
-    Relocate file `s` to the directory `d`.
+    Relocate file `s` to the path `d`.
 
     You can NOT rename file itself.
 
@@ -67,7 +97,7 @@ def doRelocateFile(s, d, overwrite=False):
     Parameter
     ---------
     s : path-like: source file
-    d : path-like: destination directory
+    d : path-like: destination path
     overwrite(optional) : logical : overwrite file in destination, or not.
 
     Return
@@ -125,9 +155,9 @@ if (__name__ == '__main__'):
     if (args.prefix):
         a['prefix'] = args.prefix
     if (args.verstr):
-        a['version'] = args.verstr
+        a['verstr'] = args.verstr
 
-    srcdst = {s: relocationDir(s, **a) for s in args.files}
+    srcdst = {s: relocationPath(s, **a) for s in args.files}
 
     for s, d in srcdst.items():
         print(s, '->', d)
