@@ -24,8 +24,10 @@ __version__ = '0.1'
 __author__ = 'T.Inoue'
 __date__ = '2019/04/27'
 
+verstr_default = 'v00000000'
 
-def relocationPath(ncfile, verstr='v00000000', prefix=None):
+
+def relocationPath(ncfile, verstr=None, prefix=None):
     """
     Construct directory name for relocation of given file.
 
@@ -41,7 +43,7 @@ def relocationPath(ncfile, verstr='v00000000', prefix=None):
     """
 
     with nc.Dataset(ncfile, "r") as ds:
-        attrs = {a: getattr(ds, a, None) for a in drs.DRS().requiredAttribs}
+        attrs = {a: getattr(ds, a, None) for a in drs.DRS.requiredAttribs}
     attrs = {a: v for a, v in attrs.items() if v != 'none'}
 
     p = Path(ncfile)
@@ -49,15 +51,17 @@ def relocationPath(ncfile, verstr='v00000000', prefix=None):
         p = p.parent
     d_attrs = drs.DRS().splitDirName(p)
 
-    if (getattr(attrs, 'version', None) is None):
+    if (verstr):
         attrs['version'] = verstr
+    elif (hasattr(attrs, 'version')):
+        attrs['version'] = getattr(attrs, 'version')
+    elif (hasattr(d_attrs, 'version')):
+        attrs['version'] = getattr(d_attrs, 'version')
     else:
-        verstr = getattr(d_attrs, 'version', None)
-        if (verstr):
-            attrs['version'] = verstr
+        attrs['version'] = verstr_default
 
-    return Path(drs.DRS(**attrs).dirName(prefix=prefix),
-                drs.DRS(**attrs).fileName())
+    d = drs.DRS(**attrs)
+    return Path(d.dirName(prefix=prefix), d.fileName())
 
 
 def validFileNameFrom(ncfile):
@@ -74,7 +78,7 @@ def validFileNameFrom(ncfile):
     """
 
     with nc.Dataset(ncfile, "r") as ds:
-        attrs = {a: getattr(ds, a, None) for a in drs.DRS().requiredAttribs}
+        attrs = {a: getattr(ds, a, None) for a in drs.DRS.requiredAttribs}
     attrs = {a: v for a, v in attrs.items() if v != 'none'}
 
     return drs.DRS(**attrs).fileName()
@@ -140,13 +144,20 @@ if (__name__ == '__main__'):
     parser.add_argument(
         '-v', '--verstr', type=str, default=None,
         help='<version> string for DRS')
+    parser.add_argument(
+        '-d', '--debug', action='store_true', default=False)
 
     args = parser.parse_args()
 
-    print('dry_run:', args.dry_run)
-    print('overwrite:', args.overwrite)
-    print('prefix:', args.prefix)
-    print('verstr:', args.verstr)
+    if (args.debug):
+        print('dbg: arguments:')
+        print('  dry_run:', args.dry_run)
+        print('  overwrite:', args.overwrite)
+        print('  prefix:', args.prefix)
+        print('  verstr:', args.verstr)
+        print('  files:')
+        for f in args.files:
+            print(f'    {f}')
 
     a = {}
     if (args.prefix):
@@ -157,6 +168,6 @@ if (__name__ == '__main__'):
     srcdst = {s: relocationPath(s, **a) for s in args.files}
 
     for s, d in srcdst.items():
-        print(s, '->', d)
+        print(s, '\n->', d)
         if (not args.dry_run):
             doRelocateFile(s, d, args.overwrite)
