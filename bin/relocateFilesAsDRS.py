@@ -47,9 +47,7 @@ def relocationPath(ncfile, verstr='v00000000', prefix=None):
     p = Path(ncfile)
     if (p.is_file()):
         p = p.parent
-    print(p)
     d_attrs = drs.DRS().splitDirName(p)
-
 
     if (getattr(attrs, 'version', None) is None):
         attrs['version'] = verstr
@@ -75,12 +73,11 @@ def validFileNameFrom(ncfile):
     str
     """
 
-    with nc.Dataset(ncfile,"r") as ds:
+    with nc.Dataset(ncfile, "r") as ds:
         attrs = {a: getattr(ds, a, None) for a in drs.DRS().requiredAttribs}
     attrs = {a: v for a, v in attrs.items() if v != 'none'}
 
     return drs.DRS(**attrs).fileName()
-
 
 
 def doRelocateFile(s, d, overwrite=False):
