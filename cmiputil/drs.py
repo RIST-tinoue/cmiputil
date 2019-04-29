@@ -178,7 +178,7 @@ class DRS:
     Note that `member_id` is not able to set directly, this is set by
     <sub_experiment_id> (omittable) and <variant_label>.
 
-    You can use the class member `drs.DRS().requiredAttribs` to know
+    You can use the class member `drs.DRS.requiredAttribs` to know
     necessary attributes to set a filename/dirname valid for DRS.
     """
     requiredAttribs = (
@@ -285,7 +285,7 @@ class DRS:
     def set(self, **argv):
         """
         Set instance attributes, if attribute is in
-        `drs.DRS().requiredAttribs`.
+        `drs.DRS.requiredAttribs`.
 
         Missing attributes in argv are left unset/untouched.
 
@@ -304,7 +304,7 @@ class DRS:
 
         """
 
-        attribs = [a for a in argv.keys() if a in self.requiredAttribs]
+        attribs = [a for a in argv.keys() if a in DRS.requiredAttribs]
 
         for attr in attribs:
             if (self.isValidValueForAttr(argv[attr], attr)):
