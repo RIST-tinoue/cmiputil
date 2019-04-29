@@ -73,7 +73,7 @@ class test_DRS(unittest.TestCase):
         "repr() constructed from filename"
         ref = "drs.DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='185001-194912', variable_id='tas', variant_label='r1i1p1f1')"
 
-        d0 = drs.DRS(self.fname)
+        d0 = drs.DRS(filename=self.fname)
         res = repr(d0)
         self.assertEqual(ref, res)
         d1 = eval(res)
@@ -293,7 +293,7 @@ class test_DRS(unittest.TestCase):
         res = drs.DRS().splitDirName(dname)
         self.assertEqual(ref, res)
 
-    def test_init_w_file01(self):
+    def test_init_w_filename01(self):
         "Constructor with filename."
         fname = self.fname
         ref =  {
@@ -307,7 +307,7 @@ class test_DRS(unittest.TestCase):
             'variable_id': 'tas',
             'variant_label': 'r1i1p1f1'}
 
-        d = drs.DRS(file=fname)
+        d = drs.DRS(filename=fname)
         res = {a:getattr(d,a) for a in ref.keys()}
         self.assertEqual(ref, res)
         with self.assertRaises(AttributeError):

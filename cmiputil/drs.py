@@ -99,8 +99,10 @@ Example with a <sub-experiment>:
 """
 
 from cmiputil.convoc import ConVoc
+import netCDF4 as nc
 from pathlib import PurePath
 from pprint import pprint
+
 
 __author__ = 'T.Inoue'
 __version__ = '0.9.0'
@@ -196,12 +198,26 @@ class DRS:
         'version',
         )
 
-    def __init__(self, file=None, **kw):
+    def __init__(self, file=None, filename=None, **kw):
+        """
+        If file is given, it must be a valid CMIP6 netCDF, set from
+        global attributes in it,
+
+        else if filename is given, it must be a valid filename as DRS,
+        set from components consist of filename.
+
+        else set from **kw dict.
+        """
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
 
         if (file):
-            attrs = self.splitFileName(file)
+            with nc.Dataset(file, "r") as ds:
+                attrs = {a: getattr(ds, a, None) for a in drs.DRS.requiredAttribs}
+            attrs = {a: v for a, v in attrs.items() if v != 'none'}
+            self.set(**attrs)
+        elif (filename):
+            attrs = self.splitFileName(filename)
             self.set(**attrs)
         else:
             self.set(**kw)
