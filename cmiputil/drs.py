@@ -224,27 +224,22 @@ class DRS:
 
     def __repr__(self):
         res = ["{}={!a}".format(k, getattr(self, k))
-               for k in DRS.requiredAttribs if k in dir(self)]
+               for k in DRS.requiredAttribs if hasattr(self, k)]
         res = 'drs.DRS(' + ', '.join(res) + ')'
         return res
 
     def __str__(self):
         res = ["{}: {!a}".format(k, getattr(self, k))
-               for k in DRS.requiredAttribs if k in dir(self)]
+               for k in DRS.requiredAttribs if hasattr(self, k)]
         res = "\n".join(res)
         return res
 
     def getAttribs(self):
         """
-        Current instance attributes.
-
-        Return
-        ------
-        dict : attirbutes
-
+        Return current instance attributes.
         """
         return {k: getattr(self, k)
-                for k in DRS.requiredAttribs if k in dir(self)}
+                for k in DRS.requiredAttribs if hasattr(self, k)}
 
     def _check_time_range(self, value):
         # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
@@ -267,14 +262,6 @@ class DRS:
         Check `value` is valid for the attribute `attr`.
 
         If `attr` is invalid, InvalidDRSAttribError is raised.
-
-        Parameters
-        ----------
-          value : str
-          attr : str
-        Returns:
-        --------
-          logical
         """
 
         if attr == 'sub_experiment_id':
@@ -310,80 +297,46 @@ class DRS:
         Each of attributes are checked by DRS.isValidValueForAttr().
 
         See isValidValueForAttr() for exception.
-
-        Parameters:
-        ----------
-          argv : dict
-        Returns
-        -------
-          self.
-
         """
 
         attribs = [a for a in argv.keys() if a in DRS.requiredAttribs]
 
-        for attr in attribs:
-            if (self.isValidValueForAttr(argv[attr], attr)):
-                setattr(self, attr, argv[attr])
+        for a in attribs:
+            if (self.isValidValueForAttr(argv[a], a)):
+                setattr(self, a, argv[a])
 
-        if ('variant_label' in dir(self)):
-            if ('sub_experiment_id' in dir(self)):
-                self.member_id = argv['sub_experiment_id'] \
-                                 + '-' \
-                                 + argv['variant_label']
+        if (hasattr(self, 'variant_label')):
+            if (hasattr(self, 'sub_experiment_id')):
+                self.member_id = "{}-{}".format(
+                    argv['sub_experiment_id'], argv['variant_label'])
             else:
                 self.member_id = argv['variant_label']
         return self
 
-
     def fileName(self):
         """
         Construct filename from current instance member attributes.
-
-        Return
-        ------
-        str : filename
         """
-
-        tmpl_w_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
-        tmpl_wo_time = "{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
-
-        if ('time_range' in dir(self)):
-            f = tmpl_w_time.format(
-                var=self.variable_id,
-                tab=self.table_id,
-                src=self.source_id,
-                exp=self.experiment_id,
-                mem=self.member_id,
-                grd=self.grid_label,
-                tim=self.time_range,
-            )
+        var = self.variable_id
+        tab = self.table_id
+        src = self.source_id
+        exp = self.experiment_id
+        mem = self.member_id
+        grd = self.grid_label
+        if (hasattr(self, 'time_range')):
+            tim=self.time_range
+            f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
         else:
-            f = tmpl_wo_time.format(
-                var=self.variable_id,
-                tab=self.table_id,
-                src=self.source_id,
-                exp=self.experiment_id,
-                mem=self.member_id,
-                grd=self.grid_label,
-            )
-
+            f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
         return str(f)
 
     def dirName(self, prefix=None):
         """
         Construct directory name by DRS from drs.DRS instance members.
 
+        If prefix is given, prepend it to the result path.
+
         If any attributes are missing, raises AttributeError.
-
-        Parameter
-        ---------
-        prefix(optional) : path-like : prepend to the result path.
-
-        Return
-        ------
-        str : dirname
-
         """
         d = PurePath(
            self.mip_era,
@@ -397,23 +350,16 @@ class DRS:
            self.grid_label,
            self.version)
         if (prefix):
-            d = prefix / d
+            d = PurePath(prefix) / d
         return str(d)
 
     def splitFileName(self, fname):
         """
-        Split filename as attributes for DRS.
+        Split filename `fname` to attributes for DRS.
 
-        If `fname` is invalid for DRS, raise ValueError 
+        Set them as members of the instance and also return as a dict.
 
-        Parameters
-        ----------
-        fname : path-like
-
-        Returns:
-        --------
-          dict
-
+        If `fname` is invalid for DRS, raise ValueError
         """
         (variable_id,
          table_id,
@@ -446,16 +392,11 @@ class DRS:
 
     def splitDirName(self, dname):
         """
-        Split given `dname` to set DRS().
+        Split dirname `dname` to attributes for DRS.
 
-        if `dname` has enough elements, return `{}`.
+        Then set them as members of the instance, and also return as a dict.
 
-        Parameters:
-        ----------
-          dname : path-like
-        Returns:
-        --------
-          dict
+        If `dname` has not enough elements, return `{}`.
         """
 
         res = {}
@@ -480,7 +421,6 @@ class DRS:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:
             variant_label = member_id
-            # sub_experiment_id = None
 
         for k in DRS.requiredAttribs:
             try:
@@ -496,26 +436,19 @@ class DRS:
 
     def isValidPath(self, path, directory=False, separated=False):
         """
-        Check if given `path` is composed of DRS-valid attributes.
+        Check if given `path` is DRS compliant.
 
         `path` may be a URL obtained by ESGF Search function.
 
-        If `directory` == True, ensure `path` is a directory, even if
+        If `directory` is True, treat `path` is a directory, even if
         that ends with '/' or not.
 
-        If `separate` == True, return dict that each attributes are
-        valid or not.
-
-        Parameter
-        ---------
-        `path` : `path-like`
-        `directory` : `logical`
-
-        Return
-        ------
-        `logical` or `dict` of {attr:logical} if `separated`
-
+        If `separate` is True, return a tuple of two dicts, first
+        element is for the filename, second is for the directory name,
+        both dicts' key/value shows that each attributes are valid
+        or not. If directory is True, first elements is just a True.
         """
+
         p = PurePath(path)
         if (directory):
             fname = None
