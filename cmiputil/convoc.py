@@ -16,9 +16,8 @@ and set a environment variable `CVPATH`, which is a colon separated
 string.
 """
 
-# import os.path
 from pathlib import Path
-from os.path import expandvars    ## hey, pathlib doesn't have expandvars !?
+from os.path import expandvars    # hey, pathlib doesn't have expandvars !?
 import json
 from os import environ
 from pprint import pprint
@@ -94,15 +93,6 @@ class ConVoc:
         Unless valid path is set, InvalidCVPathError is raised.
 
         Note that the order is meaningful.
-
-        Parameters
-        ---------
-          paths(optional) : str, paths joined by ':'
-
-        Returns
-        -------
-          nothing.
-
         """
 
         if (paths is None):
@@ -121,10 +111,6 @@ class ConVoc:
     def getSearchPath(self):
         """
         Return search paths for CV.
-
-        Returns
-        -------
-        list of Path():
         """
         return self.cvpath
 
@@ -136,14 +122,6 @@ class ConVoc:
 
         If attr is not valid, InvalidCVAttribError is raised.
         If valid CVs file not found, InvalidCVPathError is raised.
-
-        Parameters
-        ----------
-          attr : str
-
-        Returns
-        -------
-          nothing
         """
 
         if (attr not in self.managedAttribs):
@@ -171,19 +149,12 @@ class ConVoc:
 
     def getAttr(self, attr):
         """
-        Return values of given `attr` as a dict.
+        Return values of given `attr`, it may be dict, single value,
+        or "", depends on the attribute.
 
         `attr` must be valid and it's json file must be in CVPATH.
 
         See setAttr() for exception.
-
-        Parameters
-        ----------
-          attr : str
-
-        Returns
-        -------
-          dict : whole CV key-values
         """
 
         self.setAttr(attr)
@@ -194,17 +165,7 @@ class ConVoc:
         Check if given `key` is in CV `attr`.
 
         `attr` must be in DRS.requiredAttribs.
-
-        Parameters
-        ----------
-          attr : str
-          key : str
-
-        Returns
-        -------
-          logical
         """
-
         cv = self.getAttr(attr)
         return key in cv
 
@@ -215,19 +176,9 @@ class ConVoc:
         If `key` has no value, return None.
 
         If `attr` is invalid, InvalidCVAttribError is raised
+
         if `key` is invalid for `attr`, KeyError is raised
-
-        Parameters
-        ----------
-          attr : str
-          key : str
-
-        Returns
-        -------
-          object or None
-
         """
-
         try:
             res = self.getAttr(attr)[key]
         except TypeError:   # This attribute has only keys.
