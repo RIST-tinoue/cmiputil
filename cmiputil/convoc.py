@@ -133,14 +133,12 @@ class ConVoc:
 
         file = 'CMIP6_'+attr+'.json'
 
-        fpath = None
         for p in self.cvpath:
             f = p / file
             if (f.is_file()):
                 fpath = f
                 break
-
-        if fpath is None:
+        else:
             raise InvalidCVPathError(
                 'Valid CVs file not found, check CVPATH.')
 
