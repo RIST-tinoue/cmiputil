@@ -46,6 +46,54 @@ class InvalidCVPathError(ControlledVocabulariesError):
 class ConVoc:
     """
     Class for accessing CMIP6 Controlled Vocabularies.
+
+    This class reads CV from corresponding json file on demand and keep as a member.
+
+    Here's some examples.
+
+    >>> cvs = ConVoc()
+    >>> activity = cvs.getAttrib('activity_id')
+    >>> activity['CFMIP']
+    'Cloud Feedback Model Intercomparison Project'
+    >>> cvs.getValue('CFMIP', 'activity_id')
+    'Cloud Feedback Model Intercomparison Project'
+
+    >>> cvs.isValidValueForAttr('MIROC-ES2H', 'source_id')
+    True
+    >>> cvs.isValidValueForAttr('MIROC-ES2M', 'source_id')
+    False
+
+    In the below example, instance member attribute 'experiment_id' is
+    set AFTER isValidValueForAttr().
+
+    >>> hasattr(cvs, 'experiment_id')
+    False
+    >>> cvs.isValidValueForAttr('historical', 'experiment_id')
+    True
+    >>> hasattr(cvs, 'experiment_id')
+    True
+
+
+    In the below, example, `table_id` has only keys, no value,
+    getValue() return nothing (not None).
+
+    >>> cvs.isValidValueForAttr('Amon', 'table_id')
+    True
+    >>> cvs.getValue('Amon', 'table_id')
+
+    Invalid attribute raises InvalidCVAttribError.
+
+    >>> cvs.getAttrib('invalid_attr')
+    Traceback (most recent call last):
+      ...
+    InvalidCVAttribError: Invalid attribute as a CV: invalid_attr
+
+    Invalid key for valid attribute raises KeyError.
+
+    >>> cvs.getValue('CCMIP', 'activity_id')
+    Traceback (most recent call last):
+      ...
+    KeyError: 'CCMIP'
     """
 
     DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs"
@@ -114,7 +162,7 @@ class ConVoc:
         """
         return self.cvpath
 
-    def setAttr(self, attr):
+    def setAttrib(self, attr):
         """
         Read CV json file for `attr` and set members of self.
 
@@ -127,8 +175,8 @@ class ConVoc:
         if (attr not in self.managedAttribs):
             raise InvalidCVAttribError("Invalid attribute as a CV: "+attr)
 
-        if (attr in dir(self)):
-            # print('dbg:setAttr:attr already set:',attr)
+        if (hasattr(self, attr)):
+            # print('dbg:setAttrib:attr already set:',attr)
             return
 
         file = 'CMIP6_'+attr+'.json'
@@ -145,17 +193,17 @@ class ConVoc:
         with open(fpath, 'r') as f:
             setattr(self, attr, json.load(f))
 
-    def getAttr(self, attr):
+    def getAttrib(self, attr):
         """
         Return values of given `attr`, it may be dict, single value,
         or "", depends on the attribute.
 
         `attr` must be valid and it's json file must be in CVPATH.
 
-        See setAttr() for exception.
+        See setAttrib() for exception.
         """
 
-        self.setAttr(attr)
+        self.setAttrib(attr)
         return getattr(self, attr)[attr]
 
     def isValidValueForAttr(self, key, attr):
@@ -164,7 +212,7 @@ class ConVoc:
 
         `attr` must be in DRS.requiredAttribs.
         """
-        cv = self.getAttr(attr)
+        cv = self.getAttrib(attr)
         return key in cv
 
     def getValue(self, key, attr):
@@ -178,57 +226,13 @@ class ConVoc:
         if `key` is invalid for `attr`, KeyError is raised
         """
         try:
-            res = self.getAttr(attr)[key]
+            res = self.getAttrib(attr)[key]
         except TypeError:   # This attribute has only keys.
             res = None
         return res
 
 
 if (__name__ == '__main__'):
-
-    cvs = ConVoc()
-
-    print(cvs.getSearchPath())
-
-    source_id = cvs.getAttr('source_id')
-    print('len(source_id):', len(source_id))
-
-    # 'source_id' has set above
-    attr = 'source_id'
-    key = 'MIROC-ES2H'
-    print(key, attr, cvs.isValidValueForAttr(key, attr))
-
-    # 'experiment_id' has not set yet
-    attr = 'experiment_id'
-    key = 'historical'
-    print(key, attr, cvs.isValidValueForAttr(key, attr))
-    print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
-
-    pprint(cvs.getValue(key, attr))
-
-    # activity_id
-    attr = 'activity_id'
-    key = 'CMIP'
-    print(key, attr, cvs.isValidValueForAttr(key, attr))
-    print(getattr(cvs, attr) is not None)  # see there is cvs.experiment_id
-
-    pprint(cvs.getValue(key, attr))
-
-    attr = 'hoge_id'  # will raise exception
-    try:
-        cv = cvs.getAttr(attr)
-    except InvalidCVAttribError as e:
-        print("Excepted Error raised:", e)
-
-    # table_id has only keys, no value.
-    attr = 'table_id'
-    key = 'Amon'
-    cv = cvs.getAttr(attr)
-    print(key, attr, cvs.isValidValueForAttr(key, attr))
-    print(cvs.getValue(key, attr))  # should be None
-
-    attr = 'realm'
-    key = 'atmos'
-
-    print(key, attr, cvs.isValidValueForAttr(key, attr))
-    print(key, attr, cvs.getValue(key, attr))
+    from cmiputil import drs
+    import doctest
+    doctest.testmod()

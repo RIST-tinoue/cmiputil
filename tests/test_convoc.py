@@ -67,38 +67,38 @@ class test_ConVoc(unittest.TestCase):
 
 
     @unittest.skipUnless(os.environ.get('CVPATH'), 'since CVPATH not defined')
-    def test_02_getAttr01(self):
+    def test_02_getAttrib01(self):
         "Get actual table_id CV."
         attr = 'table_id'
         ref = ('CFday', 'Efx',  'IyrGre', 'SImon')
 
-        cv = convoc.ConVoc().getAttr(attr)
+        cv = convoc.ConVoc().getAttrib(attr)
         self.assertEqual(len(cv), 43)
         res = (cv[10], cv[20], cv[30], cv[40])
         self.assertEqual(ref, res)
 
-    def test_02_getAttr02(self):
+    def test_02_getAttrib02(self):
         "Invalid CV attribute, expect InvalidCVAttribError raises."
         attr = 'invalid_attr'
 
         cvs = convoc.ConVoc()
         with self.assertRaises(convoc.InvalidCVAttribError):
-            cvs.getAttr(attr)
+            cvs.getAttrib(attr)
 
-    def test_02_getAttr03(self):
+    def test_02_getAttrib03(self):
         "Get several actual CVs sequently."
 
         cvs = convoc.ConVoc()
-        cv = cvs.getAttr('activity_id')
+        cv = cvs.getAttrib('activity_id')
         self.assertEqual(len(cv), 24)
         self.assertTrue('PAMIP' in cv)
 
-        cv = cvs.getAttr('source_id')
+        cv = cvs.getAttrib('source_id')
         self.assertEqual(len(cv), 112)
         for k in ('MIROC6', 'NICAM16-7S', 'MRI-AGCM3-2'):
             self.assertTrue(k in cv)
 
-        cv = cvs.getAttr('grid_label')
+        cv = cvs.getAttrib('grid_label')
         self.assertEqual(len(cv), 45)
         for k in ('gn', 'gr', 'grz'):
             self.assertTrue(k in cv)
