@@ -192,7 +192,7 @@ class test_DRS(unittest.TestCase):
                'tas_Amon_MIROC6_piControl_r3i1p1f1_gn.nc']
 
         d = drs.DRS(**self.ga)
-        res = [d.set(variant_label=v).fileName()
+        res = [d.set(return_self=True, variant_label=v).fileName()
                for v in variants]
         self.assertEqual(ref, res)
 
@@ -265,7 +265,7 @@ class test_DRS(unittest.TestCase):
             'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/Amon/tas/gn/v20190308']
 
         d = drs.DRS(**self.ga)
-        res = [d.set(variant_label=v).dirName()
+        res = [d.set(return_self=True, variant_label=v).dirName()
                for v in variants]
 
         self.assertEqual(ref, res)

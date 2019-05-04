@@ -2,8 +2,8 @@
 # coding:utf-8
 
 """
-CMIP6 Data Reference Syntax (DRS):
-==================================
+CMIP6 Data Reference Syntax (DRS).
+
 (Excerpt from http://goo.gl/v1drZl)
 
 File name template:
@@ -110,15 +110,18 @@ __date__ = '2019/04/16'
 
 
 class DRSError(Exception):
-    "Base exception class for DRS."
+    """Base exception class for DRS."""
+
     pass
 
 
 class InvalidDRSAttribError(DRSError):
-    "Error for invalid attribute as DRS"
+    """Error for invalid attribute as DRS."""
+
 
 class InvalidPathAsDRSError(DRSError):
-    "Error for invalid path as DRS"
+    """Error for invalid path as DRS."""
+
 
 sample_attrs = {
     'activity_id': 'CMIP',
@@ -156,6 +159,8 @@ sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
 
 class DRS:
     """
+    Class for CMIP6 DRS.
+
     This class contains attributes necessary to construct a file
     name/directory name that is valid for CMIP6 DRS (Data Reference
     Syntax).  See http://goo.gl/v1drZl for details about DRS as well
@@ -183,6 +188,7 @@ class DRS:
     You can use the class member `drs.DRS.requiredAttribs` to know
     necessary attributes to set a filename/dirname valid for DRS.
     """
+
     requiredAttribs = (
         'activity_id',
         'experiment_id',
@@ -200,6 +206,8 @@ class DRS:
 
     def __init__(self, file=None, filename=None, **kw):
         """
+        Class constructor.
+
         If file is given, it must be a valid CMIP6 netCDF, set from
         global attributes in it,
 
@@ -213,7 +221,8 @@ class DRS:
 
         if (file):
             with nc.Dataset(file, "r") as ds:
-                attrs = {a: getattr(ds, a, None) for a in drs.DRS.requiredAttribs}
+                attrs = {a: getattr(ds, a, None)
+                         for a in drs.DRS.requiredAttribs}
             attrs = {a: v for a, v in attrs.items() if v != 'none'}
             self.set(**attrs)
         elif (filename):
@@ -235,9 +244,7 @@ class DRS:
         return res
 
     def getAttribs(self):
-        """
-        Return current instance attributes.
-        """
+        """Return current instance attributes."""
         return {k: getattr(self, k)
                 for k in DRS.requiredAttribs if hasattr(self, k)}
 
@@ -263,13 +270,13 @@ class DRS:
 
         If `attr` is invalid, InvalidDRSAttribError is raised.
         """
-
         if attr == 'sub_experiment_id':
             # TODO:
             # Currently, value of <sub_experiment_id> used in
             # published datasets is only 's1920', which is not in CVs.
             # So avoid check tentatively
-            return ConVoc().isValidValueForAttr(value, attr) or value == 's1920'
+            return (ConVoc().isValidValueForAttr(value, attr)
+                    or value == 's1920')
         elif attr in ConVoc().managedAttribs:
             return ConVoc().isValidValueForAttr(value, attr)
         elif attr == 'time_range':
@@ -285,12 +292,13 @@ class DRS:
         else:
             raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
 
-    def set(self, **argv):
+    def set(self, return_self=False, **argv):
         """
-        Set instance attributes, if attribute is in
-        `drs.DRS.requiredAttribs`.
+        Set instance attributes, if attribute is in `drs.DRS.requiredAttribs`.
 
         Missing attributes in argv are left unset/untouched.
+
+        Attribute with invalid value is also unset/untouched sirently.
 
         Unnecessary attributes are neglected.
 
@@ -298,9 +306,7 @@ class DRS:
 
         See isValidValueForAttr() for exception.
         """
-
         attribs = [a for a in argv.keys() if a in DRS.requiredAttribs]
-
         for a in attribs:
             if (self.isValidValueForAttr(argv[a], a)):
                 setattr(self, a, argv[a])
@@ -310,12 +316,34 @@ class DRS:
                 self.member_id = "{}-{}".format(
                     argv['sub_experiment_id'], argv['variant_label'])
             else:
-                self.member_id = argv['variant_label']
-        return self
+                self.member_id = self.variant_label
+        if (return_self):
+            return self
 
     def fileName(self):
         """
         Construct filename from current instance member attributes.
+
+        Example 1) DRS from dict w/o time_range;
+        >>> drs.DRS(**drs.sample_attrs).fileName()
+        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+
+        Example 2) DRS from dict w/ sub_experiment_id
+        >>> drs.DRS(**drs.sample_attrs_w_subexp).fileName()
+        'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+
+        Example 3) invalid value for valid attrib.
+        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+        >>> attrs.update({'table_id': 'invalid'})
+        >>> d = drs.DRS(**attrs).fileName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'table_id'
+
+        In the example above, table_id has invalid value, d.table_id
+        has NOT set, so fileName() raises that exception.
+
+
         """
         var = self.variable_id
         tab = self.table_id
@@ -324,7 +352,7 @@ class DRS:
         mem = self.member_id
         grd = self.grid_label
         if (hasattr(self, 'time_range')):
-            tim=self.time_range
+            tim = self.time_range
             f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
         else:
             f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
@@ -337,6 +365,26 @@ class DRS:
         If prefix is given, prepend it to the result path.
 
         If any attributes are missing, raises AttributeError.
+
+        Example 1) DRS from dict w/o time_range;
+        >>> drs.DRS(**drs.sample_attrs).dirName()
+        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+
+        Example 2) DRS from dict w/ sub_experiment_id
+        >>> drs.DRS(**drs.sample_attrs_w_subexp).dirName()
+        'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
+
+        Example 3) invalid value for valid attrib.
+        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+        >>> attrs['table_id'] = 'invalid'
+        >>> drs.DRS(**attrs).dirName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'table_id'
+
+        In the example above, table_id has invalid value, d.table_id
+        has NOT set, so fileName() raises that exception.
+
         """
         d = PurePath(
            self.mip_era,
@@ -360,6 +408,13 @@ class DRS:
         Set them as members of the instance and also return as a dict.
 
         If `fname` is invalid for DRS, raise ValueError
+
+        >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+        >>> drs.DRS().splitFileName(fname) # doctest: +NORMALIZE_WHITESPACE
+        {'experiment_id': 'piControl', 'grid_label': 'gn',
+        'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range':
+        '320001-329912', 'variable_id': 'tas', 'variant_label':
+        'r1i1p1f1'}
         """
         (variable_id,
          table_id,
@@ -397,8 +452,24 @@ class DRS:
         Then set them as members of the instance, and also return as a dict.
 
         If `dname` has not enough elements, return `{}`.
-        """
 
+        >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
+        ...          'piControl/r1i1p1f1/Amon/tas/gn/v20190308')
+        >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
+        {'activity_id': 'CMIP', 'experiment_id': 'piControl',
+        'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
+        'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
+        'variant_label': 'r1i1p1f1', 'version': 'v20190308',
+        'prefix': '/work/data/CMIP6'}
+
+        >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
+        ...          'Amon/tas/gn/v20190308')
+        >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
+        {'activity_id': 'CMIP', 'experiment_id': 'piControl',
+        'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
+        'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
+        'variant_label': 'r1i1p1f1', 'version': 'v20190308', 'prefix': ''}
+        """
         res = {}
 
         d = PurePath(dname)
@@ -440,15 +511,22 @@ class DRS:
 
         `path` may be a URL obtained by ESGF Search function.
 
-        If `directory` is True, treat `path` is a directory, even if
-        that ends with '/' or not.
+        If `directory` is True, treat `path` is a directory, even whether that
+        ends with '/' or not.
 
-        If `separate` is True, return a tuple of two dicts, first
-        element is for the filename, second is for the directory name,
-        both dicts' key/value shows that each attributes are valid
-        or not. If directory is True, first elements is just a True.
+        If `separate` is True, return a tuple of two dicts, first element is
+        for the filename, second is for the directory name, both dicts'
+        key/value shows that each attributes are valid or not. If directory is
+        True, first elements is just a True.
+
+        >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/'
+        ...       'IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/'
+        ...       'gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-'
+        ...       'pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
+        >>> drs.DRS().isValidPath(url)
+        True
+
         """
-
         p = PurePath(path)
         if (directory):
             fname = None
@@ -478,105 +556,5 @@ class DRS:
 
 if __name__ == "__main__":
     from cmiputil import drs
-
-    def ex01():
-        print("==ex01: DRS from dict w/o time_range ==")
-        d = drs.DRS(**drs.sample_attrs)
-        print(d)
-        print("dirname:", d.dirName())
-        print("filename:", d.fileName())
-        print("="*30+"\n")
-
-    def ex02():
-        print("==ex02: DRS from dict w/ sub_experiment_id ==")
-        d = drs.DRS(**drs.sample_attrs_w_subexp)
-        print(d)
-        print("dirname(): ", d.dirName())
-        print("filename(): ", d.fileName())
-        print("="*30+"\n")
-
-        # print(d)
-
-    def ex03():
-        print("==ex03: dict with **invalid** `table_id`")
-        attrs = drs.sample_attrs
-        attrs.update({'table_id': 'invalid'})
-        pprint(attrs)
-        print("== DRS from this dict ==")
-        d = drs.DRS(**attrs)
-        print(d)
-        print("== Note that `table_id` is not defined above,"
-              "causes AttributeError below. ==")
-        print("=== calling drs.DRS.fileName()...")
-        try:
-            print(d.fileName())
-        except AttributeError:
-            import traceback
-            print("expected Exception raised:")
-            traceback.print_exc()
-        print("=== calling drs.DRS.dirName()...")
-        try:
-            print(d.dirName())
-        except AttributeError:
-            import traceback
-            print("expected Exception raised:")
-            traceback.print_exc()
-        print("="*30+"\n")
-
-    def ex04():
-        print("== ex04: splitFileName")
-        fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-        print(fname)
-        d = drs.DRS()
-        res = d.splitFileName(fname)
-        pprint(res)
-        print("="*30+"\n")
-
-    def ex05():
-        print("== ex05: splitDirName")
-        dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
-                 'piControl/r1i1p1f1/Amon/tas/gn/v20190308')
-        dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
-                 'Amon/tas/gn/v20190308')
-        print(dname)
-        d = drs.DRS()
-        res = d.splitDirName(dname)
-        pprint(res)
-        print("="*30+"\n")
-
-    def ex06():
-        url = ("http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/"
-               "IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/"
-               "gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-"
-               "pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc")
-        fname = PurePath(url).name
-        dname = PurePath(url).parent
-
-        print("== ex05: isValidPath?")
-
-        print('url:', url)
-        res = drs.DRS().isValidPath(url, separated=True)
-        pprint(res)
-        print(all(res))
-
-        print('fname:', fname)
-        res = drs.DRS().isValidPath(fname, separated=True)
-        pprint(res)
-        print(all(res))
-
-        print('dname:', dname)
-        res = drs.DRS().isValidPath(dname, directory=True, separated=True)
-        pprint(res)
-        print(all(res))
-
-        print("="*30+"\n")
-
-    def main():
-        ex01()
-        ex02()
-        ex03()
-        ex04()
-        ex05()
-        ex06()
-
-    main()
+    import doctest
+    doctest.testmod()
