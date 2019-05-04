@@ -4,13 +4,9 @@
 # xarray with OPeNDAP Aggregation version.
 # Using xarray's plot()
 
-import sys
-from cftime import num2date
-from pprint import pprint
+from cmiputil.esgfsearch import fields_default, getCatURLs, getDataset
 import matplotlib.pyplot as plt
-sys.path.append('.')
-sys.path.append('..')
-from ESGFSearch import fields_default, getCatURLs, getDataset
+from pprint import pprint
 
 
 if (__name__ == '__main__'):
@@ -60,24 +56,9 @@ if (__name__ == '__main__'):
     # draw timeseries of each dataset
     fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
-    # ax.set_title('tas')
-    # ax.set_xlabel('time')
-    # ax.set_ylabel('K')
 
     for d in datasets:
-        # label = d.source_id+':'+d.experiment_id+':'+d.variant_label
-        # print(label)
-        # times = num2date(d['time'][:], d['time'].units)
-        # values = d['tas'].sel(lon=0, lat=0, method='nearest')
-
-        # try:
-        #     ax.plot(times, values, label=label)
-        #     ax.legend()
-        # except RuntimeError as e:
-        #     print('Skip error:', e.args)
-        #     continue
         vals = d['tas'].sel(lon=0, lat=0, method='nearest')
-        print(type(vals))
         vals.plot(ax=ax,add_legend=True)
         ax.legend()
     print('Ready to show plot...')

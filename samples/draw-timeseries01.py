@@ -3,13 +3,10 @@
 
 # xarray, mfdataset version
 
-import sys
+from cmiputil.esgfsearch import fields_default, getCatURLs, getDataset
+import matplotlib.pyplot as plt
 from cftime import num2date
 from pprint import pprint
-import matplotlib.pyplot as plt
-sys.path.append('.')
-sys.path.append('..')
-from esgfsearch import fields_default, getCatURLs, getDataset
 
 
 if (__name__ == '__main__'):
@@ -26,10 +23,10 @@ if (__name__ == '__main__'):
         # 'source_id': 'CESM2',
         # 'source_id': 'E3SM-1-0',
         # 'source_id': 'GFDL-CM4',
-        'source_id': 'BCC-CSM2-MR',
+        # 'source_id': 'BCC-CSM2-MR',
         # 'source_id': 'CESM2-WACCM',
         # 'source_id': 'EC-Earth3-LR',
-        # 'source_id':'MIROC6,MRI-ESM2-0, CNRM-CM6-1',
+        'source_id':'MIROC6,MRI-ESM2-0, CNRM-CM6-1',
         'experiment_id': 'piControl, abrupt-4xCO2',
         # 'experiment_id': 'historical',
         # 'experiment_id': 'piControl',
