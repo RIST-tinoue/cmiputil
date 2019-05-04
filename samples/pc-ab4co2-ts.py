@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# from ESGFSearch import fields_default, getCatURLs, getDataset
-import esgfsearch
+from cmiputil import esgfsearch
 from pprint import pprint
 from os.path import basename
 from cftime import num2date
