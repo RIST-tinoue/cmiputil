@@ -22,7 +22,7 @@ def isValidFileAsDRS(f, verbose=True):
     d = drs.DRS()
 
     results = {}
-    results = {a: d.isValid4Attr(v, a) for a, v in f_attrs.items()}
+    results = {a: d.isValidValueForAttr(v, a) for a, v in f_attrs.items()}
     res = all(results.values())
 
     if verbose and not res:
