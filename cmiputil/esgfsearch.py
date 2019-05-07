@@ -3,7 +3,11 @@
 Search by ESGF RESTful API, get and open multiple datafiles,
 create meta info.
 
-Using siphon and xarray version.
+See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
+for ESGF RESTful API.
+
+
+This version uses siphon and xarray.
 """
 
 import urllib3
@@ -20,9 +24,15 @@ class NotFoundError(Exception):
 
 
 # defaults
+
+#: Doc default search service URL
 search_service = 'http://esgf-node.llnl.gov/esg-search/'
 # search_service = 'http://esgf-data.dkrz.de/esg-search/'
+
+#: Doc default service type
 service_type = 'search'
+
+#: Doc default keywords for RESTful API.
 keyword_defaults = {
     'format': r'application/solr+json',
     'replica': 'false',
@@ -31,12 +41,15 @@ keyword_defaults = {
     'type': 'Dataset',  # must be to get catalog
     'fields': 'url',
     }
+
+#: Doc default fasets for RESTful API.
 facet_defaults = {
     'project': 'CMIP6',
     'table_id': 'Amon',
     'frequency': 'mon',
     'variant_label': 'r1i1p1f1',
     }
+
 fields_default = dict(keyword_defaults)
 fields_default.update(facet_defaults)
 
@@ -63,17 +76,21 @@ fields_default.update(facet_defaults)
 def getCatURLs(fields, base_url=None):
     """
     Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
-    `fields` consists of keyword parameters and facet parameters.
 
-    See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
-    for ESGF RESTful API.
-
-    Parameters:
-    base_url : search_searvice + search_type
-    fields : dict, will be given to http.request()
-
+    Args:
+        fields(dict): keyword parameters and facet parameters.
+        base_url : search_searvice + service_type
+    Raises:
+        NotFoundError: raised if no catalog found.
     Return:
-    urls : list of TDS catalog URLs found.
+        list:  TDS catalog URLs found.
+
+    If `base_url` is None, :data:`.search_service` +
+    :data:`.service_type` is used.
+
+    `field` is initialized by :data:`.keyword_defautls` and
+    :data:`.facet_defaults`.
+
     """
     if (base_url is None):
         base_url = search_service+service_type
@@ -108,22 +125,22 @@ def getCatURLs(fields, base_url=None):
 
 
 def getDataset(url, aggregate=True, netcdf=False):
-    """From given url of TDS catalog, open catalog and get all urls of files in it,
-    open as xarray.mfdataset and return it.
+    """
+    From given URL of TDS catalog, return xarray or netCDF4 dataset.
 
-    get Aggregated Dataset from catarog URL.
+    A URL of TDS catalog is obtained by, for example,
+    :meth:`getCatURLs()`.
 
-    If `aggregate` is True(default), access aggregated dataset, else
+    If `aggregate` is ``True``, access aggregated dataset, else
     access all of files listed in the catalog.
 
-    Parameters:
-    url : url of TDS catalog
-
+    Args:
+        url(str): url of TDS catalog
+        aggregate(bool): if True, access aggregate link in TDS catalog.
+        netcdf(bool): if True return netCDF4's dataset, instead of xarray's.
     Returns:
-    ds : xarray.mfdataset, or None if unable to open
-
-
-    return Opened xarray dataset.
+        xarray.dataset() or xarray.mfdataset() or netCDF4.Dataset() or
+        netCDF4.MFDataset() or None: opened dataset
 
     """
     try:

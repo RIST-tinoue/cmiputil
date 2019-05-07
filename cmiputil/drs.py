@@ -28,33 +28,33 @@ hyphen must not appear in <variable_id>.  Underscores are prohibited
 throughout except as shown in the template.
 
 The <member_id> is constructed from the <sub_experiment_id> and
-<variant_label> using the following algorithm::
+<variant_label> using the following algorithm:
 
-    if <sub_experiment_id> == “none”
-        <member_id> = <variant_label>
-    else
-        <member_id> = <sub_experiment_id>-<variant_label>
-    endif
+|    if <sub_experiment_id> == “none”
+|        <member_id> = <variant_label>
+|    else
+|        <member_id> = <sub_experiment_id>-<variant_label>
+|    endif
 
-The <time_range> is a string generated consistent with the following::
+The <time_range> is a string generated consistent with the following:
 
-    if frequency == “fx” then
-        <time_range>=””
-    else
-        <time_range> = N1-N2
-        where N1 and N2 are integers of the form
-        ‘yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]’ (expressed as a string,where
-        where ‘yyyy’, ‘MM’, ‘dd’, ‘hh’ ‘mm’ and ‘ss’ are integer year,
-        month, day, hour, minute, and second, respectively)
-    endif
+|    if frequency == “fx” then
+|        <time_range>=””
+|    else
+|        <time_range> = N1-N2
+|        where N1 and N2 are integers of the form
+|        ‘yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]’ (expressed as a string,where
+|        where ‘yyyy’, ‘MM’, ‘dd’, ‘hh’ ‘mm’ and ‘ss’ are integer year,
+|        month, day, hour, minute, and second, respectively)
+|    endif
 
-where <suffix> is defined as follows::
+where <suffix> is defined as follows:
 
-    if the variable identified by variable_id has a time dimension with a “climatology” attribute then
-         <suffix> = “-clim”
-    else
-         <suffix> = “”
-    endif
+|    if the variable identified by variable_id has a time dimension with a “climatology” attribute then
+|         <suffix> = “-clim”
+|    else
+|         <suffix> = “”
+|    endif
 
 and where the precision of the time_range strings is determined by the
 <frequency> global attribute.
@@ -199,7 +199,7 @@ class DRS:
     Note that ``member_id`` is not able to set directly, this is set by
     ``sub_experiment_id`` (omittable) and ``variant_label``.
 
-    You can use the class member :py:attr:`requiredAttribs` to know
+    You can use the class member :attr:`requiredAttribs` to know
     necessary attributes to set a filename/dirname valid for DRS.
 
     Args:
@@ -262,7 +262,7 @@ class DRS:
     def getAttribs(self):
         """
         Return current instance attributes defined of
-        :py:attr:`requiredAttribs` and their values.
+        :attr:`requiredAttribs` and their values.
 
         Returns:
             dict: attribute-value pairs.
@@ -322,14 +322,14 @@ class DRS:
 
     def set(self, return_self=False, **argv):
         """
-        Set instance attributes, if attribute is in :py:attr:`requiredAttribs`.
+        Set instance attributes, if attribute is in :attr:`requiredAttribs`.
 
         Missing attributes in `argv` are left unset/untouched.
         Attribute with invalid value is also unset/untouched sirently.
         Unnecessary attributes are neglected.
 
         Each of attributes are checked by
-        :py:meth:`isValidValueForAttr()` before set.
+        :meth:`isValidValueForAttr()` before set.
 
         Args:
             argv (dict): attribute/value pairs
@@ -577,7 +577,7 @@ class DRS:
         Check if given `path` is DRS compliant.
 
         `path` may be a URL obtained by ESGF Search function. See
-        :py:mod:`cmiputil.esgfsearch` for details.
+        :mod:`cmiputil.esgfsearch` for details.
 
         Args:
             path (Path-like) : pathname to be checked

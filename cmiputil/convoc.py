@@ -50,7 +50,7 @@ class ConVoc:
     This class reads CV from corresponding json file on demand and
     keep as a member.
 
-    See :py:meth:`setSearchPath()` for the argument `path`.
+    See :meth:`setSearchPath()` for the argument `path`.
 
     Examples:
 
@@ -67,7 +67,7 @@ class ConVoc:
     False
 
     In the below example, instance member attribute `experiment_id` is
-    set AFTER :py:meth:`isValidValueForAttr()`.
+    set AFTER :meth:`isValidValueForAttr()`.
 
     >>> hasattr(cvs, 'experiment_id')
     False
@@ -78,7 +78,7 @@ class ConVoc:
 
 
     In the below, example, `table_id` has only keys with no value,
-    :py:meth`getValue()` return nothing (not ``None``).
+    :meth`getValue()` return nothing (not ``None``).
 
     >>> cvs.isValidValueForAttr('Amon', 'table_id')
     True
@@ -133,7 +133,7 @@ class ConVoc:
 
         1) given `path`
         2) environment variable `CVPATH`
-        3) :py:attr:`DEFAULT_CVPATH`
+        3) :attr:`DEFAULT_CVPATH`
 
         Non-existent directories are omitted silently.  You have to
         specify '.' explicitly if necessary.  Note that the order is
@@ -178,7 +178,7 @@ class ConVoc:
 
         Args:
             attr(str): attribute to be read and set,
-                       must be in :py:attr:`managedAttribs`
+                       must be in :attr:`managedAttribs`
         Raises:
             InvalidCVAttribError: if `attr` is invalid.
             InvalidCVPathError: if a valid CV file not found.
@@ -216,7 +216,7 @@ class ConVoc:
 
         Args:
             attr(str): attribute to get.
-                       must be in :py:attr:`managedAttribs`
+                       must be in :attr:`managedAttribs`
         Raises:
             InvalidCVAttribError: if `attr` is invalid
         Returns:
@@ -232,7 +232,7 @@ class ConVoc:
 
         Args:
             key(str): to be checked
-            attr(str): attribute, must be in :py:attr:`managedAttribs`
+            attr(str): attribute, must be in :attr:`managedAttribs`
         Raises:
             InvalidCVAttribError: if `attr` is invalid
             KeyError: if `key` is invalid for `attr`
@@ -248,7 +248,7 @@ class ConVoc:
 
         Args:
             key(str): key to be get it's value.
-            attr(str): attribute, must be in :py:attr:`managedAttribs`
+            attr(str): attribute, must be in :attr:`managedAttribs`
         Raises:
             InvalidCVAttribError: if `attr` is invalid
             KeyError: if `key` is invalid for `attr`
