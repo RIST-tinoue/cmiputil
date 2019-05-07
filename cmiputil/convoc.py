@@ -47,9 +47,12 @@ class ConVoc:
     """
     Class for accessing CMIP6 Controlled Vocabularies.
 
-    This class reads CV from corresponding json file on demand and keep as a member.
+    This class reads CV from corresponding json file on demand and
+    keep as a member.
 
-    Here's some examples.
+    See :py:meth:`setSearchPath()` for the argument `path`.
+
+    Examples:
 
     >>> cvs = ConVoc()
     >>> activity = cvs.getAttrib('activity_id')
@@ -63,8 +66,8 @@ class ConVoc:
     >>> cvs.isValidValueForAttr('MIROC-ES2M', 'source_id')
     False
 
-    In the below example, instance member attribute 'experiment_id' is
-    set AFTER isValidValueForAttr().
+    In the below example, instance member attribute `experiment_id` is
+    set AFTER :py:meth:`isValidValueForAttr()`.
 
     >>> hasattr(cvs, 'experiment_id')
     False
@@ -74,8 +77,8 @@ class ConVoc:
     True
 
 
-    In the below, example, `table_id` has only keys, no value,
-    getValue() return nothing (not None).
+    In the below, example, `table_id` has only keys with no value,
+    :py:meth`getValue()` return nothing (not ``None``).
 
     >>> cvs.isValidValueForAttr('Amon', 'table_id')
     True
@@ -97,6 +100,7 @@ class ConVoc:
     """
 
     DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs"
+
     managedAttribs = (
         'activity_id',
         'experiment_id',
@@ -110,16 +114,13 @@ class ConVoc:
         'source_id',
         'source_type',
         'sub_experiment_id',
-        'table_id',
-    )
+        'table_id')
+    """
+    Attributes managed by this class. Note that this is the CLASS
+    attribute, not an instance attribute.
+    """
 
     def __init__(self, paths=None):
-        """
-        Initialize self.
-
-        See setSearchPath() for arguments.
-        """
-
         self.setSearchPath(paths)
         pass
 
@@ -127,20 +128,23 @@ class ConVoc:
         """
         Set search path for CV json files.
 
-        Directories taken from the environment variable `CVPATH`, which is
-        a colon separated string.
+        Directories taken from a colon separated string in the order
+        below:
 
-        If `CVPATH` is not set, `ConVoc.DEFAULT_CVPATH` is used.
+        1) given `path`
+        2) environment variable `CVPATH`
+        3) :py:attr:`DEFAULT_CVPATH`
 
-        If `paths` given, it is used instead of CVPATH.
+        Non-existent directories are omitted silently.  You have to
+        specify '.' explicitly if necessary.  Note that the order is
+        meaningful.
 
-        Non-existent directories are omitted silently.
-
-        You have to specify '.' explicitly if necessary.
-
-        Unless valid path is set, InvalidCVPathError is raised.
-
-        Note that the order is meaningful.
+        Args:
+            path(str): a colon separated string
+        Raises:
+            InvalidCVPathError: Unless valid path is set.
+        Returns:
+            nothing
         """
 
         if (paths is None):
@@ -159,6 +163,10 @@ class ConVoc:
     def getSearchPath(self):
         """
         Return search paths for CV.
+
+        Returns:
+            list of path-like: search path.
+
         """
         return self.cvpath
 
@@ -166,10 +174,16 @@ class ConVoc:
         """
         Read CV json file for `attr` and set members of self.
 
-        If attr is already read and set, do nothing.
+        If `attr` is already read and set, do nothing.
 
-        If attr is not valid, InvalidCVAttribError is raised.
-        If valid CVs file not found, InvalidCVPathError is raised.
+        Args:
+            attr(str): attribute to be read and set,
+                       must be in :py:attr:`managedAttribs`
+        Raises:
+            InvalidCVAttribError: if `attr` is invalid.
+            InvalidCVPathError: if a valid CV file not found.
+        Returns:
+            nothing.
         """
 
         if (attr not in self.managedAttribs):
@@ -195,12 +209,18 @@ class ConVoc:
 
     def getAttrib(self, attr):
         """
-        Return values of given `attr`, it may be dict, single value,
-        or "", depends on the attribute.
+        Return values of given `attr`.
 
-        `attr` must be valid and it's json file must be in CVPATH.
+        `attr` must be valid and it's json file must be in CV search
+        path.
 
-        See setAttrib() for exception.
+        Args:
+            attr(str): attribute to get.
+                       must be in :py:attr:`managedAttribs`
+        Raises:
+            InvalidCVAttribError: if `attr` is invalid
+        Returns:
+            str or dict or "": CV values for `attr`
         """
 
         self.setAttrib(attr)
@@ -210,7 +230,14 @@ class ConVoc:
         """
         Check if given `key` is in CV `attr`.
 
-        `attr` must be in DRS.requiredAttribs.
+        Args:
+            key(str): to be checked
+            attr(str): attribute, must be in :py:attr:`managedAttribs`
+        Raises:
+            InvalidCVAttribError: if `attr` is invalid
+            KeyError: if `key` is invalid for `attr`
+        Returns:
+            bool
         """
         cv = self.getAttrib(attr)
         return key in cv
@@ -219,11 +246,15 @@ class ConVoc:
         """
         Return current value of `key` of attribute `attr`.
 
-        If `key` has no value, return None.
+        Args:
+            key(str): key to be get it's value.
+            attr(str): attribute, must be in :py:attr:`managedAttribs`
+        Raises:
+            InvalidCVAttribError: if `attr` is invalid
+            KeyError: if `key` is invalid for `attr`
+        Return:
+            object: value of `key`, or None if `key` has no value.
 
-        If `attr` is invalid, InvalidCVAttribError is raised
-
-        if `key` is invalid for `attr`, KeyError is raised
         """
         try:
             res = self.getAttrib(attr)[key]

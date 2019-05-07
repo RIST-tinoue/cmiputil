@@ -366,27 +366,27 @@ class DRS:
 
         Examples:
 
-            DRS from dict w/o `time_range`
+        DRS from dict w/o `time_range`
 
-            >>> drs.DRS(**drs.sample_attrs).fileName()
-            'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        >>> drs.DRS(**drs.sample_attrs).fileName()
+        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
-            DRS from dict w/ `sub_experiment_id`
+        DRS from dict w/ `sub_experiment_id`
 
-            >>> drs.DRS(**drs.sample_attrs_w_subexp).fileName()
-            'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+        >>> drs.DRS(**drs.sample_attrs_w_subexp).fileName()
+        'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
 
-            Invalid value for valid attrib
+        Invalid value for valid attrib
 
-            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-            >>> attrs.update({'table_id': 'invalid'})
-            >>> d = drs.DRS(**attrs).fileName()
-            Traceback (most recent call last):
-              ...
-            AttributeError: 'DRS' object has no attribute 'table_id'
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> attrs.update({'table_id': 'invalid'})
+        >>> d = drs.DRS(**attrs).fileName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'table_id'
 
-            In the example above, since the key ``table_id`` has invalid value,
-            ``d.table_id`` is NOT set, and so the exception raised.
+        In the example above, since the key ``table_id`` has invalid value,
+        ``d.table_id`` is NOT set, and so the exception raised.
         """
         var = self.variable_id
         tab = self.table_id
@@ -416,28 +416,27 @@ class DRS:
 
         Examples:
 
-            DRS from dict w/o ``time_range``.
+        DRS from dict w/o ``time_range``.
 
-            >>> drs.DRS(**drs.sample_attrs).dirName()
-            'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+        >>> drs.DRS(**drs.sample_attrs).dirName()
+        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
 
-            DRS from dict w/ ``sub_experiment_id``.
+        DRS from dict w/ ``sub_experiment_id``.
 
-            >>> drs.DRS(**drs.sample_attrs_w_subexp).dirName() # doctest: +NORMALIZE_WHITESPACE
-            'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/'
-            'Amon/rsdscs/gr/v20190110'
+        >>> drs.DRS(**drs.sample_attrs_w_subexp).dirName() # doctest: +NORMALIZE_WHITESPACE
+        'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
-            Invalid value for valid attrib.
+        Invalid value for valid attrib.
 
-            >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
-            >>> attrs['table_id'] = 'invalid'
-            >>> drs.DRS(**attrs).dirName()
-            Traceback (most recent call last):
-              ...
-            AttributeError: 'DRS' object has no attribute 'table_id'
+        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+        >>> attrs['table_id'] = 'invalid'
+        >>> drs.DRS(**attrs).dirName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'table_id'
 
-            In the example above, since ``table_id`` has invalid value, `d.table_id`
-            has NOT set, and so the exception is raised.
+        In the example above, since ``table_id`` has invalid value, `d.table_id`
+        has NOT set, and so the exception is raised.
 
         """
         d = PurePath(
