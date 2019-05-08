@@ -4,20 +4,24 @@ Search by ESGF RESTful API, get and open multiple datafiles,
 create meta info.
 
 See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
-for ESGF RESTful API.
+for the detail ESGF RESTful API.
 
 
-This version uses siphon and xarray.
+This version uses
+`siphon <https://www.unidata.ucar.edu/software/siphon/>`_ and
+`xarray <http://xarray.pydata.org/>`_.
+
+See ``if (__name__ == '__main__'):`` section in the source file for
+the example usage.
+
+
 """
 
 import urllib3
 import json
-from pprint import pprint
-from os.path import basename
 import xarray as xr
 import netCDF4 as nc
 from siphon.catalog import TDSCatalog
-import matplotlib.pyplot as plt
 
 class NotFoundError(Exception):
     pass
@@ -25,14 +29,14 @@ class NotFoundError(Exception):
 
 # defaults
 
-#: Doc default search service URL
+#: Default search service URL
 search_service = 'http://esgf-node.llnl.gov/esg-search/'
 # search_service = 'http://esgf-data.dkrz.de/esg-search/'
 
-#: Doc default service type
+#: Default service type
 service_type = 'search'
 
-#: Doc default keywords for RESTful API.
+#: Default keywords for RESTful API.
 keyword_defaults = {
     'format': r'application/solr+json',
     'replica': 'false',
@@ -42,7 +46,7 @@ keyword_defaults = {
     'fields': 'url',
     }
 
-#: Doc default fasets for RESTful API.
+#: Default fasets for RESTful API.
 facet_defaults = {
     'project': 'CMIP6',
     'table_id': 'Amon',
@@ -79,7 +83,7 @@ def getCatURLs(fields, base_url=None):
 
     Args:
         fields(dict): keyword parameters and facet parameters.
-        base_url : search_searvice + service_type
+        base_url : base URL of the ESGF search service.
     Raises:
         NotFoundError: raised if no catalog found.
     Return:
@@ -194,6 +198,9 @@ def getDataset(url, aggregate=True, netcdf=False):
 
 
 if (__name__ == '__main__'):
+    from pprint import pprint
+    import matplotlib.pyplot as plt
+    import cftime
 
     # with timer('main'):
     #     main()
@@ -252,7 +259,6 @@ if (__name__ == '__main__'):
     ax.set_xlabel('time')
     ax.set_ylabel('K')
 
-    import cftime
     for d in datasets:
         label = d.source_id+': '+d.experiment_id+': '+d.variant_label
         print(label)
