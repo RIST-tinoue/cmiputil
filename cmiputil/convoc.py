@@ -78,7 +78,7 @@ class ConVoc:
 
 
     In the below, example, `table_id` has only keys with no value,
-    :meth`getValue()` return nothing (not ``None``).
+    :meth:`getValue()` return nothing (not ``None``).
 
     >>> cvs.isValidValueForAttr('Amon', 'table_id')
     True
@@ -99,7 +99,7 @@ class ConVoc:
     KeyError: 'CCMIP'
     """
 
-    DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs"
+    DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs:~/Data/CMIP6_CVs"
 
     managedAttribs = (
         'activity_id',
@@ -253,7 +253,7 @@ class ConVoc:
             InvalidCVAttribError: if `attr` is invalid
             KeyError: if `key` is invalid for `attr`
         Return:
-            object: value of `key`, or None if `key` has no value.
+            object: value of `key`, or ``None`` if `key` has no value.
 
         """
         try:
