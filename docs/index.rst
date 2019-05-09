@@ -3,14 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cmiputil's documentation!
-====================================
+==========
+`cmiputil`
+==========
+
+
+.. include::  ../README.rst
+   :start-line: 3
+
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
+   :caption: Documents:
 
    cmiputil
+
 
 
 Indices and tables
