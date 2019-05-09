@@ -4,4 +4,4 @@ from . import convoc
 from . import drs
 from . import esgfsearch
 
-__version__ = '0.1'
+__version__ = '0.2'
