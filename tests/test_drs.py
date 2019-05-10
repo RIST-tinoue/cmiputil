@@ -426,7 +426,8 @@ class test_DRS(unittest.TestCase):
             '19200101-20121231',
             '1920-2012-clim',
             '192001-201212-clim',
-            '19200101-20121231-clim',]
+            '192001-clim-201212-clim',
+            '19200101-20121231-clim']
         invalid_values = [
             'hoge',
             '1920',
@@ -438,8 +439,7 @@ class test_DRS(unittest.TestCase):
             '19200101-20121201'
             '1920-2012_clim',
             '192001-201212-clima',
-            '19200101-20121231-climatology',
-            ]
+            '19200101-20121231-climatology']
         for v in valid_values:
             self.assertTrue(drs.DRS()._check_time_range(v))
         for v in invalid_values:
@@ -453,8 +453,7 @@ class test_DRS(unittest.TestCase):
             'ver.1.0',
             '20190510',
             '2019',
-            'vv20190510',
-            ]
+            'vv20190510']
         for v in valid_values:
             self.assertTrue(drs.DRS()._check_version(v))
         for v in invalid_values:

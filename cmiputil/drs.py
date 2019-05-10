@@ -272,15 +272,19 @@ class DRS:
                 for k in DRS.requiredAttribs if hasattr(self, k)}
 
     def _check_time_range(self, value):
-        # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
+        # TODO: precision and `-clim` depends on the attribute `frequency`.
+        #       but I don't need quality assurance.
         if (value is None):
             return False
         elif (value == ""):
             return True
-        # pat = re.compile(r'\d{4,8}-\d{4,8}(-clim)?')
-        pat = re.compile(r'\d{4}(\d\d(\d\d)?)?' r'-'
-                         r'\d{4}(\d\d(\d\d)?)?'
-                         r'(-clim)?')
+        pat = re.compile(r'\d{4,8}-\d{4,8}(-clim)?')
+        # pat = re.compile(r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+        #                  r'(-clim)?'
+        #                  r'-'
+        #                  r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+        #                  r'(-clim)?'
+        #                  )
         return pat.fullmatch(value) is not None
 
     def _check_version(self, value):
