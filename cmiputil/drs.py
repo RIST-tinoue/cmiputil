@@ -119,6 +119,7 @@ __date__ = '2019/05/09'
 from cmiputil.convoc import ConVoc
 import netCDF4 as nc
 from pathlib import PurePath
+import re
 from pprint import pprint
 
 
@@ -272,19 +273,31 @@ class DRS:
 
     def _check_time_range(self, value):
         # TODO: must be 'YYYYMMDD-YYYYMMDD', use regex.
-        return value is not None
+        if (value is None):
+            return False
+        elif (value == ""):
+            return True
+        # pat = re.compile(r'\d{4,8}-\d{4,8}(-clim)?')
+        pat = re.compile(r'\d{4}(\d\d(\d\d)?)?' r'-'
+                         r'\d{4}(\d\d(\d\d)?)?'
+                         r'(-clim)?')
+        return pat.fullmatch(value) is not None
 
     def _check_version(self, value):
-        # TODO: must be 'vYYYYMMDD', use regex.
-        return value is not None
+        if (value is None):
+            return False
+        pat = re.compile(r'v\d{8}')
+        return pat.fullmatch(value) is not None
 
     def _check_variable_id(self, value):
         # TODO: Is there any method to check ?
         return value is not None
 
     def _check_variant_label(self, value):
-        # TODO: must be r{i}i{i}p{i}f{i}, use regex.
-        return value is not None
+        if (value is None):
+            return False
+        pat = re.compile(r'r\d+i\d+p\d+f\d+')
+        return pat.fullmatch(value) is not None
 
     def isValidValueForAttr(self, value, attr):
         """

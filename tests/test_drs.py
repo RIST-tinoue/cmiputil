@@ -419,6 +419,62 @@ class test_DRS(unittest.TestCase):
         res = drs.DRS().isValidPath(self.url_w_subexp, separated=True)
         self.assertEqual(ref, res)
 
+    def test_check_time_range(self):
+        valid_values = [
+            '1920-2012',
+            '192001-201212',
+            '19200101-20121231',
+            '1920-2012-clim',
+            '192001-201212-clim',
+            '19200101-20121231-clim',]
+        invalid_values = [
+            'hoge',
+            '1920',
+            'v1920',
+            '19201-201209',
+            '192001-20129',
+            '1920011-2012121'
+            '19200101-2012121'
+            '19200101-20121201'
+            '1920-2012_clim',
+            '192001-201212-clima',
+            '19200101-20121231-climatology',
+            ]
+        for v in valid_values:
+            self.assertTrue(drs.DRS()._check_time_range(v))
+        for v in invalid_values:
+            self.assertFalse(drs.DRS()._check_time_range(v))
+
+    def test_check_version(self):
+        valid_values = [
+            'v20190510',
+            'v00000000']
+        invalid_values = [
+            'ver.1.0',
+            '20190510',
+            '2019',
+            'vv20190510',
+            ]
+        for v in valid_values:
+            self.assertTrue(drs.DRS()._check_version(v))
+        for v in invalid_values:
+            self.assertFalse(drs.DRS()._check_version(v))
+
+    def test_check_variant_label(self):
+        valid_values = [
+            'r1i1p1f1',
+            'r10i1p1f1']
+        invalid_values = [
+            'r1i1p1',
+            'r1f1f1p1',
+            'rXiYfZpM',
+            'hoge',
+            '1357']
+        for v in valid_values:
+            self.assertTrue(drs.DRS()._check_variant_label(v))
+        for v in invalid_values:
+            self.assertFalse(drs.DRS()._check_variant_label(v))
+
 
 def main():
     unittest.main()
