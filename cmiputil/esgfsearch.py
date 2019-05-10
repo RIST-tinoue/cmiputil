@@ -16,12 +16,17 @@ the example usage.
 
 
 """
+__author__ = 'T.Inoue'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190509'
+__date__ = '2019/05/09'
 
 import urllib3
 import json
 import xarray as xr
 import netCDF4 as nc
 from siphon.catalog import TDSCatalog
+
 
 class NotFoundError(Exception):
     pass

@@ -50,7 +50,8 @@ The <time_range> is a string generated consistent with the following:
 
 where <suffix> is defined as follows:
 
-|    if the variable identified by variable_id has a time dimension with a “climatology” attribute then
+| if the variable identified by variable_id has a time dimension with
+| a “climatology” attribute then
 |         <suffix> = “-clim”
 |    else
 |         <suffix> = “”
@@ -110,16 +111,15 @@ Example with a <sub_experiment_id>::
      CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215
 
 """
+__author__ = 'T.Inoue'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190509'
+__date__ = '2019/05/09'
 
 from cmiputil.convoc import ConVoc
 import netCDF4 as nc
 from pathlib import PurePath
 from pprint import pprint
-
-
-__author__ = 'T.Inoue'
-__version__ = '0.9.0'
-__date__ = '2019/04/16'
 
 
 class DRSError(Exception):

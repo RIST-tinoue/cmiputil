@@ -15,6 +15,10 @@ CVs are maintained as json files. You should clone them from github,
 and set a environment variable `CVPATH`, which is a colon separated
 string.
 """
+__author__ = 'T.Inoue'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190509'
+__date__ = '2019/05/09'
 
 from pathlib import Path
 from os.path import expandvars    # hey, pathlib doesn't have expandvars !?
