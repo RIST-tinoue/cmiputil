@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Welcome to cmiputil’s documentation!" href="index.html" /> 
+    <link rel="prev" title="cmiputil" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -79,7 +79,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Documents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-cmiputil.convoc">cmiputil.convoc module</a></li>
@@ -446,7 +446,9 @@ throughout except as shown in the template.</p>
 </div>
 <p>where &lt;suffix&gt; is defined as follows:</p>
 <div class="line-block">
-<div class="line">if the variable identified by variable_id has a time dimension with a “climatology” attribute then</div>
+<div class="line">if the variable identified by variable_id has a time dimension with</div>
+<div class="line">a “climatology” attribute then</div>
+<div class="line-block">
 <div class="line-block">
 <div class="line">&lt;suffix&gt; = “-clim”</div>
 </div>
@@ -455,6 +457,7 @@ throughout except as shown in the template.</p>
 <div class="line">&lt;suffix&gt; = “”</div>
 </div>
 <div class="line">endif</div>
+</div>
 </div>
 <p>and where the precision of the time_range strings is determined by the
 &lt;frequency&gt; global attribute.</p>
@@ -527,7 +530,7 @@ one is used in the directory structure.</p></li>
 
 <dl class="class">
 <dt id="cmiputil.drs.DRS">
-<em class="property">class </em><code class="descclassname">cmiputil.drs.</code><code class="descname">DRS</code><span class="sig-paren">(</span><em>file=None</em>, <em>filename=None</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmiputil/drs.html#DRS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmiputil.drs.DRS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">cmiputil.drs.</code><code class="descname">DRS</code><span class="sig-paren">(</span><em>file=None</em>, <em>filename=None</em>, <em>allow_asterisk=False</em>, <em>**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmiputil/drs.html#DRS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmiputil.drs.DRS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for CMIP6 DRS.</p>
 <p>This class contains attributes necessary to construct a file
@@ -560,6 +563,7 @@ necessary attributes to set a filename/dirname valid for DRS.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file</strong> (<em>path-like</em>) – filename of valid CMIP6 netCDF file.</p></li>
 <li><p><strong>filename</strong> (<em>str</em>) – filename to be used to set attributes.</p></li>
+<li><p><strong>allow_asterisk</strong> (<em>bool</em>) – allow ‘*’ for unset attribute and resulting path.</p></li>
 <li><p><strong>kw</strong> (<em>dict</em>) – attribute-value pairs</p></li>
 </ul>
 </dd>
@@ -586,12 +590,12 @@ and attributes are set from components consist of that filename.</p>
 </dl>
 <p>Examples:</p>
 <p>DRS from dict w/o <code class="docutils literal notranslate"><span class="pre">time_range</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">drs</span><span class="o">.</span><span class="n">sample_attrs</span><span class="p">)</span><span class="o">.</span><span class="n">dirName</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">drs</span><span class="o">.</span><span class="n">sample_attrs</span><span class="p">)</span><span class="o">.</span><span class="n">dirName</span><span class="p">())</span>
 <span class="go">&#39;CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308&#39;</span>
 </pre></div>
 </div>
 <p>DRS from dict w/ <code class="docutils literal notranslate"><span class="pre">sub_experiment_id</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">drs</span><span class="o">.</span><span class="n">sample_attrs_w_subexp</span><span class="p">)</span><span class="o">.</span><span class="n">dirName</span><span class="p">()</span> <span class="c1"># doctest: +NORMALIZE_WHITESPACE</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">drs</span><span class="o">.</span><span class="n">sample_attrs_w_subexp</span><span class="p">)</span><span class="o">.</span><span class="n">dirName</span><span class="p">())</span> <span class="c1"># doctest: +NORMALIZE_WHITESPACE</span>
 <span class="go">&#39;CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110&#39;</span>
 </pre></div>
 </div>
@@ -708,7 +712,7 @@ not. If <cite>directory</cite> is <code class="docutils literal notranslate"><sp
 
 <dl class="method">
 <dt id="cmiputil.drs.DRS.set">
-<code class="descname">set</code><span class="sig-paren">(</span><em>return_self=False</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmiputil/drs.html#DRS.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmiputil.drs.DRS.set" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set</code><span class="sig-paren">(</span><em>allow_asterisk=False</em>, <em>return_self=False</em>, <em>**argv</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmiputil/drs.html#DRS.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmiputil.drs.DRS.set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set instance attributes, if attribute is in <a class="reference internal" href="#cmiputil.drs.DRS.requiredAttribs" title="cmiputil.drs.DRS.requiredAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">requiredAttribs</span></code></a>.</p>
 <p>Missing attributes in <cite>argv</cite> are left unset/untouched.
 Attribute with invalid value is also unset/untouched sirently.
@@ -720,6 +724,7 @@ Unnecessary attributes are neglected.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>argv</strong> (<em>dict</em>) – attribute/value pairs</p></li>
 <li><p><strong>return_self</strong> (<em>bool</em>) – return self or nothing.</p></li>
+<li><p><strong>allow_asterisk</strong> (<em>bool</em>) – allow asterisk as unset values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
@@ -834,7 +839,7 @@ the example usage.</p>
 <dd class="field-even"><p><a class="reference internal" href="#cmiputil.esgfsearch.NotFoundError" title="cmiputil.esgfsearch.NotFoundError"><strong>NotFoundError</strong></a> – raised if no catalog found.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><em>list</em> – TDS catalog URLs found.</p>
+<dd class="field-odd"><p><em>list of str</em> – TDS catalog URLs found.</p>
 </dd>
 </dl>
 <p>If <cite>base_url</cite> is None, <a class="reference internal" href="#cmiputil.esgfsearch.search_service" title="cmiputil.esgfsearch.search_service"><code class="xref py py-data docutils literal notranslate"><span class="pre">search_service</span></code></a> +
@@ -864,6 +869,37 @@ access all of files listed in the catalog.</p>
 netCDF4.MFDataset() or None: opened dataset</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="cmiputil.esgfsearch.getLocalPath">
+<code class="descclassname">cmiputil.esgfsearch.</code><code class="descname">getLocalPath</code><span class="sig-paren">(</span><em>fields</em>, <em>base_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cmiputil/esgfsearch.html#getLocalPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cmiputil.esgfsearch.getLocalPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Same interface with getCatURLs, search local data directory for CMIP6 data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>dict</em>) – keyword parameters and facet parameters.</p></li>
+<li><p><strong>base_url</strong> – base path for local data directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#cmiputil.esgfsearch.NotFoundError" title="cmiputil.esgfsearch.NotFoundError"><strong>NotFoundError</strong></a> – raised if no paths found.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list of path-like</em> – paths found to match given facets.</p>
+</dd>
+</dl>
+<p><cite>field</cite> is initialized by <code class="xref py py-data docutils literal notranslate"><span class="pre">keyword_defautls</span></code> and
+<a class="reference internal" href="#cmiputil.esgfsearch.facet_defaults" title="cmiputil.esgfsearch.facet_defaults"><code class="xref py py-data docutils literal notranslate"><span class="pre">facet_defaults</span></code></a>.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">params_update</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span> <span class="s1">&#39;variable&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span> <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">fields_default</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params_update</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">getLocalPath</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="s1">&#39;~/Data/&#39;</span><span class="p">))</span>
+<span class="go">&#39;~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="data">
@@ -905,7 +941,7 @@ netCDF4.MFDataset() or None: opened dataset</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to cmiputil’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="cmiputil" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -196,7 +196,8 @@
 
 <span class="sd">where &lt;suffix&gt; is defined as follows:</span>
 
-<span class="sd">|    if the variable identified by variable_id has a time dimension with a “climatology” attribute then</span>
+<span class="sd">| if the variable identified by variable_id has a time dimension with</span>
+<span class="sd">| a “climatology” attribute then</span>
 <span class="sd">|         &lt;suffix&gt; = “-clim”</span>
 <span class="sd">|    else</span>
 <span class="sd">|         &lt;suffix&gt; = “”</span>
@@ -256,16 +257,16 @@
 <span class="sd">     CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190509&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/05/09&#39;</span>
 
 <span class="kn">from</span> <span class="nn">cmiputil.convoc</span> <span class="k">import</span> <span class="n">ConVoc</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span> <span class="k">as</span> <span class="nn">nc</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">PurePath</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
-
-
-<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.9.0&#39;</span>
-<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/04/16&#39;</span>
 
 
 <div class="viewcode-block" id="DRSError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.drs.DRSError">[docs]</a><span class="k">class</span> <span class="nc">DRSError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -351,6 +352,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        file(path-like): filename of valid CMIP6 netCDF file.</span>
 <span class="sd">        filename(str): filename to be used to set attributes.</span>
+<span class="sd">        allow_asterisk(bool): allow &#39;*&#39; for unset attribute and resulting path.</span>
 <span class="sd">        kw(dict): attribute-value pairs</span>
 
 <span class="sd">    If `file` is given, it must be a valid CMIP6 netCDF file, and</span>
@@ -377,7 +379,7 @@
         <span class="s1">&#39;version&#39;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cvs</span> <span class="o">=</span> <span class="n">ConVoc</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mip_era</span> <span class="o">=</span> <span class="s1">&#39;CMIP6&#39;</span>
 
@@ -386,12 +388,12 @@
                 <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
                          <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">}</span>
             <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">allow_asterisk</span><span class="o">=</span><span class="n">allow_asterisk</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">filename</span><span class="p">):</span>
             <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitFileName</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">allow_asterisk</span><span class="o">=</span><span class="n">allow_asterisk</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">allow_asterisk</span><span class="o">=</span><span class="n">allow_asterisk</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">{!a}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
@@ -417,20 +419,36 @@
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">DRS</span><span class="o">.</span><span class="n">requiredAttribs</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)}</span></div>
 
     <span class="k">def</span> <span class="nf">_check_time_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="c1"># TODO: must be &#39;YYYYMMDD-YYYYMMDD&#39;, use regex.</span>
-        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="c1"># TODO: precision and `-clim` depends on the attribute `frequency`.</span>
+        <span class="c1">#       but I don&#39;t need quality assurance.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># pat = re.compile(r&#39;\d{4,8}(-clim)?-\d{4,8}(-clim)?&#39;)</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{4}</span><span class="s1">(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;(-clim)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;-&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{4}</span><span class="s1">(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;(-clim)?&#39;</span>
+                         <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_check_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="c1"># TODO: must be &#39;vYYYYMMDD&#39;, use regex.</span>
-        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;v\d</span><span class="si">{8}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_check_variable_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="c1"># TODO: Is there any method to check ?</span>
         <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_check_variant_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="c1"># TODO: must be r{i}i{i}p{i}f{i}, use regex.</span>
-        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;r\d+i\d+p\d+f\d+&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DRS.isValidValueForAttr"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.drs.DRS.isValidValueForAttr">[docs]</a>    <span class="k">def</span> <span class="nf">isValidValueForAttr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -466,7 +484,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidDRSAttribError</span><span class="p">(</span><span class="s1">&#39;Invalid Attribute for DRS:&#39;</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DRS.set"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.drs.DRS.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_self</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+<div class="viewcode-block" id="DRS.set"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.drs.DRS.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_self</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set instance attributes, if attribute is in :attr:`requiredAttribs`.</span>
 
@@ -480,6 +498,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            argv (dict): attribute/value pairs</span>
 <span class="sd">            return_self (bool): return self or nothing.</span>
+<span class="sd">            allow_asterisk (bool): allow asterisk as unset values.</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            InvalidDRSAttribError:  raises when `attr` is invalid for DRS.</span>
 <span class="sd">        Return:</span>
@@ -492,10 +511,17 @@
 
         <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;variant_label&#39;</span><span class="p">)):</span>
             <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">)):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">member_id</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">],</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;variant_label&#39;</span><span class="p">])</span>
+                <span class="n">subexp</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">]</span>
+                <span class="n">varlab</span> <span class="o">=</span> <span class="n">argv</span><span class="p">[</span><span class="s1">&#39;variant_label&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">member_id</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{subexp}</span><span class="s2">-</span><span class="si">{varlab}</span><span class="s2">&quot;</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">member_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant_label</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">allow_asterisk</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)):</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="p">(</span><span class="n">return_self</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -564,12 +590,12 @@
 
 <span class="sd">        DRS from dict w/o ``time_range``.</span>
 
-<span class="sd">        &gt;&gt;&gt; drs.DRS(**drs.sample_attrs).dirName()</span>
+<span class="sd">        &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs).dirName())</span>
 <span class="sd">        &#39;CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308&#39;</span>
 
 <span class="sd">        DRS from dict w/ ``sub_experiment_id``.</span>
 
-<span class="sd">        &gt;&gt;&gt; drs.DRS(**drs.sample_attrs_w_subexp).dirName() # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">        &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs_w_subexp).dirName()) # doctest: +NORMALIZE_WHITESPACE</span>
 <span class="sd">        &#39;CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110&#39;</span>
 
 <span class="sd">        Invalid value for valid attrib.</span>
@@ -598,7 +624,7 @@
            <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">PurePath</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">/</span> <span class="n">d</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">d</span></div>
 
 <div class="viewcode-block" id="DRS.splitFileName"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.drs.DRS.splitFileName">[docs]</a>    <span class="k">def</span> <span class="nf">splitFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

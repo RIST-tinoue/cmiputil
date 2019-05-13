@@ -162,12 +162,19 @@
 
 
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190509&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/05/09&#39;</span>
 
+<span class="kn">from</span> <span class="nn">cmiputil.drs</span> <span class="k">import</span> <span class="n">DRS</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">urllib3</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span> <span class="k">as</span> <span class="nn">nc</span>
 <span class="kn">from</span> <span class="nn">siphon.catalog</span> <span class="k">import</span> <span class="n">TDSCatalog</span>
+
 
 <div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.esgfsearch.NotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span></div>
@@ -233,7 +240,7 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        NotFoundError: raised if no catalog found.</span>
 <span class="sd">    Return:</span>
-<span class="sd">        list:  TDS catalog URLs found.</span>
+<span class="sd">        list of str:  TDS catalog URLs found.</span>
 
 <span class="sd">    If `base_url` is None, :data:`.search_service` +</span>
 <span class="sd">    :data:`.service_type` is used.</span>
@@ -343,85 +350,38 @@
     <span class="k">return</span> <span class="n">ds</span></div>
 
 
+<div class="viewcode-block" id="getLocalPath"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.esgfsearch.getLocalPath">[docs]</a><span class="k">def</span> <span class="nf">getLocalPath</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Same interface with getCatURLs, search local data directory for CMIP6 data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fields(dict): keyword parameters and facet parameters.</span>
+<span class="sd">        base_url : base path for local data directory.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        NotFoundError: raised if no paths found.</span>
+<span class="sd">    Return:</span>
+<span class="sd">        list of path-like:  paths found to match given facets.</span>
+
+<span class="sd">    `field` is initialized by :data:`.keyword_defautls` and</span>
+<span class="sd">    :data:`.facet_defaults`.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; params_update = {&#39;source_id&#39;: &#39;MIROC6&#39;, &#39;experiment_id&#39;: &#39;historical&#39;,</span>
+<span class="sd">        ...    &#39;variant_label&#39;: &#39;r1i1p1f1&#39;, &#39;variable&#39;: &#39;tas&#39;, }</span>
+<span class="sd">        &gt;&gt;&gt; params = fields_default</span>
+<span class="sd">        &gt;&gt;&gt; params.update(params_update)</span>
+<span class="sd">        &gt;&gt;&gt; str(getLocalPath(params, base_dir=&#39;~/Data/&#39;))</span>
+<span class="sd">        &#39;~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">DRS</span><span class="p">(</span><span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">base_dir</span><span class="p">))</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">fileName</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="n">f</span></div>
+
 <span class="k">if</span> <span class="p">(</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
-    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-    <span class="kn">import</span> <span class="nn">cftime</span>
-
-    <span class="c1"># with timer(&#39;main&#39;):</span>
-    <span class="c1">#     main()</span>
-
-    <span class="c1"># setup for search API.</span>
-    <span class="n">params_update</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;MRI-ESM2-0&#39;,</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;CNRM-CM6-1&#39;,    #&lt;- Catalog not found</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;CNRM-ESM2-1&#39;,    #&lt;- Catalog not found</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;IPSL-CM6A-LR&#39;,    #&lt;- Couldn&#39;t resolve host name</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;GISS-E2-1-G&#39;,   # &lt;- times in cftime.DatetimeNoLeap, causes error in plt.plot()</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;CanESM5&#39;,   # &lt;- times in cftime.DatetimeNoLeap, causes error in plt.plot()</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;CESM2&#39;,   # &lt;- times in cftime.DatetimeNoLeap, causes error in plt.plot()</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;E3SM-1-0&#39;,  #&lt;- Catalog not found</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;GFDL-CM4&#39;,  #&lt;- Catalog not found</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;BCC-CSM2-MR&#39;,  # &lt;- times in cftime.DatetimeNoLeap, causes error in plt.plot()</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;CESM2-WACCM&#39;,  # &lt;- times in cftime.DatetimeNoLeap, causes error in plt.plot()</span>
-        <span class="c1"># &#39;source_id&#39;: &#39;EC-Earth3-LR&#39;,  #&lt;- Catalog not found</span>
-        <span class="c1"># &#39;experiment_id&#39;: &#39;piControl, abrupt-4xCO2&#39;,</span>
-        <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;variable&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
-    <span class="p">}</span>
-
-    <span class="n">params</span> <span class="o">=</span> <span class="n">fields_default</span>
-    <span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params_update</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Search params(keywords and facets):&#39;</span><span class="p">)</span>
-    <span class="n">pprint</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-
-    <span class="c1"># Do search.</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">urls</span> <span class="o">=</span> <span class="n">getCatURLs</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-    <span class="k">except</span> <span class="n">NotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;### No Catalog found, sorry.&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">e</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Catalog Search Result:&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">urls</span><span class="p">))</span>
-        <span class="c1"># pprint(urls)</span>
-
-    <span class="c1"># get Catalog, then Aggregated datasets.</span>
-    <span class="n">datasets</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">urls</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Processing Catalog:&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">getDataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">netcdf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Num of datasets:&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">))</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>  <span class="c1"># nothing found</span>
-        <span class="k">raise</span> <span class="n">NotFoundError</span><span class="p">(</span><span class="s1">&#39;No datasets found&#39;</span><span class="p">)</span>
-
-    <span class="c1"># draw timeseries of each dataset</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
-    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;tas&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;K&#39;</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
-        <span class="n">label</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">source_id</span><span class="o">+</span><span class="s1">&#39;: &#39;</span><span class="o">+</span><span class="n">d</span><span class="o">.</span><span class="n">experiment_id</span><span class="o">+</span><span class="s1">&#39;: &#39;</span><span class="o">+</span><span class="n">d</span><span class="o">.</span><span class="n">variant_label</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-        <span class="c1"># d = xr.decode_cf(d)</span>
-        <span class="n">times</span> <span class="o">=</span> <span class="n">cftime</span><span class="o">.</span><span class="n">num2date</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;tas&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">lon</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lat</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Skip error:&#39;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-            <span class="k">continue</span>
-
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ready to plot...&#39;</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">drs</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
 </pre></div>
 
            </div>
