@@ -21,6 +21,8 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190509'
 __date__ = '2019/05/09'
 
+from cmiputil.drs import DRS
+from pathlib import Path
 import urllib3
 import json
 import xarray as xr
@@ -92,7 +94,7 @@ def getCatURLs(fields, base_url=None):
     Raises:
         NotFoundError: raised if no catalog found.
     Return:
-        list:  TDS catalog URLs found.
+        list of str:  TDS catalog URLs found.
 
     If `base_url` is None, :data:`.search_service` +
     :data:`.service_type` is used.
@@ -202,82 +204,148 @@ def getDataset(url, aggregate=True, netcdf=False):
     return ds
 
 
+def getLocalPath(fields, base_dir=None):
+    """
+    Same interface with getCatURLs, search local data directory for CMIP6 data.
+
+    Args:
+        fields(dict): keyword parameters and facet parameters.
+        base_url : base path for local data directory.
+    Raises:
+        NotFoundError: raised if no paths found.
+    Return:
+        list of path-like:  paths found to match given facets.
+
+    `field` is initialized by :data:`.keyword_defautls` and
+    :data:`.facet_defaults`.
+
+    """
+    d = DRS(allow_asterisk=True, **fields)
+    p = Path(d.dirName(prefix=base_dir))
+    f = Path(d.fileName())
+    return p / f
+
 if (__name__ == '__main__'):
-    from pprint import pprint
-    import matplotlib.pyplot as plt
-    import cftime
 
-    # with timer('main'):
-    #     main()
+    def example01():
+        from pprint import pprint
+        import matplotlib.pyplot as plt
+        import cftime
 
-    # setup for search API.
-    params_update = {
-        'source_id': 'MIROC6',
-        # 'source_id': 'MRI-ESM2-0',
-        # 'source_id': 'CNRM-CM6-1',    #<- Catalog not found
-        # 'source_id': 'CNRM-ESM2-1',    #<- Catalog not found
-        # 'source_id': 'IPSL-CM6A-LR',    #<- Couldn't resolve host name
-        # 'source_id': 'GISS-E2-1-G',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        # 'source_id': 'CanESM5',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        # 'source_id': 'CESM2',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        # 'source_id': 'E3SM-1-0',  #<- Catalog not found
-        # 'source_id': 'GFDL-CM4',  #<- Catalog not found
-        # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        # 'source_id': 'CESM2-WACCM',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        # 'source_id': 'EC-Earth3-LR',  #<- Catalog not found
-        # 'experiment_id': 'piControl, abrupt-4xCO2',
-        'experiment_id': 'historical',
-        'variant_label': 'r1i1p1f1',
-        'variable': 'tas',
-    }
+        # with timer('main'):
+        #     main()
 
-    params = fields_default
-    params.update(params_update)
-    print('Search params(keywords and facets):')
-    pprint(params)
+        # setup for search API.
+        params_update = {
+            'source_id': 'MIROC6',
+            # 'source_id': 'MRI-ESM2-0',
+            # 'source_id': 'CNRM-CM6-1',    #<- Catalog not found
+            # 'source_id': 'CNRM-ESM2-1',    #<- Catalog not found
+            # 'source_id': 'IPSL-CM6A-LR',    #<- Couldn't resolve host name
+            # 'source_id': 'GISS-E2-1-G',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CanESM5',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CESM2',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'E3SM-1-0',  #<- Catalog not found
+            # 'source_id': 'GFDL-CM4',  #<- Catalog not found
+            # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CESM2-WACCM',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'EC-Earth3-LR',  #<- Catalog not found
+            # 'experiment_id': 'piControl, abrupt-4xCO2',
+            'experiment_id': 'historical',
+            'variant_label': 'r1i1p1f1',
+            'variable': 'tas',
+        }
 
-    # Do search.
-    try:
-        urls = getCatURLs(params)
-    except NotFoundError as e:
-        print('### No Catalog found, sorry.')
-        raise e
-    finally:
-        print('Catalog Search Result:', len(urls))
-        # pprint(urls)
+        params = fields_default
+        params.update(params_update)
+        print('Search params(keywords and facets):')
+        pprint(params)
 
-    # get Catalog, then Aggregated datasets.
-    datasets = []
-    for url in urls:
-        print("Processing Catalog:", url)
-        d = getDataset(url, aggregate=False, netcdf=False)
-        if (d is not None):
-            datasets.append(d)
-    print('Num of datasets:', len(datasets))
-    if (len(datasets) == 0):  # nothing found
-        raise NotFoundError('No datasets found')
-
-    # draw timeseries of each dataset
-    fig = plt.figure(figsize=(16, 8))
-    ax = fig.add_subplot(111)
-    ax.set_title('tas')
-    ax.set_xlabel('time')
-    ax.set_ylabel('K')
-
-    for d in datasets:
-        label = d.source_id+': '+d.experiment_id+': '+d.variant_label
-        print(label)
-        # d = xr.decode_cf(d)
-        times = cftime.num2date(d['time'], d['time'].units)
-        values = d['tas'].sel(lon=0, lat=0, method='nearest')
-
+        # Do search.
         try:
-            ax.plot(times, values, label=label)
-            ax.legend()
-        except RuntimeError as e:
-            print('Skip error:', e.args)
-            continue
+            urls = getCatURLs(params)
+        except NotFoundError as e:
+            print('### No Catalog found, sorry.')
+            raise e
+        finally:
+            print('Catalog Search Result:', len(urls))
+            # pprint(urls)
 
-    print('Ready to plot...')
-    plt.show()
-    print('Done.')
+        # get Catalog, then Aggregated datasets.
+        datasets = []
+        for url in urls:
+            print("Processing Catalog:", url)
+            d = getDataset(url, aggregate=False, netcdf=False)
+            if (d is not None):
+                datasets.append(d)
+        print('Num of datasets:', len(datasets))
+        if (len(datasets) == 0):  # nothing found
+            raise NotFoundError('No datasets found')
+
+        # draw timeseries of each dataset
+        fig = plt.figure(figsize=(16, 8))
+        ax = fig.add_subplot(111)
+        ax.set_title('tas')
+        ax.set_xlabel('time')
+        ax.set_ylabel('K')
+
+        for d in datasets:
+            label = d.source_id+': '+d.experiment_id+': '+d.variant_label
+            print(label)
+            # d = xr.decode_cf(d)
+            times = cftime.num2date(d['time'], d['time'].units)
+            values = d['tas'].sel(lon=0, lat=0, method='nearest')
+
+            try:
+                ax.plot(times, values, label=label)
+                ax.legend()
+            except RuntimeError as e:
+                print('Skip error:', e.args)
+                continue
+
+        print('Ready to plot...')
+        plt.show()
+        print('Done.')
+
+    def example02():
+        from cmiputil.drs import DRS
+        from pprint import pprint
+        import matplotlib.pyplot as plt
+        import cftime
+
+        # setup for search API.
+        params_update = {
+            'source_id': 'MIROC6',
+            # 'source_id': 'MRI-ESM2-0',
+            # 'source_id': 'CNRM-CM6-1',    #<- Catalog not found
+            # 'source_id': 'CNRM-ESM2-1',    #<- Catalog not found
+            # 'source_id': 'IPSL-CM6A-LR',    #<- Couldn't resolve host name
+            # 'source_id': 'GISS-E2-1-G',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CanESM5',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CESM2',   # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'E3SM-1-0',  #<- Catalog not found
+            # 'source_id': 'GFDL-CM4',  #<- Catalog not found
+            # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'CESM2-WACCM',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
+            # 'source_id': 'EC-Earth3-LR',  #<- Catalog not found
+            # 'experiment_id': 'piControl, abrupt-4xCO2',
+            'experiment_id': 'historical',
+            'variant_label': 'r1i1p1f1',
+            'variable': 'tas',
+        }
+
+        params = fields_default
+        params.update(params_update)
+        print('Search params(keywords and facets):')
+        pprint(params)
+
+        # d = DRS(allow_asterisk=True, **params)
+        # pprint(d)
+        # p = d.dirName(prefix='~/Data/')
+        # f = d.fileName()
+        # print(p,f)
+        f = getLocalPath(params, base_dir='~/Data/')
+        print(f)
+
+        
+    example02()
