@@ -243,7 +243,7 @@ class test_DRS(unittest.TestCase):
         "Construct dirname by class method."
         ref = ("CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/"
                "Amon/tas/gn/v20190308")
-        res = drs.DRS(**self.ga).dirName()
+        res = str(drs.DRS(**self.ga).dirName())
 
         self.assertEqual(ref, res)
 
@@ -252,7 +252,7 @@ class test_DRS(unittest.TestCase):
 
         ref = ("CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/"
                "s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110")
-        res = drs.DRS(**self.ga_w_sub).dirName()
+        res = str(drs.DRS(**self.ga_w_sub).dirName())
 
         self.assertEqual(ref, res)
 
@@ -265,7 +265,7 @@ class test_DRS(unittest.TestCase):
             'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/Amon/tas/gn/v20190308']
 
         d = drs.DRS(**self.ga)
-        res = [d.set(return_self=True, variant_label=v).dirName()
+        res = [str(d.set(return_self=True, variant_label=v).dirName())
                for v in variants]
 
         self.assertEqual(ref, res)
@@ -429,6 +429,8 @@ class test_DRS(unittest.TestCase):
             '192001-clim-201212-clim',
             '19200101-20121231-clim']
         invalid_values = [
+            None,
+            "", 
             'hoge',
             '1920',
             'v1920',

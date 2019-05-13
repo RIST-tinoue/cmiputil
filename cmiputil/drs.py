@@ -278,14 +278,14 @@ class DRS:
         if (value is None):
             return False
         elif (value == ""):
-            return True
-        pat = re.compile(r'\d{4,8}-\d{4,8}(-clim)?')
-        # pat = re.compile(r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
-        #                  r'(-clim)?'
-        #                  r'-'
-        #                  r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
-        #                  r'(-clim)?'
-        #                  )
+            return False
+        # pat = re.compile(r'\d{4,8}(-clim)?-\d{4,8}(-clim)?')
+        pat = re.compile(r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+                         r'(-clim)?'
+                         r'-'
+                         r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+                         r'(-clim)?'
+                         )
         return pat.fullmatch(value) is not None
 
     def _check_version(self, value):
@@ -444,12 +444,12 @@ class DRS:
 
         DRS from dict w/o ``time_range``.
 
-        >>> drs.DRS(**drs.sample_attrs).dirName()
+        >>> str(drs.DRS(**drs.sample_attrs).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
 
         DRS from dict w/ ``sub_experiment_id``.
 
-        >>> drs.DRS(**drs.sample_attrs_w_subexp).dirName() # doctest: +NORMALIZE_WHITESPACE
+        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName()) # doctest: +NORMALIZE_WHITESPACE
         'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
         Invalid value for valid attrib.
@@ -478,7 +478,7 @@ class DRS:
            self.version)
         if (prefix):
             d = PurePath(prefix) / d
-        return str(d)
+        return d
 
     def splitFileName(self, fname):
         """
