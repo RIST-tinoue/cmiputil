@@ -206,6 +206,7 @@ class DRS:
     Args:
         file(path-like): filename of valid CMIP6 netCDF file.
         filename(str): filename to be used to set attributes.
+        allow_asterisk(bool): allow '*' for unset attribute and resulting path.
         kw(dict): attribute-value pairs
 
     If `file` is given, it must be a valid CMIP6 netCDF file, and
@@ -232,7 +233,7 @@ class DRS:
         'version',
         )
 
-    def __init__(self, file=None, filename=None, **kw):
+    def __init__(self, file=None, filename=None, allow_asterisk=False, **kw):
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
 
@@ -241,12 +242,12 @@ class DRS:
                 attrs = {a: getattr(ds, a, None)
                          for a in drs.DRS.requiredAttribs}
             attrs = {a: v for a, v in attrs.items() if v != 'none'}
-            self.set(**attrs)
+            self.set(allow_asterisk=allow_asterisk, **attrs)
         elif (filename):
             attrs = self.splitFileName(filename)
-            self.set(**attrs)
+            self.set(allow_asterisk=allow_asterisk, **attrs)
         else:
-            self.set(**kw)
+            self.set(allow_asterisk=allow_asterisk, **kw)
 
     def __repr__(self):
         res = ["{}={!a}".format(k, getattr(self, k))
@@ -337,7 +338,7 @@ class DRS:
         else:
             raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
 
-    def set(self, return_self=False, **argv):
+    def set(self, allow_asterisk=False, return_self=False, **argv):
         """
         Set instance attributes, if attribute is in :attr:`requiredAttribs`.
 
@@ -351,6 +352,7 @@ class DRS:
         Args:
             argv (dict): attribute/value pairs
             return_self (bool): return self or nothing.
+            allow_asterisk (bool): allow asterisk as unset values.
         Raises:
             InvalidDRSAttribError:  raises when `attr` is invalid for DRS.
         Return:
@@ -363,10 +365,17 @@ class DRS:
 
         if (hasattr(self, 'variant_label')):
             if (hasattr(self, 'sub_experiment_id')):
-                self.member_id = "{}-{}".format(
-                    argv['sub_experiment_id'], argv['variant_label'])
+                subexp = argv['sub_experiment_id']
+                varlab = argv['variant_label']
+                self.member_id = f"{subexp}-{varlab}"
             else:
                 self.member_id = self.variant_label
+
+        if (allow_asterisk):
+            for a in self.requiredAttribs:
+                if (not hasattr(self, a)):
+                    setattr(self, a, '*')
+
         if (return_self):
             return self
 
