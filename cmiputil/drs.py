@@ -242,12 +242,11 @@ class DRS:
                 attrs = {a: getattr(ds, a, None)
                          for a in drs.DRS.requiredAttribs}
             attrs = {a: v for a, v in attrs.items() if v != 'none'}
-            self.set(allow_asterisk=allow_asterisk, **attrs)
         elif (filename):
             attrs = self.splitFileName(filename)
-            self.set(allow_asterisk=allow_asterisk, **attrs)
         else:
-            self.set(allow_asterisk=allow_asterisk, **kw)
+            attrs = kw
+        self.set(allow_asterisk=allow_asterisk, **attrs)
 
     def __repr__(self):
         res = ["{}={!a}".format(k, getattr(self, k))
@@ -375,6 +374,8 @@ class DRS:
             for a in self.requiredAttribs:
                 if (not hasattr(self, a)):
                     setattr(self, a, '*')
+            if (not hasattr(self, 'member_id')):
+                setattr(self, 'member_id', '*')
 
         if (return_self):
             return self
