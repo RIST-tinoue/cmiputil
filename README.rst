@@ -70,7 +70,7 @@ Usage
     >>> from cmiputil import convoc
     >>> help(convoc)
 
-See also each source files, tests, and sample apprications.
+See also each pydoc, tests, and sample applications.
 
 Document
 --------
