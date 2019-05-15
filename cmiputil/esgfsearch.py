@@ -206,7 +206,9 @@ def getDataset(url, aggregate=True, netcdf=False):
 
 def getLocalPath(fields, base_dir=None):
     """
-    Same interface with getCatURLs, search local data directory for CMIP6 data.
+    Search local data directory for CMIP6 data.
+
+    Using same interface with getCatURLs()
 
     Args:
         fields(dict): keyword parameters and facet parameters.
