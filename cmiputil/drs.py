@@ -206,7 +206,7 @@ class DRS:
     Args:
         file(path-like): filename of valid CMIP6 netCDF file.
         filename(str): filename to be used to set attributes.
-        allow_asterisk(bool): allow '*' for unset attribute and resulting path.
+        allow_glob(bool): allow '*' for unset attribute and resulting path.
         kw(dict): attribute-value pairs
 
     If `file` is given, it must be a valid CMIP6 netCDF file, and
@@ -218,6 +218,7 @@ class DRS:
     Else attributes are set from `**kw` dict.
     """
 
+    #: Attributes managed in this class.
     requiredAttribs = (
         'activity_id',
         'experiment_id',
@@ -233,7 +234,35 @@ class DRS:
         'version',
         )
 
-    def __init__(self, file=None, filename=None, allow_asterisk=False, **kw):
+    #: Attributes necessary to construct dirname.
+    dirnameAttribs = (
+        "mip_era",
+        "activity_id",
+        "institution_id",
+        "source_id",
+        "experiment_id",
+        "member_id",
+        "table_id",
+        "variable_id",
+        "grid_label",
+        "version")
+
+    #: Attributes necessary to construct filename.
+    filenameAttribs = (
+        "variable_id",
+        "table_id",
+        "source_id",
+        "experiment_id",
+        "member_id",
+        "grid_label",
+        )
+
+    #: Attributes optional to construct filename.
+    filenameAttribsOptional = (
+        "time_range",
+        )
+
+    def __init__(self, file=None, filename=None, allow_glob=False, **kw):
         self.cvs = ConVoc()
         self.mip_era = 'CMIP6'
 
@@ -246,17 +275,27 @@ class DRS:
             attrs = self.splitFileName(filename)
         else:
             attrs = kw
-        self.set(allow_asterisk=allow_asterisk, **attrs)
+        self.set(allow_glob=allow_glob, **attrs)
 
     def __repr__(self):
-        res = ["{}={!a}".format(k, getattr(self, k))
-               for k in DRS.requiredAttribs if hasattr(self, k)]
+        # res = ["{}={!a}".format(k, getattr(self, k))
+        #        for k in DRS.requiredAttribs if hasattr(self, k)]
+        res = []
+        for a in DRS.requiredAttribs:
+            if hasattr(self, a):
+                v = getattr(self, a)
+                if (type(v) is list):
+                    v = ','.join(v)
+                res.append("{}='{}'".format(a,v))
+        res.append("allow_glob={}".format(self.allow_glob))
         res = 'drs.DRS(' + ', '.join(res) + ')'
         return res
 
     def __str__(self):
         res = ["{}: {!a}".format(k, getattr(self, k))
                for k in DRS.requiredAttribs if hasattr(self, k)]
+        allow_glob = self.allow_glob
+        res.append(f'allow_glob: {allow_glob}',)
         res = "\n".join(res)
         return res
 
@@ -303,6 +342,18 @@ class DRS:
         pat = re.compile(r'r\d+i\d+p\d+f\d+')
         return pat.fullmatch(value) is not None
 
+    def _setMemberID(self):
+        if (hasattr(self, 'variant_label')):
+            if (hasattr(self, 'sub_experiment_id')):
+                subexp = self.sub_experiment_id
+                varlab = self.variant_label
+                self.member_id = f"{subexp}-{varlab}"
+            else:
+                self.member_id = self.variant_label
+            return self.member_id
+        else:
+            return None
+
     def isValidValueForAttr(self, value, attr):
         """
         Check `value` is valid for the attribute `attr`.
@@ -337,7 +388,7 @@ class DRS:
         else:
             raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
 
-    def set(self, allow_asterisk=False, return_self=False, **argv):
+    def set(self, allow_glob=False, return_self=False, **argv):
         """
         Set instance attributes, if attribute is in :attr:`requiredAttribs`.
 
@@ -351,35 +402,66 @@ class DRS:
         Args:
             argv (dict): attribute/value pairs
             return_self (bool): return self or nothing.
-            allow_asterisk (bool): allow asterisk as unset values.
+            allow_glob (bool): allow asterisk or multiple values for glob.
         Raises:
             InvalidDRSAttribError:  raises when `attr` is invalid for DRS.
         Return:
             nothing or self when `return_self` is ``True``
+
+        Note:
+            if `allow_glob` is ``True``, attributes not given are set as ``*``.
         """
-        attribs = [a for a in argv.keys() if a in DRS.requiredAttribs]
-        for a in attribs:
-            if (self.isValidValueForAttr(argv[a], a)):
-                setattr(self, a, argv[a])
+        self.allow_glob = allow_glob
 
-        if (hasattr(self, 'variant_label')):
-            if (hasattr(self, 'sub_experiment_id')):
-                subexp = argv['sub_experiment_id']
-                varlab = argv['variant_label']
-                self.member_id = f"{subexp}-{varlab}"
-            else:
-                self.member_id = self.variant_label
+        attribs = {a:argv[a] for a in argv.keys() if a in DRS.requiredAttribs}
 
-        if (allow_asterisk):
+        if (allow_glob):
+            for a,v in attribs.items():
+                v = [vv.strip() for vv in v.split(',')]
+                if len(v) > 1:
+                    setattr(self, a, v)
+                else:
+                    setattr(self, a, v[0])
+        else:
+            for a,v in attribs.items():
+                setattr(self, a, v)
+        self._setMemberID()
+
+        if (allow_glob):
             for a in self.requiredAttribs:
                 if (not hasattr(self, a)):
                     setattr(self, a, '*')
             if (not hasattr(self, 'member_id')):
                 setattr(self, 'member_id', '*')
 
+        self.isValid(silent=True, delete_invalid=True)
+        
         if (return_self):
             return self
 
+    def isValid(self, silent=False, delete_invalid=True):
+        """
+        Check if attributes are valid as DRS.
+        """
+        res = {}
+        if (self.allow_glob):
+            #  TODO: This is tentative, IMPLEMENT HERE.
+            res = {a: True for a in self.requiredAttribs}
+        else:
+            for a in self.requiredAttribs:
+                v = getattr(self, a, None)
+                if v:
+                    if self.isValidValueForAttr(v, a):
+                        res[a] = True
+                    else:
+                        res[a] = False
+                        if (not silent):
+                            print(f'Warining: {a} has invalid value {v}.')
+                        if (delete_invalid):
+                            delattr(self, a)
+        return all(res)
+
+    
     def fileName(self):
         """
         Construct filename from current instance member attributes.
@@ -412,23 +494,39 @@ class DRS:
           ...
         AttributeError: 'DRS' object has no attribute 'table_id'
 
+
         In the example above, since the key ``table_id`` has invalid value,
         ``d.table_id`` is NOT set, and so the exception raised.
         """
-        var = self.variable_id
-        tab = self.table_id
-        src = self.source_id
-        exp = self.experiment_id
-        mem = self.member_id
-        grd = self.grid_label
-        if (hasattr(self, 'time_range')):
-            tim = self.time_range
+        attr = {}
+        for a in self.filenameAttribs:
+            v = getattr(self, a)
+            if type(v) is list:
+                v = '{'+','.join(v)+'}'
+            attr[a] = v
+        for a in self.filenameAttribsOptional:
+            v = getattr(self, a, None)
+            if v is None:  # not set
+                pass
+            elif type(v) is list:
+                attr[a] = '{'+','.join(v)+'}'
+            else:
+                attr[a] = v
+
+        var = attr["variable_id"]
+        tab = attr["table_id"]
+        src = attr["source_id"]
+        exp = attr["experiment_id"]
+        mem = attr["member_id"]
+        grd = attr["grid_label"]
+        if ('time_range' in attr):
+            tim = attr["time_range"]
             f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
         else:
             f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
         return f
 
-    def dirName(self, prefix=None):
+    def dirName(self, prefix=None, glob=False):
         """
         Construct directory name by DRS from drs.DRS instance members.
 
@@ -466,17 +564,24 @@ class DRS:
         has NOT set, and so the exception is raised.
 
         """
+        attr={}
+        for a in self.dirnameAttribs:
+            v = getattr(self, a)
+            if type(v) is list:
+                v = '{'+','.join(v)+'}'
+            attr[a] = v
+
         d = PurePath(
-           self.mip_era,
-           self.activity_id,
-           self.institution_id,
-           self.source_id,
-           self.experiment_id,
-           self.member_id,
-           self.table_id,
-           self.variable_id,
-           self.grid_label,
-           self.version)
+           attr["mip_era"],
+           attr["activity_id"],
+           attr["institution_id"],
+           attr["source_id"],
+           attr["experiment_id"],
+           attr["member_id"],
+           attr["table_id"],
+           attr["variable_id"],
+           attr["grid_label"],
+           attr["version"])
         if (prefix):
             d = PurePath(prefix) / d
         return d
@@ -516,7 +621,6 @@ class DRS:
         except ValueError:
             # time_range = None
             pass
-
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
         except ValueError:

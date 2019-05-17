@@ -56,7 +56,7 @@ class test_DRS(unittest.TestCase):
                "activity_id='CMIP', experiment_id='piControl', "
                "grid_label='gn', institution_id='MIROC', mip_era='CMIP6', "
                "source_id='MIROC6', table_id='Amon', variable_id='tas', "
-               "variant_label='r1i1p1f1', version='v20190308')")
+               "variant_label='r1i1p1f1', version='v20190308', allow_glob=False)")
 
         d0 = drs.DRS(**self.ga)
         res = repr(d0)
@@ -76,7 +76,7 @@ class test_DRS(unittest.TestCase):
             "source_id='IPSL-CM6A-LR', sub_experiment_id='s1950', "
             "table_id='Amon', time_range='192001-201412', "
             "variable_id='rsdscs', variant_label='r1i1p1f1', "
-            "version='v20190110')")
+            "version='v20190110', allow_glob=False)")
 
         d0 = drs.DRS(**self.ga_w_sub)
         res = repr(d0)
@@ -94,7 +94,7 @@ class test_DRS(unittest.TestCase):
             "drs.DRS(experiment_id='piControl', grid_label='gn', "
             "mip_era='CMIP6', source_id='MIROC6', table_id='Amon', "
             "time_range='185001-194912', variable_id='tas', "
-            "variant_label='r1i1p1f1')")
+            "variant_label='r1i1p1f1', allow_glob=False)")
 
         d0 = drs.DRS(filename=self.fname)
         res = repr(d0)
@@ -117,7 +117,8 @@ class test_DRS(unittest.TestCase):
                "table_id: 'Amon'\n"
                "variable_id: 'tas'\n"
                "variant_label: 'r1i1p1f1'\n"
-               "version: 'v20190308'")
+               "version: 'v20190308'\n"
+               "allow_glob: False")
         d0 = drs.DRS(**self.ga)
         res = str(d0)
         self.assertEqual(ref, res)
@@ -135,7 +136,8 @@ class test_DRS(unittest.TestCase):
                "time_range: '192001-201412'\n"
                "variable_id: 'rsdscs'\n"
                "variant_label: 'r1i1p1f1'\n"
-               "version: 'v20190110'")
+               "version: 'v20190110'\n"
+               "allow_glob: False")
         d0 = drs.DRS(**self.ga_w_sub)
         res = str(d0)
         self.assertEqual(ref, res)
@@ -154,7 +156,8 @@ class test_DRS(unittest.TestCase):
             "time_range: '192001-201412'\n"
             "variable_id: 'rsdscs'\n"
             "variant_label: 'r1i1p1f1'\n"
-            "version: 'v20190110'")
+            "version: 'v20190110'\n"
+            "allow_glob: False")
         d0 = drs.DRS(**self.ga_w_sub)
         res = str(d0)
         self.assertEqual(ref, res)
@@ -177,11 +180,12 @@ class test_DRS(unittest.TestCase):
 
     def test_fileNameUseClass21(self):
         "invalid attribute, expect AttributeError."
-        self.ga['table_id'] = 'invalid'
+        ga = {k:v for k,v in self.ga.items()}
+        ga['table_id'] = 'invalid'
         ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
 
         with self.assertRaises(AttributeError):
-            res = drs.DRS(**self.ga).fileName()
+            res = drs.DRS(**ga).fileName()
             self.assertEqual(ref, res)
 
     def test_fileNameUseInstance01(self):
@@ -258,17 +262,19 @@ class test_DRS(unittest.TestCase):
 
     def test_dirNameUseInstance01(self):
         "Construct dirname by istance method, reusing one instance."
-        variants = ['r1i1p1f1', 'r2i1p1f1', 'r3i1p1f1']
-        ref = [
-            'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308',
-            'CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/Amon/tas/gn/v20190308',
-            'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/Amon/tas/gn/v20190308']
+        ref = {
+            'r1i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
+            'Amon/tas/gn/v20190308',
+            'r2i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/'
+            'Amon/tas/gn/v20190308',
+            'r3i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/'
+            'Amon/tas/gn/v20190308'}
 
         d = drs.DRS(**self.ga)
-        res = [str(d.set(return_self=True, variant_label=v).dirName())
-               for v in variants]
-
-        self.assertEqual(ref, res)
+        for v,r in ref.items():
+            d.set(return_self=True, variant_label=v)
+            res = str(d.dirName())
+            self.assertEqual(r, res)
 
     def test_splitDirName01(self):
         "Split dirname without prefix"
