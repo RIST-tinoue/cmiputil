@@ -130,7 +130,11 @@ class DRSError(Exception):
 
 
 class InvalidDRSAttribError(DRSError):
-    """Error for invalid attribute as DRS."""
+    """
+    Error for invalid attribute as DRS.
+
+    TODO: Use ValueError instead of this exception
+"""
 
 
 class InvalidPathAsDRSError(DRSError):
@@ -172,8 +176,7 @@ sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
 
 
 class DRS:
-    """
-    Class for CMIP6 DRS.
+    """Class for CMIP6 DRS.
 
     This class contains attributes necessary to construct a file
     name/directory name that is valid for CMIP6 DRS (Data Reference
@@ -182,29 +185,32 @@ class DRS:
 
     Instance member variables of this class are:
 
-    - ``variable_id``
-    - ``table_id``
-    - ``source_id``
+    - ``activity_id``
     - ``experiment_id``
     - ``grid_label``
-    - ``time_range``
-    - ``version``
-    - ``sub_experiment_id``
-    - ``variant_label``
-    - ``member_id``
-    - ``mip_era``
-    - ``activity_id``
     - ``institution_id``
+    - ``mip_era``
     - ``source_id``
+    - ``source_id``
+    - ``sub_experiment_id``
+    - ``table_id``
+    - ``time_range``
+    - ``variable_id``
+    - ``variant_label``
+    - ``version``
+    - ``member_id``
 
-    Note that ``member_id`` is not able to set directly, this is set by
-    ``sub_experiment_id`` (omittable) and ``variant_label``.
+    Note that ``member_id`` is not able to set directly, this is set
+    by ``sub_experiment_id`` (omittable) and ``variant_label``, via
+    internal method :meth:`_setMemberID`.
 
-    You can use the class member :attr:`requiredAttribs` to know
-    necessary attributes to set a filename/dirname valid for DRS.
+    You can use the class member :attr:`requiredAttribs`,
+    :attr:`filenameAttribs`, :attr:`filenameAttribsOptional`,
+    :attr:`dirnameAttribs` to know necessary attributes to set this
+    class and a filename/dirname valid for DRS.
 
     Args:
-        file(path-like): filename of valid CMIP6 netCDF file.
+        file(path-like): CMIP6 netCDF file.
         filename(str): filename to be used to set attributes.
         allow_glob(bool): allow '*' for unset attribute and resulting path.
         kw(dict): attribute-value pairs
@@ -216,6 +222,7 @@ class DRS:
     and attributes are set from components consist of that filename.
 
     Else attributes are set from `**kw` dict.
+
     """
 
     #: Attributes managed in this class.
@@ -439,9 +446,30 @@ class DRS:
         if (return_self):
             return self
 
-    def isValid(self, silent=False, delete_invalid=True):
+    def isValid(self, silent=False, delete_invalid=False):
         """
         Check if attributes are valid as DRS.
+
+        Args:
+          silent(bool): no message even if something is invalid.
+          delete_invalid(bool): delete invalid attribute and its value.
+        Return:
+          bool: all attributes are valid or not.
+
+        Examples:
+
+        >>> d = drs.DRS(**drs.sample_attrs)
+        >>> d.isValid(silent=True)
+        True
+        >>> d.activity_id = 'InvalidMIP'
+        >>> d.isValid(silent=True, delete_invalid=True)
+        False
+        >>> hasattr(d, 'activity_id')
+        False
+
+        Note that after `delete_invalid` is ``True`` in above,
+        `d.activity_id` is deleted.
+
         """
         res = {}
         if (self.allow_glob):
@@ -459,7 +487,7 @@ class DRS:
                             print(f'Warining: {a} has invalid value {v}.')
                         if (delete_invalid):
                             delattr(self, a)
-        return all(res)
+        return all(res.values())
 
     
     def fileName(self):
@@ -494,9 +522,22 @@ class DRS:
           ...
         AttributeError: 'DRS' object has no attribute 'table_id'
 
-
         In the example above, since the key ``table_id`` has invalid value,
         ``d.table_id`` is NOT set, and so the exception raised.
+
+        Using glob,
+
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> drs.DRS(**attrs).fileName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'experiment_id'
+        >>> str(drs.DRS(**attrs, allow_glob=True).fileName())
+        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
+
+        Note that when `allow_glob` is ``True`` in constructor, all
+        attributes not :meth:`set` expricitly are set as ``*``.
         """
         attr = {}
         for a in self.filenameAttribs:
@@ -513,28 +554,22 @@ class DRS:
             else:
                 attr[a] = v
 
-        var = attr["variable_id"]
-        tab = attr["table_id"]
-        src = attr["source_id"]
-        exp = attr["experiment_id"]
-        mem = attr["member_id"]
-        grd = attr["grid_label"]
         if ('time_range' in attr):
-            tim = attr["time_range"]
-            f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}_{tim}.nc"
+            f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
+                 "_{member_id}_{grid_label}_{time_range}.nc").format(**attr)
         else:
-            f = f"{var}_{tab}_{src}_{exp}_{mem}_{grd}.nc"
+            f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
+                 "_{member_id}_{grid_label}.nc").format(**attr)
         return f
 
-    def dirName(self, prefix=None, glob=False):
+    def dirName(self, prefix=None):
         """
-        Construct directory name by DRS from drs.DRS instance members.
+        Construct directory name by DRS from :class:`DRS` instance members.
 
         Args:
             prefix (Path-like): prepend to the result path.
-
         Raises:
-            AttributeError: any attributes are missing.
+            AttributeError: any attributes are missing or invalid.
 
         Returns:
             Path-like: directory name
@@ -563,6 +598,22 @@ class DRS:
         In the example above, since ``table_id`` has invalid value, `d.table_id`
         has NOT set, and so the exception is raised.
 
+        Using glob,
+
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> drs.DRS(**attrs).dirName()
+        Traceback (most recent call last):
+          ...
+        AttributeError: 'DRS' object has no attribute 'experiment_id'
+        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
+        >>> del attrs['experiment_id']
+        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        'CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20190308'
+
+        Note that when `allow_glob` is ``True``, all attributes not
+        :meth:`set` expricitly are set as ``*``.
         """
         attr={}
         for a in self.dirnameAttribs:
