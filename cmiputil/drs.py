@@ -637,7 +637,7 @@ class DRS:
         >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
         >>> drs.DRS(**attrs, allow_glob=True).dirName(glob=True)
-        [PurePosixPath('CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20190308'), PurePosixPath('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308')]
+        ['CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20190308', 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308']
         """
         attr={}
         for a in self.dirnameAttribs:
@@ -660,9 +660,9 @@ class DRS:
         if (prefix):
             d = PurePath(prefix) / d
         if glob:
-            return [PurePath(p) for p in self._glob(str(d))]
+            return [p for p in self._glob(str(d))]
         else:
-            return d
+            return str(d)
 
         
 
