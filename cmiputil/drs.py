@@ -799,7 +799,7 @@ class DRS:
         If `separate` is True, return a tuple of two dicts, first
         element is for the filename, second is for the directory name,
         both dicts' key/value shows that each attributes are valid or
-        not. If `directory` is ``True``, first elements is just a ``True``.
+        not. If `directory` is ``True``, first elements is ``{'all': True}``.
 
         Examples:
 
@@ -823,13 +823,13 @@ class DRS:
             f_res = {a: self.isValidValueForAttr(f_attr[a], a)
                      for a in f_attr if a in DRS.requiredAttribs}
         else:
-            f_res = True
+            f_res = {'all':True}
         if (dname != PurePath('.')):
             d_attr = self.splitDirName(dname)
             d_res = {a: self.isValidValueForAttr(d_attr[a], a)
                      for a in d_attr if a in DRS.requiredAttribs}
         else:
-            d_res = True
+            d_res = {'all':True}
 
         if separated:
             return f_res, d_res

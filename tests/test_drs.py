@@ -384,7 +384,7 @@ class test_DRS(unittest.TestCase):
 
     def test_isValidPath07(self):
         "Valid dirname, separaterd==True"
-        ref = (True,
+        ref = ({'all': True},
                {'activity_id': True,
                 'experiment_id': True,
                 'grid_label': True,
