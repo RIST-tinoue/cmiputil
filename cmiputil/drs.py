@@ -121,7 +121,7 @@ import netCDF4 as nc
 from pathlib import PurePath
 import re
 from pprint import pprint
-
+import glob
 
 class DRSError(Exception):
     """Base exception class for DRS."""
@@ -490,12 +490,12 @@ class DRS:
         return all(res.values())
 
 
-    def fileName(self, glob=False):
+    def fileName(self, glob_expand=False):
         """
         Construct filename from current instance member attributes.
 
         Args:
-            glob(bool): do glob or not.
+            glob_expand(bool): do glob/brace expand or not.
 
         Raises:
             AttributeError: any attributes are missing.
@@ -528,7 +528,7 @@ class DRS:
         In the example above, since the key ``table_id`` has invalid value,
         ``d.table_id`` is NOT set, and so the exception raised.
 
-        Using glob,
+        Using glob/brace_expand,
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
@@ -547,7 +547,7 @@ class DRS:
         >>> attrs.update({'experiment_id':'amip, piControl'})
         >>> drs.DRS(**attrs, allow_glob=True).fileName()
         'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
-        >>> drs.DRS(**attrs, allow_glob=True).fileName(glob=True)
+        >>> drs.DRS(**attrs, allow_glob=True).fileName(glob_expand=True)
         ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
 
 
@@ -573,17 +573,17 @@ class DRS:
         else:
             f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
                  "_{member_id}_{grid_label}.nc").format(**attr)
-        if (glob):
-            f = self._glob(f)
+        if (glob_expand):
+            f = self._expandbrace(f)
         return f
 
-    def dirName(self, prefix=None, glob=False):
+    def dirName(self, prefix=None, glob_expand=False):
         """
         Construct directory name by DRS from :class:`DRS` instance members.
 
         Args:
             prefix (Path-like): prepend to the result path.
-            glob(bool): do glob or not.
+            glob_expand(bool): do glob/expand brace or not.
         Raises:
             AttributeError: any attributes are missing or invalid.
 
@@ -614,7 +614,7 @@ class DRS:
         In the example above, since ``table_id`` has invalid value, `d.table_id`
         has NOT set, and so the exception is raised.
 
-        Using glob,
+        Using glob/brace expand,
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
@@ -636,7 +636,7 @@ class DRS:
         >>> attrs.update({'experiment_id':'amip, piControl'})
         >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
-        >>> drs.DRS(**attrs, allow_glob=True).dirName(glob=True)
+        >>> drs.DRS(**attrs, allow_glob=True).dirName(glob_expand=True)  # doctest: +SKIP
         ['CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20190308', 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308']
         """
         attr={}
@@ -659,8 +659,10 @@ class DRS:
            attr["version"])
         if (prefix):
             d = PurePath(prefix) / d
-        if glob:
-            return [p for p in self._glob(str(d))]
+        if glob_expand:
+             plist = [glob.glob(p) for p in self._expandbrace(str(d))]
+             return [p for pp in plist for p in pp]
+
         else:
             return str(d)
 
@@ -837,7 +839,7 @@ class DRS:
             return all((f_res.values(), d_res.values()))
 
 
-    def _glob(self, path):
+    def _expandbrace(self, path):
         return getitem(path)[0]
 
 # Borrowed from https://rosettacode.org/wiki/Brace_expansion#Python
