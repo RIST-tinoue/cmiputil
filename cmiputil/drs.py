@@ -489,26 +489,29 @@ class DRS:
                             delattr(self, a)
         return all(res.values())
 
-    
-    def fileName(self):
+
+    def fileName(self, glob=False):
         """
         Construct filename from current instance member attributes.
+
+        Args:
+            glob(bool): do glob or not.
 
         Raises:
             AttributeError: any attributes are missing.
 
         Returns:
-            str: filename
+            str or list(str): filename
 
 
         Examples:
 
-        DRS from dict w/o `time_range`
+        DRS from dict w/o ``time_range``
 
         >>> drs.DRS(**drs.sample_attrs).fileName()
         'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
-        DRS from dict w/ `sub_experiment_id`
+        DRS from dict w/ ``sub_experiment_id``
 
         >>> drs.DRS(**drs.sample_attrs_w_subexp).fileName()
         'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
@@ -536,8 +539,18 @@ class DRS:
         >>> str(drs.DRS(**attrs, allow_glob=True).fileName())
         'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
 
-        Note that when `allow_glob` is ``True`` in constructor, all
+        Note that when ``allow_glob`` is ``True`` in constructor, all
         attributes not :meth:`set` expricitly are set as ``*``.
+
+        Brace expansion,
+
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> drs.DRS(**attrs, allow_glob=True).fileName()
+        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
+        >>> drs.DRS(**attrs, allow_glob=True).fileName(glob=True)
+        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
+
+
         """
         attr = {}
         for a in self.filenameAttribs:
@@ -560,19 +573,22 @@ class DRS:
         else:
             f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
                  "_{member_id}_{grid_label}.nc").format(**attr)
+        if (glob):
+            f = self._glob(f)
         return f
 
-    def dirName(self, prefix=None):
+    def dirName(self, prefix=None, glob=False):
         """
         Construct directory name by DRS from :class:`DRS` instance members.
 
         Args:
             prefix (Path-like): prepend to the result path.
+            glob(bool): do glob or not.
         Raises:
             AttributeError: any attributes are missing or invalid.
 
         Returns:
-            Path-like: directory name
+            Path-like or list(Path-like): directory name
 
         Examples:
 
@@ -612,8 +628,16 @@ class DRS:
         >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20190308'
 
-        Note that when `allow_glob` is ``True``, all attributes not
+        Note that when ``allow_glob`` is ``True``, all attributes not
         :meth:`set` expricitly are set as ``*``.
+
+        Brace expansion,
+
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
+        >>> drs.DRS(**attrs, allow_glob=True).dirName(glob=True)
+        ['CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20190308', 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308']
         """
         attr={}
         for a in self.dirnameAttribs:
@@ -635,7 +659,13 @@ class DRS:
            attr["version"])
         if (prefix):
             d = PurePath(prefix) / d
-        return d
+        if glob:
+            return self._glob(str(d))
+        else:
+            return d
+
+        
+
 
     def splitFileName(self, fname):
         """
@@ -805,6 +835,13 @@ class DRS:
             return f_res, d_res
         else:
             return all((f_res, d_res))
+
+    def _glob(self, path):
+        import shlex
+        import subprocess
+        line =  f'bash -c "echo {path}"'
+        proc = subprocess.run(shlex.split(line), stdout=subprocess.PIPE)
+        return proc.stdout.decode("utf-8").split()
 
 
 if __name__ == "__main__":
