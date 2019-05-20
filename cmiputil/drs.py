@@ -834,7 +834,7 @@ class DRS:
         if separated:
             return f_res, d_res
         else:
-            return all((f_res, d_res))
+            return all((f_res.values(), d_res.values()))
 
     def _glob(self, path):
         import shlex
