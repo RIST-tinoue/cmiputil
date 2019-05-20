@@ -836,12 +836,47 @@ class DRS:
         else:
             return all((f_res.values(), d_res.values()))
 
+
     def _glob(self, path):
-        import shlex
-        import subprocess
-        line =  f'bash -c "echo {path}"'
-        proc = subprocess.run(shlex.split(line), stdout=subprocess.PIPE)
-        return proc.stdout.decode("utf-8").split()
+        return getitem(path)[0]
+
+# Borrowed from https://rosettacode.org/wiki/Brace_expansion#Python
+# Content is available under GNU Free Documentation License 1.2 unless otherwise noted.
+
+def getitem(s, depth=0):
+    out = [""]
+    while s:
+        c = s[0]
+        if depth and (c == ',' or c == '}'):
+            return out,s
+        if c == '{':
+            x = getgroup(s[1:], depth+1)
+            if x:
+                out,s = [a+b for a in out for b in x[0]], x[1]
+                continue
+        if c == '\\' and len(s) > 1:
+            s, c = s[1:], c + s[1]
+ 
+        out, s = [a+c for a in out], s[1:]
+ 
+    return out,s
+ 
+def getgroup(s, depth):
+    out, comma = [], False
+    while s:
+        g,s = getitem(s, depth)
+        if not s: break
+        out += g
+ 
+        if s[0] == '}':
+            if comma: return out, s[1:]
+            return ['{' + a + '}' for a in out], s[1:]
+ 
+        if s[0] == ',':
+            comma,s = True, s[1:]
+ 
+    return None
+
 
 
 if __name__ == "__main__":
