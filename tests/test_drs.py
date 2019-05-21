@@ -1,7 +1,7 @@
 from cmiputil import drs
 import unittest
 from os.path import dirname
-
+from pathlib import Path
 
 class test_DRS(unittest.TestCase):
     def setUp(self):
@@ -164,7 +164,7 @@ class test_DRS(unittest.TestCase):
 
     def test_fileNameUseClass01(self):
         "Construct filename by class method."
-        ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc')
 
         res = drs.DRS(**self.ga).fileName()
         self.assertEqual(ref, res)
@@ -172,7 +172,7 @@ class test_DRS(unittest.TestCase):
     def test_fileNameUseClass11(self):
         "Construct filename by class method, with `time_range`."
         self.ga['time_range'] = '185001-194912'
-        ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
+        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc')
 
         res = drs.DRS(**self.ga).fileName()
 
@@ -182,7 +182,7 @@ class test_DRS(unittest.TestCase):
         "invalid attribute, expect AttributeError."
         ga = {k:v for k,v in self.ga.items()}
         ga['table_id'] = 'invalid'
-        ref = 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc'
+        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc')
 
         with self.assertRaises(AttributeError):
             res = drs.DRS(**ga).fileName()
@@ -191,9 +191,9 @@ class test_DRS(unittest.TestCase):
     def test_fileNameUseInstance01(self):
         "Construct filename by instance method, reusing one instance."
         variants = ['r1i1p1f1', 'r2i1p1f1', 'r3i1p1f1']
-        ref = ['tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc',
-               'tas_Amon_MIROC6_piControl_r2i1p1f1_gn.nc',
-               'tas_Amon_MIROC6_piControl_r3i1p1f1_gn.nc']
+        ref = [Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'),
+               Path('tas_Amon_MIROC6_piControl_r2i1p1f1_gn.nc'),
+               Path('tas_Amon_MIROC6_piControl_r3i1p1f1_gn.nc')]
 
         d = drs.DRS(**self.ga)
         res = [d.set(return_self=True, variant_label=v).fileName()
@@ -245,35 +245,35 @@ class test_DRS(unittest.TestCase):
 
     def test_dirNameUseClass01(self):
         "Construct dirname by class method."
-        ref = ("CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/"
+        ref = Path("CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/"
                "Amon/tas/gn/v20190308")
-        res = str(drs.DRS(**self.ga).dirName())
+        res = drs.DRS(**self.ga).dirName()
 
         self.assertEqual(ref, res)
 
     def test_dirNameUseClass02(self):
         "Construct dirname with sub_experiment_id by class method."
 
-        ref = ("CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/"
+        ref = Path("CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/"
                "s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110")
-        res = str(drs.DRS(**self.ga_w_sub).dirName())
+        res = drs.DRS(**self.ga_w_sub).dirName()
 
         self.assertEqual(ref, res)
 
     def test_dirNameUseInstance01(self):
         "Construct dirname by istance method, reusing one instance."
         ref = {
-            'r1i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
-            'Amon/tas/gn/v20190308',
-            'r2i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/'
-            'Amon/tas/gn/v20190308',
-            'r3i1p1f1': 'CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/'
-            'Amon/tas/gn/v20190308'}
+            'r1i1p1f1': Path('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
+                             'Amon/tas/gn/v20190308'),
+            'r2i1p1f1': Path('CMIP6/CMIP/MIROC/MIROC6/piControl/r2i1p1f1/'
+                             'Amon/tas/gn/v20190308'),
+            'r3i1p1f1': Path('CMIP6/CMIP/MIROC/MIROC6/piControl/r3i1p1f1/'
+                             'Amon/tas/gn/v20190308')}
 
         d = drs.DRS(**self.ga)
         for v,r in ref.items():
             d.set(return_self=True, variant_label=v)
-            res = str(d.dirName())
+            res = d.dirName()
             self.assertEqual(r, res)
 
     def test_splitDirName01(self):

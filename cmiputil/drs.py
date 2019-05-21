@@ -118,7 +118,7 @@ __date__ = '2019/05/09'
 
 from cmiputil.convoc import ConVoc
 import netCDF4 as nc
-from pathlib import PurePath
+from pathlib import Path, Path
 import re
 from pprint import pprint
 import glob
@@ -490,31 +490,37 @@ class DRS:
         return all(res.values())
 
 
-    def fileName(self):
+    def fileName(self, prefix=None):
         """
         Construct filename from current instance member attributes.
 
         Args:
-            glob_expand(bool): do glob/brace expand or not.
+            prefix(path-like): prepend to the resulting filename
 
         Raises:
             AttributeError: any attributes are missing.
 
         Returns:
-            str or list(str): filename
+            path-like: filename
 
 
         Examples:
 
         DRS from dict w/o ``time_range``
 
-        >>> drs.DRS(**drs.sample_attrs).fileName()
+        >>> str(drs.DRS(**drs.sample_attrs).fileName())
         'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
         DRS from dict w/ ``sub_experiment_id``
 
-        >>> drs.DRS(**drs.sample_attrs_w_subexp).fileName()
+        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).fileName())
         'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+
+        with prefix
+        
+        >>> prefix=Path('/data/CMIP6/')
+        >>> str(drs.DRS(**drs.sample_attrs).fileName(prefix))
+        '/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
 
         Invalid value for valid attrib
 
@@ -564,9 +570,13 @@ class DRS:
         else:
             f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
                  "_{member_id}_{grid_label}.nc").format(**attr)
+        f = Path(f)
+        if (prefix):
+            f = Path(prefix) / f
+
         return f
 
-    def fileNameList(self):
+    def fileNameList(self, prefix=None):
         """
         Returns a list of filenames constructed by the instance member
         attributes that may contains '*' and/or braces.
@@ -585,16 +595,18 @@ class DRS:
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> drs.DRS(**attrs, allow_glob=True).fileName()
+        >>> str(drs.DRS(**attrs, allow_glob=True).fileName())
         'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
-        >>> drs.DRS(**attrs, allow_glob=True).fileNameList()  # doctest: +SKIP
+
+        >>> dlist = drs.DRS(**attrs, allow_glob=True).fileNameList() # doctest: +SKIP
+        >>> [str(d) for d in dlist]  # doctest: +SKIP
         ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
 
         The last example will return ``[]`` if expanded files do not
         exist.
 
         """
-        fname = self.fileName()
+        fname = self.fileName(prefix=prefix)
         flist = [glob.glob(p) for p in self._expandbrace(str(fname))]
         return [f for ff in flist for f in ff]
 
@@ -661,7 +673,7 @@ class DRS:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
 
-        d = PurePath(
+        d = Path(
            attr["mip_era"],
            attr["activity_id"],
            attr["institution_id"],
@@ -673,8 +685,8 @@ class DRS:
            attr["grid_label"],
            attr["version"])
         if (prefix):
-            d = PurePath(prefix) / d
-        return str(d)
+            d = Path(prefix) / d
+        return d
 
     def dirNameList(self, prefix=None):
         """
@@ -747,7 +759,7 @@ class DRS:
          source_id,
          experiment_id,
          member_id,
-         grid_label) = PurePath(fname).stem.split('_', 5)
+         grid_label) = Path(fname).stem.split('_', 5)
 
         try:
             (grid_label, time_range) = grid_label.split('_')
@@ -803,7 +815,7 @@ class DRS:
         """
         res = {}
 
-        d = PurePath(dname)
+        d = Path(dname)
 
         try:
             (version,
@@ -831,7 +843,7 @@ class DRS:
                 pass
         self.set(**res)
         if (len(d.parts) > 10):
-            res["prefix"] = str(PurePath(*d.parts[:-10]))
+            res["prefix"] = str(Path(*d.parts[:-10]))
         else:
             res["prefix"] = ''
         return res
@@ -862,7 +874,7 @@ class DRS:
             >>> drs.DRS().isValidPath(url)
             True
         """
-        p = PurePath(path)
+        p = Path(path)
         if (directory):
             fname = None
             dname = p
@@ -876,7 +888,7 @@ class DRS:
                      for a in f_attr if a in DRS.requiredAttribs}
         else:
             f_res = {'all':True}
-        if (dname != PurePath('.')):
+        if (dname != Path('.')):
             d_attr = self.splitDirName(dname)
             d_res = {a: self.isValidValueForAttr(d_attr[a], a)
                      for a in d_attr if a in DRS.requiredAttribs}
