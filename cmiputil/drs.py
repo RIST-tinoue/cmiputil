@@ -292,7 +292,8 @@ class DRS:
                     v = ','.join(v)
                 res.append("{}='{}'".format(a,v))
         res.append("allow_glob={}".format(self.allow_glob))
-        res = 'drs.DRS(' + ', '.join(res) + ')'
+        res = (self.__class__.__name__
+               + '(' + ', '.join(res) + ')')
         return res
 
     def __str__(self):
@@ -302,6 +303,13 @@ class DRS:
         res.append(f'allow_glob: {allow_glob}',)
         res = "\n".join(res)
         return res
+
+    def __eq__(self, other):
+        typecheck = (type(self) == type(other))
+        res = [(getattr(self, k) == getattr(other, k))
+               for k in self.requiredAttribs
+               if hasattr(self, k)]
+        return (all(res) and typecheck)
 
     def getAttribs(self):
         """

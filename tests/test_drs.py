@@ -52,7 +52,7 @@ class test_DRS(unittest.TestCase):
 
     def test_repr01(self):
         "repr() constructed from dict"
-        ref = ("drs.DRS("
+        ref = ("DRS("
                "activity_id='CMIP', experiment_id='piControl', "
                "grid_label='gn', institution_id='MIROC', mip_era='CMIP6', "
                "source_id='MIROC6', table_id='Amon', variable_id='tas', "
@@ -61,7 +61,7 @@ class test_DRS(unittest.TestCase):
         d0 = drs.DRS(**self.ga)
         res = repr(d0)
         self.assertEqual(ref, res)
-        d1 = eval(res)
+        d1 = eval('drs.'+res)
         self.assertEqual(type(d0), type(d1))
         res = [(getattr(d0, k) == getattr(d1, k))
                for k in drs.DRS.requiredAttribs
@@ -71,7 +71,7 @@ class test_DRS(unittest.TestCase):
     def test_repr02(self):
         "repr() constructed from dict with sub_experiment_id"
         ref = (
-            "drs.DRS(activity_id='DCPP', experiment_id='dcppC-atl-pacemaker', "
+            "DRS(activity_id='DCPP', experiment_id='dcppC-atl-pacemaker', "
             "grid_label='gr', institution_id='IPSL', mip_era='CMIP6', "
             "source_id='IPSL-CM6A-LR', sub_experiment_id='s1950', "
             "table_id='Amon', time_range='192001-201412', "
@@ -81,17 +81,14 @@ class test_DRS(unittest.TestCase):
         d0 = drs.DRS(**self.ga_w_sub)
         res = repr(d0)
         self.assertEqual(ref, res)
-        d1 = eval(res)
-        self.assertEqual(type(d0), type(d1))
-        res = [(getattr(d0, k) == getattr(d1, k))
-               for k in drs.DRS.requiredAttribs
-               if k in dir(d0)]
-        self.assertTrue(all(res))
+        d1 = eval('drs.'+res)
+        self.assertEqual(d0, d1)
+
 
     def test_repr03(self):
         "repr() constructed from filename"
         ref = (
-            "drs.DRS(experiment_id='piControl', grid_label='gn', "
+            "DRS(experiment_id='piControl', grid_label='gn', "
             "mip_era='CMIP6', source_id='MIROC6', table_id='Amon', "
             "time_range='185001-194912', variable_id='tas', "
             "variant_label='r1i1p1f1', allow_glob=False)")
@@ -99,12 +96,8 @@ class test_DRS(unittest.TestCase):
         d0 = drs.DRS(filename=self.fname)
         res = repr(d0)
         self.assertEqual(ref, res)
-        d1 = eval(res)
-        self.assertEqual(type(d0), type(d1))
-        res = [(getattr(d0, k) == getattr(d1, k))
-               for k in drs.DRS.requiredAttribs
-               if k in dir(d0)]
-        self.assertTrue(all(res))
+        d1 = eval('drs.'+res)
+        self.assertEqual(d0, d1)
 
     def test_str01(self):
         "str() constructed from dict"
