@@ -276,7 +276,7 @@ class DRS:
         if (file):
             with nc.Dataset(file, "r") as ds:
                 attrs = {a: getattr(ds, a, None)
-                         for a in drs.DRS.requiredAttribs}
+                         for a in self.requiredAttribs}
             attrs = {a: v for a, v in attrs.items() if v != 'none'}
         elif (filename):
             attrs = self.splitFileName(filename)
@@ -286,9 +286,9 @@ class DRS:
 
     def __repr__(self):
         # res = ["{}={!a}".format(k, getattr(self, k))
-        #        for k in DRS.requiredAttribs if hasattr(self, k)]
+        #        for k in __class__.requiredAttribs if hasattr(self, k)]
         res = []
-        for a in DRS.requiredAttribs:
+        for a in self.requiredAttribs:
             if hasattr(self, a):
                 v = getattr(self, a)
                 if (type(v) is list):
@@ -300,7 +300,7 @@ class DRS:
 
     def __str__(self):
         res = ["{}: {!a}".format(k, getattr(self, k))
-               for k in DRS.requiredAttribs if hasattr(self, k)]
+               for k in self.requiredAttribs if hasattr(self, k)]
         allow_glob = self.allow_glob
         res.append(f'allow_glob: {allow_glob}',)
         res = "\n".join(res)
@@ -315,7 +315,7 @@ class DRS:
             dict: attribute-value pairs.
         """
         return {k: getattr(self, k)
-                for k in DRS.requiredAttribs if hasattr(self, k)}
+                for k in self.requiredAttribs if hasattr(self, k)}
 
     def _check_time_range(self, value):
         # TODO: precision and `-clim` depends on the attribute `frequency`.
@@ -420,7 +420,7 @@ class DRS:
         """
         self.allow_glob = allow_glob
 
-        attribs = {a:argv[a] for a in argv.keys() if a in DRS.requiredAttribs}
+        attribs = {a:argv[a] for a in argv.keys() if a in self.requiredAttribs}
 
         if (allow_glob):
             for a,v in attribs.items():
@@ -773,7 +773,7 @@ class DRS:
             # sub_experiment_id = None
 
         res = {}
-        for k in DRS.requiredAttribs:
+        for k in self.requiredAttribs:
             try:
                 res[k] = eval(k)
             except NameError:
@@ -836,7 +836,7 @@ class DRS:
         except ValueError:
             variant_label = member_id
 
-        for k in DRS.requiredAttribs:
+        for k in self.requiredAttribs:
             try:
                 res[k] = eval(k)
             except NameError:
@@ -885,13 +885,13 @@ class DRS:
         if (fname):
             f_attr = self.splitFileName(fname)
             f_res = {a: self.isValidValueForAttr(f_attr[a], a)
-                     for a in f_attr if a in DRS.requiredAttribs}
+                     for a in f_attr if a in self.requiredAttribs}
         else:
             f_res = {'all':True}
         if (dname != Path('.')):
             d_attr = self.splitDirName(dname)
             d_res = {a: self.isValidValueForAttr(d_attr[a], a)
-                     for a in d_attr if a in DRS.requiredAttribs}
+                     for a in d_attr if a in self.requiredAttribs}
         else:
             d_res = {'all':True}
 
