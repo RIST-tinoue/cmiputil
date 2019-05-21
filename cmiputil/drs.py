@@ -150,12 +150,12 @@ sample_attrs = {
     'table_id': 'Amon',
     'variable_id': 'tas',
     'variant_label': 'r1i1p1f1',
-    'version': 'v20190308',
+    'version': 'v20181212',
     'non_necessary_attribute': 'hoge'
 }
 sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc"
 sample_dname = "CMIP6/CMIP/MIROC/MIROC6/piControl/"\
-               "r1i1p1f1/Amon/tas/gn/v20190308"
+               "r1i1p1f1/Amon/tas/gn/v20181212"
 
 sample_attrs_w_subexp = {
     'activity_id': 'DCPP',
@@ -212,7 +212,7 @@ class DRS:
     Args:
         file(path-like): CMIP6 netCDF file.
         filename(str): filename to be used to set attributes.
-        allow_glob(bool): allow '*' for unset attribute and resulting path.
+        allow_glob(bool): allow ``*`` for unset attribute and resulting path.
         kw(dict): attribute-value pairs
 
     If `file` is given, it must be a valid CMIP6 netCDF file, and
@@ -490,7 +490,7 @@ class DRS:
         return all(res.values())
 
 
-    def fileName(self, glob_expand=False):
+    def fileName(self):
         """
         Construct filename from current instance member attributes.
 
@@ -542,15 +542,6 @@ class DRS:
         Note that when ``allow_glob`` is ``True`` in constructor, all
         attributes not :meth:`set` expricitly are set as ``*``.
 
-        Brace expansion,
-
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> drs.DRS(**attrs, allow_glob=True).fileName()
-        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
-        >>> drs.DRS(**attrs, allow_glob=True).fileName(glob_expand=True)
-        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
-
-
         """
         attr = {}
         for a in self.filenameAttribs:
@@ -573,29 +564,60 @@ class DRS:
         else:
             f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
                  "_{member_id}_{grid_label}.nc").format(**attr)
-        if (glob_expand):
-            f = self._expandbrace(f)
         return f
 
-    def dirName(self, prefix=None, glob_expand=False):
+    def fileNameList(self):
+        """
+        Returns a list of filenames constructed by the instance member
+        attributes that may contains '*' and/or braces.
+
+        Returns:
+        list of str: filenames
+
+        Todo:
+            Since non-existent files are omitted, this method seems
+            useless. Implement pathNameList() to obtain a list of
+            path(dir/file)
+
+        Examples:
+
+        Brace expansion,
+
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> drs.DRS(**attrs, allow_glob=True).fileName()
+        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
+        >>> drs.DRS(**attrs, allow_glob=True).fileNameList()  # doctest: +SKIP
+        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
+
+        The last example will return ``[]`` if expanded files do not
+        exist.
+
+        """
+        fname = self.fileName()
+        flist = [glob.glob(p) for p in self._expandbrace(str(fname))]
+        return [f for ff in flist for f in ff]
+
+    def dirName(self, prefix=None):
         """
         Construct directory name by DRS from :class:`DRS` instance members.
 
+        If you want glob/brace expaned list, use :meth:`dirNameList` instead.
+
         Args:
             prefix (Path-like): prepend to the result path.
-            glob_expand(bool): do glob/expand brace or not.
         Raises:
             AttributeError: any attributes are missing or invalid.
 
         Returns:
-            Path-like or list(Path-like): directory name
+            Path-like : directory name
 
         Examples:
 
         DRS from dict w/o ``time_range``.
 
         >>> str(drs.DRS(**drs.sample_attrs).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308'
+        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
 
         DRS from dict w/ ``sub_experiment_id``.
 
@@ -611,10 +633,10 @@ class DRS:
           ...
         AttributeError: 'DRS' object has no attribute 'table_id'
 
-        In the example above, since ``table_id`` has invalid value, `d.table_id`
+        In the example above, since ``table_id`` has invalid value, ``DRS.table_id``
         has NOT set, and so the exception is raised.
 
-        Using glob/brace expand,
+        Allow glob/brace,
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
@@ -623,21 +645,14 @@ class DRS:
           ...
         AttributeError: 'DRS' object has no attribute 'experiment_id'
         >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
+        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20181212'
         >>> del attrs['experiment_id']
-        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20190308'
+        >>> str(drs.DRS(**attrs, allow_glob=True).dirName(prefix='/data/'))
+        '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
 
         Note that when ``allow_glob`` is ``True``, all attributes not
         :meth:`set` expricitly are set as ``*``.
 
-        Brace expansion,
-
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20190308'
-        >>> drs.DRS(**attrs, allow_glob=True).dirName(glob_expand=True)  # doctest: +SKIP
-        ['CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20190308', 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20190308']
         """
         attr={}
         for a in self.dirnameAttribs:
@@ -659,15 +674,50 @@ class DRS:
            attr["version"])
         if (prefix):
             d = PurePath(prefix) / d
-        if glob_expand:
-             plist = [glob.glob(p) for p in self._expandbrace(str(d))]
-             return [p for pp in plist for p in pp]
+        return str(d)
 
-        else:
-            return str(d)
+    def dirNameList(self, prefix=None):
+        """
+        Return list of directory name constructed by DRS from
+        :class:`DRS` instance members, that contains asterisk and/or
+        braces
 
+        Args:
+            prefix(path-like): dirname to prepend.
+
+        Returns:
+            list of path-like: directory names
+
+        Note:
+            Non-existent directories are omitted.
+
+        Examples:
+
+        Brace expansion,
+
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> attrs.update({'experiment_id':'amip, piControl'})
+        >>> del attrs['version']
+        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
+        >>> drs.DRS(**attrs, allow_glob=True).dirNameList(prefix='/data')  # doctest: +NORMALIZE_WHITESPACE
+        ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214',
+        '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
         
+        The last example will return ``[]`` if expanded directories do
+        not exist.
 
+
+        TODO:
+            Completely re-implment that 
+
+            - get list use glob (asterisk expansion) only
+            - filter out using regex by brace list
+
+        """
+        dname = self.dirName(prefix=prefix)  # may contain '*' and braces
+        plist = [glob.glob(p) for p in self._expandbrace(str(dname))]
+        return [p for pp in plist for p in pp]
 
     def splitFileName(self, fname):
         """
@@ -735,21 +785,21 @@ class DRS:
         Examples:
 
             >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
-            ...          'piControl/r1i1p1f1/Amon/tas/gn/v20190308')
+            ...          'piControl/r1i1p1f1/Amon/tas/gn/v20181212')
             >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
             {'activity_id': 'CMIP', 'experiment_id': 'piControl',
             'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
             'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
-            'variant_label': 'r1i1p1f1', 'version': 'v20190308',
+            'variant_label': 'r1i1p1f1', 'version': 'v20181212',
             'prefix': '/work/data/CMIP6'}
 
             >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
-            ...          'Amon/tas/gn/v20190308')
+            ...          'Amon/tas/gn/v20181212')
             >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
             {'activity_id': 'CMIP', 'experiment_id': 'piControl',
             'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
             'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
-            'variant_label': 'r1i1p1f1', 'version': 'v20190308', 'prefix': ''}
+            'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
         """
         res = {}
 
