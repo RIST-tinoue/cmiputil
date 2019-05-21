@@ -274,10 +274,7 @@ class DRS:
         self.mip_era = 'CMIP6'
 
         if (file):
-            with nc.Dataset(file, "r") as ds:
-                attrs = {a: getattr(ds, a, None)
-                         for a in self.requiredAttribs}
-            attrs = {a: v for a, v in attrs.items() if v != 'none'}
+            attrs = self.getAttrsFromGA(file)
         elif (filename):
             attrs = self.splitFileName(filename)
         else:
@@ -286,7 +283,7 @@ class DRS:
 
     def __repr__(self):
         # res = ["{}={!a}".format(k, getattr(self, k))
-        #        for k in __class__.requiredAttribs if hasattr(self, k)]
+        #        for k in self.requiredAttribs if hasattr(self, k)]
         res = []
         for a in self.requiredAttribs:
             if hasattr(self, a):
@@ -360,6 +357,28 @@ class DRS:
             return self.member_id
         else:
             return None
+
+    def getAttrsFromGA(self, file):
+        """
+        Obtain requiered attributes from the global attributes defined
+        in a valid netCDF file.
+
+        Args:
+            file(str or path-like?): filename of a valid netCDF file.
+
+        Returns:
+            dict: whose keys are from :attr:`DRS.requiredAttribs`.
+
+        TODO:
+            Should this be the member of this class ??
+
+        """
+
+        with nc.Dataset(file, "r") as ds:
+            attrs = {a: getattr(ds, a, None)
+                    for a in drs.self.requiredAttribs}
+        attrs = {a: v for a, v in attrs.items() if v != 'none'}
+        return attrs
 
     def isValidValueForAttr(self, value, attr):
         """
