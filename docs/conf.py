@@ -57,8 +57,13 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 # html_theme = 'alabaster'
+# html_theme = 'classic'
 # html_theme = 'sphinxdoc'
 html_theme = 'sphinx_rtd_theme'
+# html_theme = 'pyramid'
+# html_theme = 'agogo'
+# html_theme = 'nature'
+# html_theme = 'bizstyle'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -68,6 +73,7 @@ html_static_path = ['_static']
 
 # -- Extension configuration -------------------------------------------------
 autodoc_member_order = "groupwise"
+autoclass_content = "both"
 
 napoleon_include_init_with_doc = False
 napoleon_use_ivar = True
