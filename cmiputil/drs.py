@@ -900,7 +900,7 @@ class DRS:
         >>> d.isValid()
         False
         """
-        return self.validate(silent=silent, delete_invalid=False)
+        return self._validate(silent=silent, delete_invalid=False)
 
     def isValidValueForAttr(self, value, attr):
         """
@@ -1014,10 +1014,9 @@ class DRS:
         For above case, You should use ``d.set(activity_id='...')``
         instead of setting an attribute directly. See :meth:`set`.
         """
+        self._validate(silent=silent, delete_invalid=True)
 
-        self.validate(silent=silent, delete_invalid=True)
-
-    def validate(self, silent=False, delete_invalid=False):
+    def _validate(self, silent=False, delete_invalid=False):
         fmt = 'Warining: <{}> has invalid value "{}".'
         res = {}
         for a in self.requiredAttribs:
