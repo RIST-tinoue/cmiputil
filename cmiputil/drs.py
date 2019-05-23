@@ -251,8 +251,7 @@ class DRS:
 
         Examples:
 
-        >>> drs.DRS(
-        ... filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
+        >>> drs.DRS(filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
         DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1')
         >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/')
         DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
@@ -660,12 +659,17 @@ class DRS:
         plist = [glob.glob(p) for p in self._expandbrace(str(dname))]
         return [p for pp in plist for p in pp]
 
-    def splitFileName(self, fname):
-        """
-        Split filename to attributes for DRS.
+    def splitFileName(self, fname, validate=False):
+        """Split filename to attributes for DRS.
+
+        If ``varidate=False``, just split only. So if the filename
+        consist of the same number of components with DRS-valid
+        filename, no error happens. You should set `validate=True` or
+        use :meth:`isValidValueForAttr` by yourself.
 
         Args:
-            fname (Path-like): filename
+            fname (Path-like) : filename
+            validate(bool) : validate the resulting attribute/value pair
 
         Raises:
             ValueError: if `fname` is invalid for DRS.
@@ -682,23 +686,24 @@ class DRS:
         >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
         >>> drs.DRS().splitFileName(fname)
         {'experiment_id': 'piControl', 'grid_label': 'gn', 'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range': '320001-329912', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1'}
-        >>> fname='some_invalid_very_long_file_name.nc'
+        >>> fname='invalid_very_long_file_name.nc'
         >>> drs.DRS().splitFileName(fname)
         Traceback (most recent call last):
             ...
-        ValueError: not enough values to unpack (expected 6, got 5)
-
-        TODO:
-            - Validate the result, even if `fname` has enough numbers
-              components.
-            - Should raise exeption or return null list if invalid ???
+        ValueError: Invalid filename: "invalid_very_long_file_name.nc"
+        >>> fname='invalid_but_same_length_with_drs.nc'
+        >>> drs.DRS().splitFileName(fname)
+        {'experiment_id': 'length', 'grid_label': 'drs', 'source_id': 'same', 'table_id': 'but', 'variable_id': 'invalid', 'variant_label': 'with'}
+        >>> drs.DRS().splitFileName(fname, validate=True)
+        Traceback (most recent call last):
+            ...
+        ValueError: "length" is invalid for <experiment_id>
         """
-        (variable_id,
-         table_id,
-         source_id,
-         experiment_id,
-         member_id,
-         grid_label) = Path(fname).stem.split('_', 5)
+        try:
+            (variable_id, table_id, source_id, experiment_id, member_id,
+             grid_label) = Path(fname).stem.split('_', 5)
+        except ValueError:
+            raise ValueError(f'Invalid filename: "{fname}"')
 
         try:
             (grid_label, time_range) = grid_label.split('_')
@@ -712,12 +717,16 @@ class DRS:
             # sub_experiment_id = None
 
         res = {}
-        for k in self.requiredAttribs:
+        for a in self.requiredAttribs:
             try:
-                res[k] = eval(k)
+                res[a] = eval(a)
             except NameError:
                 pass
 
+        if validate:
+            for a, v in res.items():
+                if not self.isValidValueForAttr(v, a):
+                    raise ValueError(f'"{v}" is invalid for <{a}>')
         return res
 
     def splitDirName(self, dname):
