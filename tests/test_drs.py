@@ -368,10 +368,9 @@ class test_DRS(unittest.TestCase):
         self.assertTrue(res)
 
     def test_isValidPath05(self):
-        "Valid dirname(-like) but forget directory=True, expect ValueError"
-        with self.assertRaises(ValueError):
-            res = drs.DRS().isValidPath(dirname(self. url))
-            self.assertTrue(res)
+        "Valid dirname(-like) but forget directory=True, expect False"
+        res = drs.DRS().isValidPath(dirname(self.url))
+        self.assertFalse(res)
 
     def test_isValidPath06(self):
         "Valid dirname(-like)"
