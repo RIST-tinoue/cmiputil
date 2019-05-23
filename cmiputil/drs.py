@@ -847,10 +847,6 @@ class DRS:
         False
         >>> drs.DRS().isValidPath(url, directory=True)
         True
-
-        TODO:
-            Catch ValueError from splitFileName() when given path is a directory w/o ``directory=True``
-
         """
         p = Path(path)
         if (directory):
