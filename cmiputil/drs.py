@@ -118,10 +118,11 @@ __date__ = '2019/05/09'
 
 from cmiputil.convoc import ConVoc
 import netCDF4 as nc
-from pathlib import Path, Path
+from pathlib import Path
 import re
-from pprint import pprint
+# from pprint import pprint
 import glob
+
 
 class DRSError(Exception):
     """Base exception class for DRS."""
@@ -148,14 +149,15 @@ sample_attrs = {
     'institution_id': 'MIROC',
     'source_id': 'MIROC6',
     'table_id': 'Amon',
+    'time_range': '320001-329912',
     'variable_id': 'tas',
     'variant_label': 'r1i1p1f1',
     'version': 'v20181212',
     'non_necessary_attribute': 'hoge'
 }
-sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc"
-sample_dname = "CMIP6/CMIP/MIROC/MIROC6/piControl/"\
-               "r1i1p1f1/Amon/tas/gn/v20181212"
+sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+sample_dname = ("CMIP6/CMIP/MIROC/MIROC6/piControl/"
+                "r1i1p1f1/Amon/tas/gn/v20181212")
 
 sample_attrs_w_subexp = {
     'activity_id': 'DCPP',
@@ -169,10 +171,26 @@ sample_attrs_w_subexp = {
     'variable_id': 'rsdscs',
     'variant_label': 'r1i1p1f1',
     'version': 'v20190110'}
-sample_fname_w_subexp = 'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'\
-                        '_s1950-r1i1p1f1_gr_192001-201412.nc'
-sample_dname_w_subexp = 'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'\
-                        's1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
+sample_fname_w_subexp = ('rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'
+                         '_s1950-r1i1p1f1_gr_192001-201412.nc')
+sample_dname_w_subexp = ('CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'
+                         's1950-r1i1p1f1/Amon/rsdscs/gr/v20190110')
+
+sample_attrs_no_time_range = {
+    'activity_id': 'CMIP',
+    'experiment_id': 'historical',
+    'grid_label': 'gn',
+    'institution_id': 'MIROC',
+    'mip_era': 'CMIP6',
+    'prefix': '',
+    'source_id': 'MIROC6',
+    'table_id': 'fx',
+    'variable_id': 'areacella',
+    'variant_label': 'r1i1p1f1',
+    'version': 'v20190311'}
+sample_fname_no_time_range = 'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
+sample_dname_no_time_range = ('CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/'
+                              'fx/areacella/gn/v20190311/')
 
 
 class DRS:
@@ -202,7 +220,7 @@ class DRS:
 
     Note that ``member_id`` is not able to set directly, this is set
     by ``sub_experiment_id`` (omittable) and ``variant_label``, via
-    internal method :meth:`_setMemberID`.
+    internal method :meth:`set_member_id`.
 
     You can use the class member :attr:`requiredAttribs`,
     :attr:`filenameAttribs`, :attr:`filenameAttribsOptional`,
@@ -212,16 +230,66 @@ class DRS:
     Args:
         file(path-like): CMIP6 netCDF file.
         filename(str): filename to be used to set attributes.
-        allow_glob(bool): allow ``*`` for unset attribute and resulting path.
+        dirname(str): dirname to be used to set attributes.
         kw(dict): attribute-value pairs
+        do_sanitize(bool): do sanitize or not
 
     If `file` is given, it must be a valid CMIP6 netCDF file, and
     attributes in that file are read and set.
 
     Else if `filename` is given, it must be a valid filename as DRS,
-    and attributes are set from components consist of that filename.
+    and attributes are set from components consist of that name.
+
+    Else if `dirname` is given, it must be a valid directory name as
+    DRS, and attributes are set from components consist of that
+    name.
 
     Else attributes are set from `**kw` dict.
+
+    If `do_sanitize` is ``True``, remove invalid attribute values,
+    else set as-is.
+
+    You can sanitize after via :meth:`doSanitize`.
+
+
+    Examples:
+
+    >>> drs.DRS(
+    ... filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6',
+        source_id='MIROC6', table_id='Amon', time_range='320001-329912',
+        variable_id='tas', variant_label='r1i1p1f1')
+
+    >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/'
+    ...                 'r1i1p1f1/Amon/tas/gn/v20181212/')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn',
+        institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6',
+        table_id='Amon', variable_id='tas', variant_label='r1i1p1f1',
+        version='v20181212')
+
+    Do or not sanitize;
+
+    >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+    >>> attrs['table_id'] = 'INVALID'
+    >>> d = drs.DRS(**attrs)
+    >>> d.table_id
+    Traceback (most recent call last):
+        ...
+    AttributeError: 'DRS' object has no attribute 'table_id'
+    >>> d = drs.DRS(**attrs, do_sanitize=False)
+    >>> d.table_id
+    'INVALID'
+
+    Note:
+        Attributes as the class member,
+
+        - ``hasattr(self, a) is False`` : not set explicitly
+        - ``self.a == None`` : not set explicitly
+        - ``self.a == '*'`` : set as is
+        - ``type(self.a) == list`` : multiple values for brace expansion.
+
 
     """
 
@@ -269,29 +337,43 @@ class DRS:
         "time_range",
         )
 
-    def __init__(self, file=None, filename=None, allow_glob=False, **kw):
-        self.cvs = ConVoc()
+    #: list of <experiment_id> that have sub_experiment
+    _experiments_w_sub = None
+
+    #: ConVoc instance
+    _cvs = None
+
+    def __init__(self, file=None, filename=None, dirname=None,
+                 do_sanitize=True, **kw):
+        """
+
+
+        """
+        if (not self.__class__._cvs):
+            self.__class__._cvs = ConVoc()
         self.mip_era = 'CMIP6'
 
         if (file):
             attrs = self.getAttrsFromGA(file)
         elif (filename):
             attrs = self.splitFileName(filename)
+        elif (dirname):
+            attrs = self.splitDirName(dirname)
         else:
             attrs = kw
-        self.set(allow_glob=allow_glob, **attrs)
+        self.set(do_sanitize=do_sanitize, **attrs)
 
     def __repr__(self):
-        # res = ["{}={!a}".format(k, getattr(self, k))
-        #        for k in self.requiredAttribs if hasattr(self, k)]
+        # Since now attributes of self allow to be a list, but at
+        # setter values must be a comma-separated str, must convert
+        # list to str.
         res = []
         for a in self.requiredAttribs:
             if hasattr(self, a):
                 v = getattr(self, a)
                 if (type(v) is list):
                     v = ','.join(v)
-                res.append("{}='{}'".format(a,v))
-        res.append("allow_glob={}".format(self.allow_glob))
+                res.append("{}='{}'".format(a, v))
         res = (self.__class__.__name__
                + '(' + ', '.join(res) + ')')
         return res
@@ -299,8 +381,6 @@ class DRS:
     def __str__(self):
         res = ["{}: {!a}".format(k, getattr(self, k))
                for k in self.requiredAttribs if hasattr(self, k)]
-        allow_glob = self.allow_glob
-        res.append(f'allow_glob: {allow_glob}',)
         res = "\n".join(res)
         return res
 
@@ -354,7 +434,15 @@ class DRS:
         pat = re.compile(r'r\d+i\d+p\d+f\d+')
         return pat.fullmatch(value) is not None
 
-    def _setMemberID(self):
+    # TODO: add @property
+    def set_member_id(self):
+
+        if not self.__class__._experiments_w_sub:
+            exps = self._cvs.getAttrib('experiment_id')
+            self.__class__._experiments_w_sub = [
+                e for e in exps.keys()
+                if exps[e]['sub_experiment_id'][0] != 'none']
+
         if (hasattr(self, 'variant_label')):
             if (hasattr(self, 'sub_experiment_id')):
                 subexp = self.sub_experiment_id
@@ -384,7 +472,7 @@ class DRS:
 
         with nc.Dataset(file, "r") as ds:
             attrs = {a: getattr(ds, a, None)
-                    for a in drs.self.requiredAttribs}
+                     for a in drs.self.requiredAttribs}
         attrs = {a: v for a, v in attrs.items() if v != 'none'}
         return attrs
 
@@ -420,9 +508,9 @@ class DRS:
         elif attr == 'mip_era':
             return (value.lower() == 'cmip6')
         else:
-            raise InvalidDRSAttribError('Invalid Attribute for DRS:', attr)
+            raise AttributeError('Invalid Attribute for DRS:', attr)
 
-    def set(self, allow_glob=False, return_self=False, **argv):
+    def set(self, do_sanitize=True, **argv):
         """
         Set instance attributes, if attribute is in :attr:`requiredAttribs`.
 
@@ -435,163 +523,204 @@ class DRS:
 
         Args:
             argv (dict): attribute/value pairs
-            return_self (bool): return self or nothing.
-            allow_glob (bool): allow asterisk or multiple values for glob.
+            do_sanitize(bool): remove invalid values via :meth:`doSanitize`
         Raises:
             InvalidDRSAttribError:  raises when `attr` is invalid for DRS.
         Return:
-            nothing or self when `return_self` is ``True``
+            nothing
 
-        Note:
-            if `allow_glob` is ``True``, attributes not given are set as ``*``.
         """
-        self.allow_glob = allow_glob
+        attribs = {a: argv[a] for a in argv.keys()
+                   if a in self.requiredAttribs}
 
-        attribs = {a:argv[a] for a in argv.keys() if a in self.requiredAttribs}
-
-        if (allow_glob):
-            for a,v in attribs.items():
-                v = [vv.strip() for vv in v.split(',')]
-                if len(v) > 1:
-                    setattr(self, a, v)
-                else:
-                    setattr(self, a, v[0])
-        else:
-            for a,v in attribs.items():
+        for a, v in attribs.items():
+            v = [vv.strip() for vv in v.split(',')]
+            if len(v) > 1:
                 setattr(self, a, v)
-        self._setMemberID()
+            else:
+                setattr(self, a, v[0])
 
-        if (allow_glob):
-            for a in self.requiredAttribs:
-                if (not hasattr(self, a)):
-                    setattr(self, a, '*')
-            if (not hasattr(self, 'member_id')):
-                setattr(self, 'member_id', '*')
+        self.set_member_id()
 
-        self.isValid(silent=True, delete_invalid=True)
-        
-        if (return_self):
-            return self
+        # for a in self.requiredAttribs:
+        #     if (not hasattr(self, a)):
+        #         setattr(self, a, '*')
+        # if (not hasattr(self, 'member_id')):
+        #     setattr(self, 'member_id', '*')
 
-    def isValid(self, silent=False, delete_invalid=False):
+        if (do_sanitize):
+            self.doSanitize()
+
+    def isValid(self, silent=True):
         """
         Check if attributes are valid as DRS.
 
         Args:
           silent(bool): no message even if something is invalid.
-          delete_invalid(bool): delete invalid attribute and its value.
         Return:
           bool: all attributes are valid or not.
 
         Examples:
 
         >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d.isValid(silent=True)
+        >>> d.isValid()
         True
         >>> d.activity_id = 'InvalidMIP'
-        >>> d.isValid(silent=True, delete_invalid=True)
+        >>> d.isValid()
         False
+        """
+        return self.validate(silent=silent, delete_invalid=False)
+
+    def doSanitize(self, silent=True):
+        """
+        Sanitize instance, remove invalid values for valid attributes.
+
+
+        Args:
+            silent(bool): do it silently or not
+        Raise:
+            nothing
+        Returns:
+            nothing
+
+        Examples:
+
+        >>> d = drs.DRS(**drs.sample_attrs)
+        >>> d.activity_id = 'InvalidMIP'
+        >>> hasattr(d, 'activity_id')
+        True
+        >>> d.doSanitize()
         >>> hasattr(d, 'activity_id')
         False
 
         Note that after `delete_invalid` is ``True`` in above,
         `d.activity_id` is deleted.
-
         """
+
+        self.validate(silent=silent, delete_invalid=True)
+
+    def validate(self, silent=False, delete_invalid=False):
+        fmt = 'Warining: <{}> has invalid value "{}".'
         res = {}
-        if (self.allow_glob):
-            #  TODO: This is tentative, IMPLEMENT HERE.
-            res = {a: True for a in self.requiredAttribs}
-        else:
-            for a in self.requiredAttribs:
-                v = getattr(self, a, None)
-                if v:
-                    if self.isValidValueForAttr(v, a):
-                        res[a] = True
-                    else:
-                        res[a] = False
-                        if (not silent):
-                            print(f'Warining: {a} has invalid value {v}.')
-                        if (delete_invalid):
-                            delattr(self, a)
+        for a in self.requiredAttribs:
+            v = getattr(self, a, None)
+            if v is None:
+                pass
+            elif type(v) is list:
+                # res[a] = True # tentative
+                vals = {vv: self.isValidValueForAttr(vv, a) for vv in v}
+                res[a] = all(vals.values())
+                if (not res[a]):
+                    if (not silent):
+                        print(fmt.format(a, [vv for vv in v if not vals[vv]]))
+                    if (delete_invalid):
+                        setattr(self, a, [vv for vv in v if vals[vv]])
+            else:
+                if self.isValidValueForAttr(v, a):
+                    res[a] = True
+                else:
+                    res[a] = False
+                    if (not silent):
+                        print(fmt.format(a, v))
+                    if (delete_invalid):
+                        delattr(self, a)
         return all(res.values())
 
-
-    def fileName(self, prefix=None):
+    def fileName(self, prefix=None, w_time_range=True,
+                 allow_asterisk=True):
         """
         Construct filename from current instance member attributes.
 
         Args:
             prefix(path-like): prepend to the resulting filename
-
+            w_time_range(bool): result contains <time_range> part or not
+            allow_asterisk(bool): allow result contains ``*``
         Raises:
             AttributeError: any attributes are missing.
 
         Returns:
             path-like: filename
 
+        Note:
+            By definition, including <time_range> part or not is
+            decided by the attribute <frequency> is 'fx' or not.
+            <frequency> is the same with the attribute <table_id>, so
+            in this method if ``self.table_id == 'fx'`` force
+            `w_time_range` to be ``True``.
+            If ``self.table_id = '*'`` or set multi values and you
+            want force <time_range> part to be omitted, set
+            ``w_time_range=False`` explicitly.
 
         Examples:
 
-        DRS from dict w/o ``time_range``
+        Usual case;
 
         >>> str(drs.DRS(**drs.sample_attrs).fileName())
-        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
 
-        DRS from dict w/ ``sub_experiment_id``
+        With ``sub_experiment_id``;
 
         >>> str(drs.DRS(**drs.sample_attrs_w_subexp).fileName())
         'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
 
-        with prefix
-        
+        No ``time_range``;
+
+        >>> str(drs.DRS(**drs.sample_attrs_no_time_range)
+        ...     .fileName(w_time_range=False))
+        'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
+
+        With prefix;
+
         >>> prefix=Path('/data/CMIP6/')
         >>> str(drs.DRS(**drs.sample_attrs).fileName(prefix))
-        '/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'
+        '/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
 
-        Invalid value for valid attrib
+        Invalid value for valid attribute;
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'table_id': 'invalid'})
-        >>> d = drs.DRS(**attrs).fileName()
+        >>> str(drs.DRS(**attrs).fileName())
+        'tas_*_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
+        >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
         Traceback (most recent call last):
-          ...
+           ...
         AttributeError: 'DRS' object has no attribute 'table_id'
 
-        In the example above, since the key ``table_id`` has invalid value,
-        ``d.table_id`` is NOT set, and so the exception raised.
 
-        Using glob/brace_expand,
+        Missing attributes;
+
+        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+        >>> del attrs['time_range']
+        >>> str(drs.DRS(**attrs).fileName())
+        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc'
+        >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
+        Traceback (most recent call last):
+           ...
+        AttributeError: 'DRS' object has no attribute 'time_range'
+
+        Allow multi values;
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> drs.DRS(**attrs).fileName()
-        Traceback (most recent call last):
-          ...
-        AttributeError: 'DRS' object has no attribute 'experiment_id'
-        >>> str(drs.DRS(**attrs, allow_glob=True).fileName())
-        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
-
-        Note that when ``allow_glob`` is ``True`` in constructor, all
-        attributes not :meth:`set` expricitly are set as ``*``.
-
+        >>> str(drs.DRS(**attrs).fileName())
+        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_320001-329912.nc'
         """
         attr = {}
-        for a in self.filenameAttribs:
-            v = getattr(self, a)
+        for a in self.filenameAttribs + self.filenameAttribsOptional:
+            try:
+                v = getattr(self, a)
+            except AttributeError:
+                if (allow_asterisk):
+                    v = '*'
+                else:
+                    raise
             if type(v) is list:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
-        for a in self.filenameAttribsOptional:
-            v = getattr(self, a, None)
-            if v is None:  # not set
-                pass
-            elif type(v) is list:
-                attr[a] = '{'+','.join(v)+'}'
-            else:
-                attr[a] = v
 
-        if ('time_range' in attr):
+        if (attr['table_id'] == 'fx'):
+            w_time_range = False
+        if w_time_range:
             f = ("{variable_id}_{table_id}_{source_id}_{experiment_id}"
                  "_{member_id}_{grid_label}_{time_range}.nc").format(**attr)
         else:
@@ -622,12 +751,14 @@ class DRS:
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> str(drs.DRS(**attrs, allow_glob=True).fileName())
+        >>> del attrs['time_range']
+        >>> str(drs.DRS(**attrs).fileName())
         'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
 
-        >>> dlist = drs.DRS(**attrs, allow_glob=True).fileNameList() # doctest: +SKIP
+        >>> dlist = drs.DRS(**attrs).fileNameList() # doctest: +SKIP
         >>> [str(d) for d in dlist]  # doctest: +SKIP
-        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc', 'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
+        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc',
+         'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
 
         The last example will return ``[]`` if expanded files do not
         exist.
@@ -637,65 +768,77 @@ class DRS:
         flist = [glob.glob(p) for p in self._expandbrace(str(fname))]
         return [f for ff in flist for f in ff]
 
-    def dirName(self, prefix=None):
+    def dirName(self, prefix=None, allow_asterisk=True):
         """
         Construct directory name by DRS from :class:`DRS` instance members.
+
+        If `allow_asterisk` is ``True``, invalid
 
         If you want glob/brace expaned list, use :meth:`dirNameList` instead.
 
         Args:
             prefix (Path-like): prepend to the result path.
+            allow_asterisk: allow result contains ``*`` or not.
         Raises:
-            AttributeError: any attributes are missing or invalid.
+            AttributeError: any attributes are missing or invalid and
+                            ``allow_asterisk=False``
 
         Returns:
             Path-like : directory name
 
         Examples:
 
-        DRS from dict w/o ``time_range``.
+        Usual case;
 
         >>> str(drs.DRS(**drs.sample_attrs).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
 
-        DRS from dict w/ ``sub_experiment_id``.
+        With ``sub_experiment_id``;
 
-        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName()) # doctest: +NORMALIZE_WHITESPACE
+        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName())
+        ... # doctest: +NORMALIZE_WHITESPACE
         'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
-        Invalid value for valid attrib.
+        Invalid value for valid attribute;
 
         >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
         >>> attrs['table_id'] = 'invalid'
-        >>> drs.DRS(**attrs).dirName()
+        >>> str(drs.DRS(**attrs).dirName())
+        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/*/tas/gn/v20181212'
+        >>> str(drs.DRS(**attrs).dirName(allow_asterisk=False))
         Traceback (most recent call last):
-          ...
+            ...
         AttributeError: 'DRS' object has no attribute 'table_id'
 
-        In the example above, since ``table_id`` has invalid value, ``DRS.table_id``
-        has NOT set, and so the exception is raised.
+        Missing attributes;
 
-        Allow glob/brace,
+        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+        >>> del attrs['experiment_id']
+        >>> str(drs.DRS(**attrs).dirName(prefix='/data/'))
+        '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
+        >>> str(drs.DRS(**attrs).dirName(prefix='/data/',
+        ...                              allow_asterisk=False))
+        Traceback (most recent call last):
+            ...
+        AttributeError: 'DRS' object has no attribute 'experiment_id'
+
+        Allow multi values;
 
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> drs.DRS(**attrs).dirName()
-        Traceback (most recent call last):
-          ...
-        AttributeError: 'DRS' object has no attribute 'experiment_id'
-        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        >>> str(drs.DRS(**attrs).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20181212'
-        >>> del attrs['experiment_id']
-        >>> str(drs.DRS(**attrs, allow_glob=True).dirName(prefix='/data/'))
-        '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
-
-        Note that when ``allow_glob`` is ``True``, all attributes not
-        :meth:`set` expricitly are set as ``*``.
 
         """
-        attr={}
+        attr = {}
         for a in self.dirnameAttribs:
-            v = getattr(self, a)
+            try:
+                v = getattr(self, a)
+            except AttributeError:
+                if allow_asterisk:
+                    v = '*'
+                else:
+                    raise
             if type(v) is list:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
@@ -737,18 +880,19 @@ class DRS:
         >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
         >>> attrs.update({'experiment_id':'amip, piControl'})
         >>> del attrs['version']
-        >>> str(drs.DRS(**attrs, allow_glob=True).dirName())
+        >>> str(drs.DRS(**attrs).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
-        >>> drs.DRS(**attrs, allow_glob=True).dirNameList(prefix='/data')  # doctest: +NORMALIZE_WHITESPACE
+        >>> drs.DRS(**attrs).dirNameList(prefix='/data')
+        ... # doctest: +NORMALIZE_WHITESPACE
         ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214',
         '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
-        
+
         The last example will return ``[]`` if expanded directories do
         not exist.
 
 
         TODO:
-            Completely re-implment that 
+            Completely re-implment that
 
             - get list use glob (asterisk expansion) only
             - filter out using regex by brace list
@@ -773,13 +917,19 @@ class DRS:
         Returns:
             dict: attribute and it's value
 
+        Note:
+            Instance members keep untouched, give :meth:`set` the
+            result of this method.
+
         Examples:
-            >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-            >>> drs.DRS().splitFileName(fname) # doctest: +NORMALIZE_WHITESPACE
-            {'experiment_id': 'piControl', 'grid_label': 'gn',
-            'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range':
-            '320001-329912', 'variable_id': 'tas', 'variant_label':
-            'r1i1p1f1'}
+
+        >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+        >>> drs.DRS().splitFileName(fname) # doctest: +NORMALIZE_WHITESPACE
+        {'experiment_id': 'piControl', 'grid_label': 'gn',
+        'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range':
+        '320001-329912', 'variable_id': 'tas', 'variant_label':
+        'r1i1p1f1'}
+
         """
         (variable_id,
          table_id,
@@ -805,7 +955,6 @@ class DRS:
                 res[k] = eval(k)
             except NameError:
                 pass
-        self.set(**res)
 
         return res
 
@@ -813,15 +962,28 @@ class DRS:
         """
         Split dirname to attributes for DRS.
 
-        Then set them as members of the instance, and also return as a dict.
-
         Args:
             dname (path-like) : directory name
 
         Returns:
             dict: attribute and it's value, {} if `dname` is not enough.
 
+        Note:
+            Instance members keep untouched, give :meth:`set` the
+            result of this method.
+
         Examples:
+
+            >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
+            ...          'Amon/tas/gn/v20181212')
+            >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
+            {'activity_id': 'CMIP', 'experiment_id': 'piControl',
+            'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
+            'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
+            'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
+
+
+        Contains `prefix`;
 
             >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
             ...          'piControl/r1i1p1f1/Amon/tas/gn/v20181212')
@@ -832,13 +994,7 @@ class DRS:
             'variant_label': 'r1i1p1f1', 'version': 'v20181212',
             'prefix': '/work/data/CMIP6'}
 
-            >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
-            ...          'Amon/tas/gn/v20181212')
-            >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
-            {'activity_id': 'CMIP', 'experiment_id': 'piControl',
-            'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
-            'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
-            'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
+
         """
         res = {}
 
@@ -868,7 +1024,7 @@ class DRS:
                 res[k] = eval(k)
             except NameError:
                 pass
-        self.set(**res)
+
         if (len(d.parts) > 10):
             res["prefix"] = str(Path(*d.parts[:-10]))
         else:
@@ -894,12 +1050,12 @@ class DRS:
 
         Examples:
 
-            >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/IPSL/'
-            ...       'IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/Amon/rsdscs/'
-            ...       'gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_dcppC-pac-'
-            ...       'pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
-            >>> drs.DRS().isValidPath(url)
-            True
+        >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
+        ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
+        ...       'Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_'
+        ...       'dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
+        >>> drs.DRS().isValidPath(url)
+        True
         """
         p = Path(path)
         if (directory):
@@ -914,60 +1070,63 @@ class DRS:
             f_res = {a: self.isValidValueForAttr(f_attr[a], a)
                      for a in f_attr if a in self.requiredAttribs}
         else:
-            f_res = {'all':True}
+            f_res = {'all': True}
         if (dname != Path('.')):
             d_attr = self.splitDirName(dname)
             d_res = {a: self.isValidValueForAttr(d_attr[a], a)
                      for a in d_attr if a in self.requiredAttribs}
         else:
-            d_res = {'all':True}
+            d_res = {'all': True}
 
         if separated:
             return f_res, d_res
         else:
             return all((f_res.values(), d_res.values()))
 
-
     def _expandbrace(self, path):
-        return getitem(path)[0]
+        return _getitem(path)[0]
 
-# Borrowed from https://rosettacode.org/wiki/Brace_expansion#Python
-# Content is available under GNU Free Documentation License 1.2 unless otherwise noted.
 
-def getitem(s, depth=0):
+# Below two methods are borrowed from
+# https://rosettacode.org/wiki/Brace_expansion#Python.  Content is
+# available under GNU Free Documentation License 1.2 unless otherwise
+# noted.
+def _getitem(s, depth=0):
     out = [""]
     while s:
         c = s[0]
         if depth and (c == ',' or c == '}'):
-            return out,s
+            return out, s
         if c == '{':
-            x = getgroup(s[1:], depth+1)
+            x = _getgroup(s[1:], depth+1)
             if x:
-                out,s = [a+b for a in out for b in x[0]], x[1]
+                out, s = [a+b for a in out for b in x[0]], x[1]
                 continue
         if c == '\\' and len(s) > 1:
             s, c = s[1:], c + s[1]
- 
+
         out, s = [a+c for a in out], s[1:]
- 
-    return out,s
- 
-def getgroup(s, depth):
+
+    return out, s
+
+
+def _getgroup(s, depth):
     out, comma = [], False
     while s:
-        g,s = getitem(s, depth)
-        if not s: break
+        g, s = _getitem(s, depth)
+        if not s:
+            break
         out += g
- 
-        if s[0] == '}':
-            if comma: return out, s[1:]
-            return ['{' + a + '}' for a in out], s[1:]
- 
-        if s[0] == ',':
-            comma,s = True, s[1:]
- 
-    return None
 
+        if s[0] == '}':
+            if comma:
+                return out, s[1:]
+            return ['{' + a + '}' for a in out], s[1:]
+
+        if s[0] == ',':
+            comma, s = True, s[1:]
+
+    return None
 
 
 if __name__ == "__main__":

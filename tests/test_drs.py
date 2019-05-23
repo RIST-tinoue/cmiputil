@@ -12,6 +12,7 @@ class test_DRS(unittest.TestCase):
             'institution_id': 'MIROC',
             'source_id': 'MIROC6',
             'table_id': 'Amon',
+            'time_range': '320001-329912',
             'variable_id': 'tas',
             'variant_label': 'r1i1p1f1',
             'version': 'v20190308',
@@ -54,9 +55,11 @@ class test_DRS(unittest.TestCase):
         "repr() constructed from dict"
         ref = ("DRS("
                "activity_id='CMIP', experiment_id='piControl', "
-               "grid_label='gn', institution_id='MIROC', mip_era='CMIP6', "
-               "source_id='MIROC6', table_id='Amon', variable_id='tas', "
-               "variant_label='r1i1p1f1', version='v20190308', allow_glob=False)")
+               "grid_label='gn', institution_id='MIROC', "
+               "mip_era='CMIP6', source_id='MIROC6', "
+               "table_id='Amon', time_range='320001-329912', "
+               "variable_id='tas', variant_label='r1i1p1f1', "
+               "version='v20190308')")
 
         d0 = drs.DRS(**self.ga)
         res = repr(d0)
@@ -76,7 +79,7 @@ class test_DRS(unittest.TestCase):
             "source_id='IPSL-CM6A-LR', sub_experiment_id='s1950', "
             "table_id='Amon', time_range='192001-201412', "
             "variable_id='rsdscs', variant_label='r1i1p1f1', "
-            "version='v20190110', allow_glob=False)")
+            "version='v20190110')")
 
         d0 = drs.DRS(**self.ga_w_sub)
         res = repr(d0)
@@ -91,7 +94,7 @@ class test_DRS(unittest.TestCase):
             "DRS(experiment_id='piControl', grid_label='gn', "
             "mip_era='CMIP6', source_id='MIROC6', table_id='Amon', "
             "time_range='185001-194912', variable_id='tas', "
-            "variant_label='r1i1p1f1', allow_glob=False)")
+            "variant_label='r1i1p1f1')")
 
         d0 = drs.DRS(filename=self.fname)
         res = repr(d0)
@@ -108,10 +111,10 @@ class test_DRS(unittest.TestCase):
                "mip_era: 'CMIP6'\n"
                "source_id: 'MIROC6'\n"
                "table_id: 'Amon'\n"
+               "time_range: '320001-329912'\n"
                "variable_id: 'tas'\n"
                "variant_label: 'r1i1p1f1'\n"
-               "version: 'v20190308'\n"
-               "allow_glob: False")
+               "version: 'v20190308'")
         d0 = drs.DRS(**self.ga)
         res = str(d0)
         self.assertEqual(ref, res)
@@ -129,8 +132,7 @@ class test_DRS(unittest.TestCase):
                "time_range: '192001-201412'\n"
                "variable_id: 'rsdscs'\n"
                "variant_label: 'r1i1p1f1'\n"
-               "version: 'v20190110'\n"
-               "allow_glob: False")
+               "version: 'v20190110'")
         d0 = drs.DRS(**self.ga_w_sub)
         res = str(d0)
         self.assertEqual(ref, res)
@@ -149,15 +151,14 @@ class test_DRS(unittest.TestCase):
             "time_range: '192001-201412'\n"
             "variable_id: 'rsdscs'\n"
             "variant_label: 'r1i1p1f1'\n"
-            "version: 'v20190110'\n"
-            "allow_glob: False")
+            "version: 'v20190110'")
         d0 = drs.DRS(**self.ga_w_sub)
         res = str(d0)
         self.assertEqual(ref, res)
 
     def test_fileNameUseClass01(self):
         "Construct filename by class method."
-        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc')
+        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
 
         res = drs.DRS(**self.ga).fileName()
         self.assertEqual(ref, res)
@@ -175,23 +176,25 @@ class test_DRS(unittest.TestCase):
         "invalid attribute, expect AttributeError."
         ga = {k:v for k,v in self.ga.items()}
         ga['table_id'] = 'invalid'
-        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_185001-194912.nc')
+        ref = Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
 
         with self.assertRaises(AttributeError):
-            res = drs.DRS(**ga).fileName()
+            res = drs.DRS(**ga).fileName(allow_asterisk=False)
             self.assertEqual(ref, res)
 
     def test_fileNameUseInstance01(self):
         "Construct filename by instance method, reusing one instance."
         variants = ['r1i1p1f1', 'r2i1p1f1', 'r3i1p1f1']
-        ref = [Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn.nc'),
-               Path('tas_Amon_MIROC6_piControl_r2i1p1f1_gn.nc'),
-               Path('tas_Amon_MIROC6_piControl_r3i1p1f1_gn.nc')]
+        refs = [
+            Path('tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'),
+            Path('tas_Amon_MIROC6_piControl_r2i1p1f1_gn_320001-329912.nc'),
+            Path('tas_Amon_MIROC6_piControl_r3i1p1f1_gn_320001-329912.nc')]
 
         d = drs.DRS(**self.ga)
-        res = [d.set(return_self=True, variant_label=v).fileName()
-               for v in variants]
-        self.assertEqual(ref, res)
+        for v, ref in zip(variants, refs):
+            d.set(variant_label=v)
+            res = d.fileName()
+            self.assertEqual(ref, res)
 
     def test_splitFileName01(self):
         "Split fname without `time_range`"
