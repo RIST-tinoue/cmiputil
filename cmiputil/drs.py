@@ -124,117 +124,6 @@ import glob
 # from pprint import pprint
 
 
-# Below two methods are borrowed from
-# https://rosettacode.org/wiki/Brace_expansion#Python.  Content is
-# available under GNU Free Documentation License 1.2 unless otherwise
-# noted.
-def _getitem(s, depth=0):
-    out = [""]
-    while s:
-        c = s[0]
-        if depth and (c == ',' or c == '}'):
-            return out, s
-        if c == '{':
-            x = _getgroup(s[1:], depth+1)
-            if x:
-                out, s = [a+b for a in out for b in x[0]], x[1]
-                continue
-        if c == '\\' and len(s) > 1:
-            s, c = s[1:], c + s[1]
-
-        out, s = [a+c for a in out], s[1:]
-
-    return out, s
-
-
-def _getgroup(s, depth):
-    out, comma = [], False
-    while s:
-        g, s = _getitem(s, depth)
-        if not s:
-            break
-        out += g
-
-        if s[0] == '}':
-            if comma:
-                return out, s[1:]
-            return ['{' + a + '}' for a in out], s[1:]
-
-        if s[0] == ',':
-            comma, s = True, s[1:]
-
-    return None
-
-
-class DRSError(Exception):
-    """Base exception class for DRS."""
-    pass
-
-
-class InvalidDRSAttribError(DRSError):
-    """
-    Error for invalid attribute as DRS.
-
-    TODO: Use ValueError instead of this exception
-    """
-
-
-class InvalidPathAsDRSError(DRSError):
-    """Error for invalid path as DRS."""
-    pass
-
-
-sample_attrs = {
-    'activity_id': 'CMIP',
-    'experiment_id': 'piControl',
-    'grid_label': 'gn',
-    'institution_id': 'MIROC',
-    'source_id': 'MIROC6',
-    'table_id': 'Amon',
-    'time_range': '320001-329912',
-    'variable_id': 'tas',
-    'variant_label': 'r1i1p1f1',
-    'version': 'v20181212',
-    'non_necessary_attribute': 'hoge'
-}
-sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-sample_dname = ("CMIP6/CMIP/MIROC/MIROC6/piControl/"
-                "r1i1p1f1/Amon/tas/gn/v20181212")
-
-sample_attrs_w_subexp = {
-    'activity_id': 'DCPP',
-    'experiment_id': 'dcppC-atl-pacemaker',
-    'grid_label': 'gr',
-    'institution_id': 'IPSL',
-    'source_id': 'IPSL-CM6A-LR',
-    'sub_experiment_id': 's1950',
-    'table_id': 'Amon',
-    'time_range': '192001-201412',
-    'variable_id': 'rsdscs',
-    'variant_label': 'r1i1p1f1',
-    'version': 'v20190110'}
-sample_fname_w_subexp = ('rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'
-                         '_s1950-r1i1p1f1_gr_192001-201412.nc')
-sample_dname_w_subexp = ('CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'
-                         's1950-r1i1p1f1/Amon/rsdscs/gr/v20190110')
-
-sample_attrs_no_time_range = {
-    'activity_id': 'CMIP',
-    'experiment_id': 'historical',
-    'grid_label': 'gn',
-    'institution_id': 'MIROC',
-    'mip_era': 'CMIP6',
-    'prefix': '',
-    'source_id': 'MIROC6',
-    'table_id': 'fx',
-    'variable_id': 'areacella',
-    'variant_label': 'r1i1p1f1',
-    'version': 'v20190311'}
-sample_fname_no_time_range = 'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
-sample_dname_no_time_range = ('CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/'
-                              'fx/areacella/gn/v20190311/')
-
-
 class DRS:
     """Class for CMIP6 DRS.
 
@@ -269,69 +158,16 @@ class DRS:
     :attr:`dirnameAttribs` to know necessary attributes to set this
     class and a filename/dirname valid for DRS.
 
-    Args:
-        file(path-like): CMIP6 netCDF file.
-        filename(str): filename to be used to set attributes.
-        dirname(str): dirname to be used to set attributes.
-        kw(dict): attribute-value pairs
-        do_sanitize(bool): do sanitize or not
-
-    If `file` is given, it must be a valid CMIP6 netCDF file, and
-    attributes in that file are read and set.
-
-    Else if `filename` is given, it must be a valid filename as DRS,
-    and attributes are set from components consist of that name.
-
-    Else if `dirname` is given, it must be a valid directory name as
-    DRS, and attributes are set from components consist of that
-    name.
-
-    Else attributes are set from `**kw` dict.
-
-    If `do_sanitize` is ``True``, remove invalid attribute values,
-    else set as-is.
-
-    You can sanitize after via :meth:`doSanitize`.
-
-
-    Examples:
-
-    >>> drs.DRS(
-    ... filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6',
-        source_id='MIROC6', table_id='Amon', time_range='320001-329912',
-        variable_id='tas', variant_label='r1i1p1f1')
-
-    >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/'
-    ...                 'r1i1p1f1/Amon/tas/gn/v20181212/')
-    ... # doctest: +NORMALIZE_WHITESPACE
-    DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn',
-        institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6',
-        table_id='Amon', variable_id='tas', variant_label='r1i1p1f1',
-        version='v20181212')
-
-    Do or not sanitize;
-
-    >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
-    >>> attrs['table_id'] = 'INVALID'
-    >>> d = drs.DRS(**attrs)
-    >>> d.table_id
-    Traceback (most recent call last):
-        ...
-    AttributeError: 'DRS' object has no attribute 'table_id'
-    >>> d = drs.DRS(**attrs, do_sanitize=False)
-    >>> d.table_id
-    'INVALID'
-
     Note:
         Attributes as the class member,
 
         - ``hasattr(self, a) is False`` : not set explicitly
         - ``self.a == None`` : not set explicitly
-        - ``self.a == '*'`` : set as is
+        - ``self.a == '*'`` : set as is     <- not implemented yet
         - ``type(self.a) == list`` : multiple values for brace expansion.
 
+    Todo:
+        Make check methods accept ``*`` as a value.
 
     """
 
@@ -387,6 +223,54 @@ class DRS:
 
     def __init__(self, file=None, filename=None, dirname=None,
                  do_sanitize=True, **kw):
+        """
+        Args:
+            file(path-like): CMIP6 netCDF file.
+            filename(str): filename to be used to set attributes.
+            dirname(str): dirname to be used to set attributes.
+            kw(dict): attribute-value pairs
+            do_sanitize(bool): do sanitize or not
+
+        If `file` is given, it must be a valid CMIP6 netCDF file, and
+        attributes in that file are read and set.
+
+        Else if `filename` is given, it must be a valid filename as DRS,
+        and attributes are set from components consist of that name.
+
+        Else if `dirname` is given, it must be a valid directory name as
+        DRS, and attributes are set from components consist of that
+        name.
+
+        Else attributes are set from `**kw` dict.
+
+        If `do_sanitize` is ``True``, remove invalid attribute values,
+        else set as-is.
+
+        You can sanitize *after* via :meth:`doSanitize`.
+
+
+        Examples:
+
+        >>> drs.DRS(
+        ... filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
+        DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1')
+        >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/')
+        DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
+
+        Do or not sanitize;
+
+        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+        >>> attrs['table_id'] = 'INVALID'
+        >>> d = drs.DRS(**attrs)
+        >>> d.table_id
+        Traceback (most recent call last):
+            ...
+        AttributeError: 'DRS' object has no attribute 'table_id'
+        >>> d = drs.DRS(**attrs, do_sanitize=False)
+        >>> d.table_id
+        'INVALID'
+
+        """
         if (not self.__class__._cvs):
             self.__class__._cvs = ConVoc()
         self.mip_era = 'CMIP6'
@@ -455,9 +339,12 @@ class DRS:
         """
         Set instance attributes, if attribute is in :attr:`requiredAttribs`.
 
-        Missing attributes in `argv` are left unset/untouched.
-        Attribute with invalid value is also unset/untouched sirently.
-        Unnecessary attributes are neglected.
+        In `argv`,
+
+        - missing attributes are left unset/untouched,
+        - attribute with invalid value is sanitized via
+          :meth:`doSanitize` if ``do_sanitize=True``,
+        - unnecessary attributes are neglected.
 
         Each of attributes are checked by
         :meth:`isValidValueForAttr()` before set.
@@ -465,8 +352,26 @@ class DRS:
         Args:
             argv (dict): attribute/value pairs
             do_sanitize(bool): remove invalid values via :meth:`doSanitize`
+
         Return:
             nothing
+
+        Examples:
+
+        >>> d = drs.DRS(**drs.sample_attrs)
+        >>> d
+        DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
+        >>> d.set(experiment_id='amip')
+        >>> d.experiment_id
+        'amip'
+        >>> d.set(experiment_id='invalid_experiment')
+        >>> d.experiment_id
+        Traceback (most recent call last):
+            ...
+        AttributeError: 'DRS' object has no attribute 'experiment_id'
+
+        In the last example, invalid value for `experiment_id` is
+        sanitized since ``do_sanitize=True`` by default.
 
         """
         attribs = {a: argv[a] for a in argv.keys()
@@ -523,8 +428,7 @@ class DRS:
 
         No ``time_range``;
 
-        >>> str(drs.DRS(**drs.sample_attrs_no_time_range)
-        ...     .fileName(w_time_range=False))
+        >>> str(drs.DRS(**drs.sample_attrs_no_time_range).fileName(w_time_range=False))
         'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
 
         With prefix;
@@ -654,7 +558,6 @@ class DRS:
         With ``sub_experiment_id``;
 
         >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName())
-        ... # doctest: +NORMALIZE_WHITESPACE
         'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
         Invalid value for valid attribute;
@@ -674,8 +577,7 @@ class DRS:
         >>> del attrs['experiment_id']
         >>> str(drs.DRS(**attrs).dirName(prefix='/data/'))
         '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
-        >>> str(drs.DRS(**attrs).dirName(prefix='/data/',
-        ...                              allow_asterisk=False))
+        >>> str(drs.DRS(**attrs).dirName(prefix='/data/', allow_asterisk=False))
         Traceback (most recent call last):
             ...
         AttributeError: 'DRS' object has no attribute 'experiment_id'
@@ -741,9 +643,7 @@ class DRS:
         >>> str(drs.DRS(**attrs).dirName())
         'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
         >>> drs.DRS(**attrs).dirNameList(prefix='/data')
-        ... # doctest: +NORMALIZE_WHITESPACE
-        ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214',
-        '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
+        ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214', '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
 
         The last example will return ``[]`` if expanded directories do
         not exist.
@@ -764,8 +664,6 @@ class DRS:
         """
         Split filename to attributes for DRS.
 
-        Set them as members of the instance and also return as a dict.
-
         Args:
             fname (Path-like): filename
 
@@ -782,12 +680,18 @@ class DRS:
         Examples:
 
         >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-        >>> drs.DRS().splitFileName(fname) # doctest: +NORMALIZE_WHITESPACE
-        {'experiment_id': 'piControl', 'grid_label': 'gn',
-        'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range':
-        '320001-329912', 'variable_id': 'tas', 'variant_label':
-        'r1i1p1f1'}
+        >>> drs.DRS().splitFileName(fname)
+        {'experiment_id': 'piControl', 'grid_label': 'gn', 'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range': '320001-329912', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1'}
+        >>> fname='some_invalid_very_long_file_name.nc'
+        >>> drs.DRS().splitFileName(fname)
+        Traceback (most recent call last):
+            ...
+        ValueError: not enough values to unpack (expected 6, got 5)
 
+        TODO:
+            - Validate the result, even if `fname` has enough numbers
+              components.
+            - Should raise exeption or return null list if invalid ???
         """
         (variable_id,
          table_id,
@@ -824,7 +728,7 @@ class DRS:
             dname (path-like) : directory name
 
         Returns:
-            dict: attribute and it's value, {} if `dname` is not enough.
+            dict: attribute and it's value, ``{}`` if `dname` is not enough.
 
         Note:
             Instance members keep untouched, give :meth:`set` the
@@ -832,25 +736,20 @@ class DRS:
 
         Examples:
 
-            >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/'
-            ...          'Amon/tas/gn/v20181212')
-            >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
-            {'activity_id': 'CMIP', 'experiment_id': 'piControl',
-            'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
-            'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
-            'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
+            >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
+            >>> drs.DRS().splitDirName(dname)
+            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
 
+        With `prefix`;
 
-        Contains `prefix`;
+            >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
+            >>> drs.DRS().splitDirName(dname)
+            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': '/work/data/CMIP6'}
 
-            >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/'
-            ...          'piControl/r1i1p1f1/Amon/tas/gn/v20181212')
-            >>> drs.DRS().splitDirName(dname) # doctest: +NORMALIZE_WHITESPACE
-            {'activity_id': 'CMIP', 'experiment_id': 'piControl',
-            'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6',
-            'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
-            'variant_label': 'r1i1p1f1', 'version': 'v20181212',
-            'prefix': '/work/data/CMIP6'}
+        TODO:
+            - Validate the result, even if `dname` has enough numbers
+              of components.
+            - Should raise exeption or return null list if invalid ???
         """
         res = {}
 
@@ -899,6 +798,9 @@ class DRS:
             directory (bool) : treat `path` is a directory
             separated (bool) : return a tuple of two dicts
 
+        Returns:
+            bool or list of bool : valid or not (see below)
+
         If `separate` is True, return a tuple of two dicts, first
         element is for the filename, second is for the directory name,
         both dicts' key/value shows that each attributes are valid or
@@ -912,6 +814,19 @@ class DRS:
         ...       'dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
         >>> drs.DRS().isValidPath(url)
         True
+        >>> drs.DRS().isValidPath(url, separated=True)
+        ({'experiment_id': True, 'grid_label': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'time_range': True, 'variable_id': True, 'variant_label': True}, {'activity_id': True, 'experiment_id': True, 'grid_label': True, 'institution_id': True, 'mip_era': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'variable_id': True, 'variant_label': True, 'version': True})
+        >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
+        ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
+        ...       'Amon/rsdscs/gr/v20190110')
+        >>> drs.DRS().isValidPath(url)
+        False
+        >>> drs.DRS().isValidPath(url, directory=True)
+        True
+
+        TODO:
+            Catch ValueError from splitFileName() when given path is a directory w/o ``directory=True``
+
         """
         p = Path(path)
         if (directory):
@@ -967,9 +882,23 @@ class DRS:
             value (object) : value for `attr`
             attr (object) : global attribute
         Raises:
-            InvalidDRSAttribError: raises when `attr` is invalid for DRS.
+            AttributeError: raises when `attr` is invalid for DRS.
         Returns:
             bool: whether `value` is valid for the attribute `attr`
+
+        Examples:
+
+        >>> d = drs.DRS()
+        >>> d.isValidValueForAttr('Amon', 'table_id')
+        True
+        >>> d.isValidValueForAttr('Invalid', 'source_id')
+        False
+        >>> d.isValidValueForAttr('piControl', 'experiment_id')
+        True
+        >>> d.isValidValueForAttr('piControl', 'experiments_id')
+        Traceback (most recent call last):
+            ...
+        AttributeError: ('Invalid Attribute for DRS:', 'experiments_id')
         """
         if attr == 'sub_experiment_id':
             # TODO:
@@ -1026,13 +955,16 @@ class DRS:
 
     def doSanitize(self, silent=True):
         """
-        Sanitize instance, remove invalid values for valid attributes.
+        Sanitize instances.
 
+        That is, remove invalid values for valid attributes.
 
         Args:
             silent(bool): do it silently or not
+
         Raise:
             nothing
+
         Returns:
             nothing
 
@@ -1046,8 +978,8 @@ class DRS:
         >>> hasattr(d, 'activity_id')
         False
 
-        Note that after `delete_invalid` is ``True`` in above,
-        `d.activity_id` is deleted.
+        For above case, You should use ``d.set(activity_id='...')``
+        instead of setting an attribute directly. See :meth:`set`.
         """
 
         self.validate(silent=silent, delete_invalid=True)
@@ -1113,6 +1045,99 @@ class DRS:
             return False
         pat = re.compile(r'r\d+i\d+p\d+f\d+')
         return pat.fullmatch(value) is not None
+
+
+# Below two methods are borrowed from
+# https://rosettacode.org/wiki/Brace_expansion#Python.
+# Stated that "Content is available under GNU Free Documentation
+# License 1.2 unless otherwise noted".
+def _getitem(s, depth=0):
+    out = [""]
+    while s:
+        c = s[0]
+        if depth and (c == ',' or c == '}'):
+            return out, s
+        if c == '{':
+            x = _getgroup(s[1:], depth+1)
+            if x:
+                out, s = [a+b for a in out for b in x[0]], x[1]
+                continue
+        if c == '\\' and len(s) > 1:
+            s, c = s[1:], c + s[1]
+
+        out, s = [a+c for a in out], s[1:]
+
+    return out, s
+
+
+def _getgroup(s, depth):
+    out, comma = [], False
+    while s:
+        g, s = _getitem(s, depth)
+        if not s:
+            break
+        out += g
+
+        if s[0] == '}':
+            if comma:
+                return out, s[1:]
+            return ['{' + a + '}' for a in out], s[1:]
+
+        if s[0] == ',':
+            comma, s = True, s[1:]
+
+    return None
+
+
+sample_attrs = {
+    'activity_id': 'CMIP',
+    'experiment_id': 'piControl',
+    'grid_label': 'gn',
+    'institution_id': 'MIROC',
+    'source_id': 'MIROC6',
+    'table_id': 'Amon',
+    'time_range': '320001-329912',
+    'variable_id': 'tas',
+    'variant_label': 'r1i1p1f1',
+    'version': 'v20181212',
+    'non_necessary_attribute': 'hoge'
+}
+sample_fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+sample_dname = ("CMIP6/CMIP/MIROC/MIROC6/piControl/"
+                "r1i1p1f1/Amon/tas/gn/v20181212")
+
+sample_attrs_w_subexp = {
+    'activity_id': 'DCPP',
+    'experiment_id': 'dcppC-atl-pacemaker',
+    'grid_label': 'gr',
+    'institution_id': 'IPSL',
+    'source_id': 'IPSL-CM6A-LR',
+    'sub_experiment_id': 's1950',
+    'table_id': 'Amon',
+    'time_range': '192001-201412',
+    'variable_id': 'rsdscs',
+    'variant_label': 'r1i1p1f1',
+    'version': 'v20190110'}
+sample_fname_w_subexp = ('rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker'
+                         '_s1950-r1i1p1f1_gr_192001-201412.nc')
+sample_dname_w_subexp = ('CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/'
+                         's1950-r1i1p1f1/Amon/rsdscs/gr/v20190110')
+
+sample_attrs_no_time_range = {
+    'activity_id': 'CMIP',
+    'experiment_id': 'historical',
+    'grid_label': 'gn',
+    'institution_id': 'MIROC',
+    'mip_era': 'CMIP6',
+    'prefix': '',
+    'source_id': 'MIROC6',
+    'table_id': 'fx',
+    'variable_id': 'areacella',
+    'variant_label': 'r1i1p1f1',
+    'version': 'v20190311'}
+sample_fname_no_time_range = 'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
+sample_dname_no_time_range = ('CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/'
+                              'fx/areacella/gn/v20190311/')
 
 
 if __name__ == "__main__":
