@@ -837,14 +837,22 @@ class DRS:
             dname = p.parent
 
         if (fname):
-            f_attr = self.splitFileName(fname)
-            f_res = {a: self.isValidValueForAttr(f_attr[a], a)
+            try:
+                f_attr = self.splitFileName(fname)
+            except ValueError:
+                f_res = {'all': False}
+            else:
+                f_res = {a: self.isValidValueForAttr(f_attr[a], a)
                      for a in f_attr if a in self.requiredAttribs}
         else:
             f_res = {'all': True}
         if (dname != Path('.')):
-            d_attr = self.splitDirName(dname)
-            d_res = {a: self.isValidValueForAttr(d_attr[a], a)
+            try:
+                d_attr = self.splitDirName(dname)
+            except ValueError:
+                d_res = {'all': False}
+            else:
+                d_res = {a: self.isValidValueForAttr(d_attr[a], a)
                      for a in d_attr if a in self.requiredAttribs}
         else:
             d_res = {'all': True}
@@ -852,7 +860,7 @@ class DRS:
         if separated:
             return f_res, d_res
         else:
-            return all((f_res.values(), d_res.values()))
+            return all(f_res.values()) and all(d_res.values())
 
     def isValid(self, silent=True):
         """
