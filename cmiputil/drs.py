@@ -149,9 +149,9 @@ class DRS:
     - ``version``
     - ``member_id``
 
-    Note that ``member_id`` is not able to set directly, this is set
-    by ``sub_experiment_id`` (omittable) and ``variant_label``, via
-    internal method :meth:`set_member_id`.
+    Note that ``member_id`` is not able to set directly, this is
+    constructed by ``sub_experiment_id`` (omittable) and
+    ``variant_label``, via decorated method :meth:`member_id`.
 
     You can use the class member :attr:`requiredAttribs`,
     :attr:`filenameAttribs`, :attr:`filenameAttribsOptional`,
@@ -383,7 +383,7 @@ class DRS:
             else:
                 setattr(self, a, v[0])
 
-        self.set_member_id()
+        # self.set_member_id()
 
         if (do_sanitize):
             self.doSanitize()
@@ -961,8 +961,13 @@ class DRS:
         return {k: getattr(self, k)
                 for k in self.requiredAttribs if hasattr(self, k)}
 
-    # TODO: add @property
-    def set_member_id(self):
+    @property
+    def member_id(self):
+        """Getter for the attribute <member_id>.
+
+        See the definition of this attribute in :mod:`cmiputil.drs`.
+        """
+
 
         if not self.__class__._experiments_w_sub:
             exps = self._cvs.getAttrib('experiment_id')
@@ -974,12 +979,12 @@ class DRS:
             if (hasattr(self, 'sub_experiment_id')):
                 subexp = self.sub_experiment_id
                 varlab = self.variant_label
-                self.member_id = f"{subexp}-{varlab}"
+                res = f"{subexp}-{varlab}"
             else:
-                self.member_id = self.variant_label
-            return self.member_id
-        else:
-            return None
+                res = self.variant_label
+            return res
+        # else:
+        #     return None
 
     def doSanitize(self, silent=True):
         """
