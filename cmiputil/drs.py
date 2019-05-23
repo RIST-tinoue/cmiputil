@@ -113,20 +113,61 @@ Example with a <sub_experiment_id>::
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190509'
-__date__ = '2019/05/09'
+__version__ = 'v20190523'
+__date__ = '2019/05/23'
 
 from cmiputil.convoc import ConVoc
 import netCDF4 as nc
 from pathlib import Path
 import re
-# from pprint import pprint
 import glob
+# from pprint import pprint
+
+
+# Below two methods are borrowed from
+# https://rosettacode.org/wiki/Brace_expansion#Python.  Content is
+# available under GNU Free Documentation License 1.2 unless otherwise
+# noted.
+def _getitem(s, depth=0):
+    out = [""]
+    while s:
+        c = s[0]
+        if depth and (c == ',' or c == '}'):
+            return out, s
+        if c == '{':
+            x = _getgroup(s[1:], depth+1)
+            if x:
+                out, s = [a+b for a in out for b in x[0]], x[1]
+                continue
+        if c == '\\' and len(s) > 1:
+            s, c = s[1:], c + s[1]
+
+        out, s = [a+c for a in out], s[1:]
+
+    return out, s
+
+
+def _getgroup(s, depth):
+    out, comma = [], False
+    while s:
+        g, s = _getitem(s, depth)
+        if not s:
+            break
+        out += g
+
+        if s[0] == '}':
+            if comma:
+                return out, s[1:]
+            return ['{' + a + '}' for a in out], s[1:]
+
+        if s[0] == ',':
+            comma, s = True, s[1:]
+
+    return None
 
 
 class DRSError(Exception):
     """Base exception class for DRS."""
-
     pass
 
 
@@ -135,11 +176,12 @@ class InvalidDRSAttribError(DRSError):
     Error for invalid attribute as DRS.
 
     TODO: Use ValueError instead of this exception
-"""
+    """
 
 
 class InvalidPathAsDRSError(DRSError):
     """Error for invalid path as DRS."""
+    pass
 
 
 sample_attrs = {
@@ -345,10 +387,6 @@ class DRS:
 
     def __init__(self, file=None, filename=None, dirname=None,
                  do_sanitize=True, **kw):
-        """
-
-
-        """
         if (not self.__class__._cvs):
             self.__class__._cvs = ConVoc()
         self.mip_era = 'CMIP6'
@@ -391,69 +429,6 @@ class DRS:
                if hasattr(self, k)]
         return (all(res) and typecheck)
 
-    def getAttribs(self):
-        """
-        Return current instance attributes defined of
-        :attr:`requiredAttribs` and their values.
-
-        Returns:
-            dict: attribute-value pairs.
-        """
-        return {k: getattr(self, k)
-                for k in self.requiredAttribs if hasattr(self, k)}
-
-    def _check_time_range(self, value):
-        # TODO: precision and `-clim` depends on the attribute `frequency`.
-        #       but I don't need quality assurance.
-        if (value is None):
-            return False
-        elif (value == ""):
-            return False
-        # pat = re.compile(r'\d{4,8}(-clim)?-\d{4,8}(-clim)?')
-        pat = re.compile(r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
-                         r'(-clim)?'
-                         r'-'
-                         r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
-                         r'(-clim)?'
-                         )
-        return pat.fullmatch(value) is not None
-
-    def _check_version(self, value):
-        if (value is None):
-            return False
-        pat = re.compile(r'v\d{8}')
-        return pat.fullmatch(value) is not None
-
-    def _check_variable_id(self, value):
-        # TODO: Is there any method to check ?
-        return value is not None
-
-    def _check_variant_label(self, value):
-        if (value is None):
-            return False
-        pat = re.compile(r'r\d+i\d+p\d+f\d+')
-        return pat.fullmatch(value) is not None
-
-    # TODO: add @property
-    def set_member_id(self):
-
-        if not self.__class__._experiments_w_sub:
-            exps = self._cvs.getAttrib('experiment_id')
-            self.__class__._experiments_w_sub = [
-                e for e in exps.keys()
-                if exps[e]['sub_experiment_id'][0] != 'none']
-
-        if (hasattr(self, 'variant_label')):
-            if (hasattr(self, 'sub_experiment_id')):
-                subexp = self.sub_experiment_id
-                varlab = self.variant_label
-                self.member_id = f"{subexp}-{varlab}"
-            else:
-                self.member_id = self.variant_label
-            return self.member_id
-        else:
-            return None
-
     def getAttrsFromGA(self, file):
         """
         Obtain requiered attributes from the global attributes defined
@@ -476,40 +451,6 @@ class DRS:
         attrs = {a: v for a, v in attrs.items() if v != 'none'}
         return attrs
 
-    def isValidValueForAttr(self, value, attr):
-        """
-        Check `value` is valid for the attribute `attr`.
-
-        Args:
-            value (object) : value for `attr`
-            attr (object) : global attribute
-        Raises:
-            InvalidDRSAttribError: raises when `attr` is invalid for DRS.
-        Returns:
-            bool: whether `value` is valid for the attribute `attr`
-        """
-        if attr == 'sub_experiment_id':
-            # TODO:
-            # Currently, value of <sub_experiment_id> used in
-            # published datasets is only 's1920', which is not in CVs.
-            # So avoid check tentatively
-            return (ConVoc().isValidValueForAttr(value, attr)
-                    or value == 's1920')
-        elif attr in ConVoc().managedAttribs:
-            return ConVoc().isValidValueForAttr(value, attr)
-        elif attr == 'time_range':
-            return self._check_time_range(value)
-        elif attr == 'version':
-            return self._check_version(value)
-        elif attr == 'variable_id':
-            return self._check_variable_id(value)
-        elif attr == 'variant_label':
-            return self._check_variant_label(value)
-        elif attr == 'mip_era':
-            return (value.lower() == 'cmip6')
-        else:
-            raise AttributeError('Invalid Attribute for DRS:', attr)
-
     def set(self, do_sanitize=True, **argv):
         """
         Set instance attributes, if attribute is in :attr:`requiredAttribs`.
@@ -524,8 +465,6 @@ class DRS:
         Args:
             argv (dict): attribute/value pairs
             do_sanitize(bool): remove invalid values via :meth:`doSanitize`
-        Raises:
-            InvalidDRSAttribError:  raises when `attr` is invalid for DRS.
         Return:
             nothing
 
@@ -542,89 +481,8 @@ class DRS:
 
         self.set_member_id()
 
-        # for a in self.requiredAttribs:
-        #     if (not hasattr(self, a)):
-        #         setattr(self, a, '*')
-        # if (not hasattr(self, 'member_id')):
-        #     setattr(self, 'member_id', '*')
-
         if (do_sanitize):
             self.doSanitize()
-
-    def isValid(self, silent=True):
-        """
-        Check if attributes are valid as DRS.
-
-        Args:
-          silent(bool): no message even if something is invalid.
-        Return:
-          bool: all attributes are valid or not.
-
-        Examples:
-
-        >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d.isValid()
-        True
-        >>> d.activity_id = 'InvalidMIP'
-        >>> d.isValid()
-        False
-        """
-        return self.validate(silent=silent, delete_invalid=False)
-
-    def doSanitize(self, silent=True):
-        """
-        Sanitize instance, remove invalid values for valid attributes.
-
-
-        Args:
-            silent(bool): do it silently or not
-        Raise:
-            nothing
-        Returns:
-            nothing
-
-        Examples:
-
-        >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d.activity_id = 'InvalidMIP'
-        >>> hasattr(d, 'activity_id')
-        True
-        >>> d.doSanitize()
-        >>> hasattr(d, 'activity_id')
-        False
-
-        Note that after `delete_invalid` is ``True`` in above,
-        `d.activity_id` is deleted.
-        """
-
-        self.validate(silent=silent, delete_invalid=True)
-
-    def validate(self, silent=False, delete_invalid=False):
-        fmt = 'Warining: <{}> has invalid value "{}".'
-        res = {}
-        for a in self.requiredAttribs:
-            v = getattr(self, a, None)
-            if v is None:
-                pass
-            elif type(v) is list:
-                # res[a] = True # tentative
-                vals = {vv: self.isValidValueForAttr(vv, a) for vv in v}
-                res[a] = all(vals.values())
-                if (not res[a]):
-                    if (not silent):
-                        print(fmt.format(a, [vv for vv in v if not vals[vv]]))
-                    if (delete_invalid):
-                        setattr(self, a, [vv for vv in v if vals[vv]])
-            else:
-                if self.isValidValueForAttr(v, a):
-                    res[a] = True
-                else:
-                    res[a] = False
-                    if (not silent):
-                        print(fmt.format(a, v))
-                    if (delete_invalid):
-                        delattr(self, a)
-        return all(res.values())
 
     def fileName(self, prefix=None, w_time_range=True,
                  allow_asterisk=True):
@@ -993,8 +851,6 @@ class DRS:
             'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas',
             'variant_label': 'r1i1p1f1', 'version': 'v20181212',
             'prefix': '/work/data/CMIP6'}
-
-
         """
         res = {}
 
@@ -1083,50 +939,180 @@ class DRS:
         else:
             return all((f_res.values(), d_res.values()))
 
+    def isValid(self, silent=True):
+        """
+        Check if attributes are valid as DRS.
+
+        Args:
+          silent(bool): no message even if something is invalid.
+        Return:
+          bool: all attributes are valid or not.
+
+        Examples:
+
+        >>> d = drs.DRS(**drs.sample_attrs)
+        >>> d.isValid()
+        True
+        >>> d.activity_id = 'InvalidMIP'
+        >>> d.isValid()
+        False
+        """
+        return self.validate(silent=silent, delete_invalid=False)
+
+    def isValidValueForAttr(self, value, attr):
+        """
+        Check `value` is valid for the attribute `attr`.
+
+        Args:
+            value (object) : value for `attr`
+            attr (object) : global attribute
+        Raises:
+            InvalidDRSAttribError: raises when `attr` is invalid for DRS.
+        Returns:
+            bool: whether `value` is valid for the attribute `attr`
+        """
+        if attr == 'sub_experiment_id':
+            # TODO:
+            # Currently, value of <sub_experiment_id> used in
+            # published datasets is only 's1920', which is not in CVs.
+            # So avoid check tentatively
+            return (ConVoc().isValidValueForAttr(value, attr)
+                    or value == 's1920')
+        elif attr in ConVoc().managedAttribs:
+            return ConVoc().isValidValueForAttr(value, attr)
+        elif attr == 'time_range':
+            return self._check_time_range(value)
+        elif attr == 'version':
+            return self._check_version(value)
+        elif attr == 'variable_id':
+            return self._check_variable_id(value)
+        elif attr == 'variant_label':
+            return self._check_variant_label(value)
+        elif attr == 'mip_era':
+            return (value.lower() == 'cmip6')
+        else:
+            raise AttributeError('Invalid Attribute for DRS:', attr)
+
+    def getAttribs(self):
+        """
+        Return current instance attributes defined of
+        :attr:`requiredAttribs` and their values.
+
+        Returns:
+            dict: attribute-value pairs.
+        """
+        return {k: getattr(self, k)
+                for k in self.requiredAttribs if hasattr(self, k)}
+
+    # TODO: add @property
+    def set_member_id(self):
+
+        if not self.__class__._experiments_w_sub:
+            exps = self._cvs.getAttrib('experiment_id')
+            self.__class__._experiments_w_sub = [
+                e for e in exps.keys()
+                if exps[e]['sub_experiment_id'][0] != 'none']
+
+        if (hasattr(self, 'variant_label')):
+            if (hasattr(self, 'sub_experiment_id')):
+                subexp = self.sub_experiment_id
+                varlab = self.variant_label
+                self.member_id = f"{subexp}-{varlab}"
+            else:
+                self.member_id = self.variant_label
+            return self.member_id
+        else:
+            return None
+
+    def doSanitize(self, silent=True):
+        """
+        Sanitize instance, remove invalid values for valid attributes.
+
+
+        Args:
+            silent(bool): do it silently or not
+        Raise:
+            nothing
+        Returns:
+            nothing
+
+        Examples:
+
+        >>> d = drs.DRS(**drs.sample_attrs)
+        >>> d.activity_id = 'InvalidMIP'
+        >>> hasattr(d, 'activity_id')
+        True
+        >>> d.doSanitize()
+        >>> hasattr(d, 'activity_id')
+        False
+
+        Note that after `delete_invalid` is ``True`` in above,
+        `d.activity_id` is deleted.
+        """
+
+        self.validate(silent=silent, delete_invalid=True)
+
+    def validate(self, silent=False, delete_invalid=False):
+        fmt = 'Warining: <{}> has invalid value "{}".'
+        res = {}
+        for a in self.requiredAttribs:
+            v = getattr(self, a, None)
+            if v is None:
+                pass
+            elif type(v) is list:
+                # res[a] = True # tentative
+                vals = {vv: self.isValidValueForAttr(vv, a) for vv in v}
+                res[a] = all(vals.values())
+                if (not res[a]):
+                    if (not silent):
+                        print(fmt.format(a, [vv for vv in v if not vals[vv]]))
+                    if (delete_invalid):
+                        setattr(self, a, [vv for vv in v if vals[vv]])
+            else:
+                if self.isValidValueForAttr(v, a):
+                    res[a] = True
+                else:
+                    res[a] = False
+                    if (not silent):
+                        print(fmt.format(a, v))
+                    if (delete_invalid):
+                        delattr(self, a)
+        return all(res.values())
+
     def _expandbrace(self, path):
         return _getitem(path)[0]
 
+    def _check_time_range(self, value):
+        # TODO: precision and `-clim` depends on the attribute `frequency`.
+        #       but I don't need quality assurance.
+        if (value is None):
+            return False
+        elif (value == ""):
+            return False
+        # pat = re.compile(r'\d{4,8}(-clim)?-\d{4,8}(-clim)?')
+        pat = re.compile(r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+                         r'(-clim)?'
+                         r'-'
+                         r'\d{4}(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?'
+                         r'(-clim)?'
+                         )
+        return pat.fullmatch(value) is not None
 
-# Below two methods are borrowed from
-# https://rosettacode.org/wiki/Brace_expansion#Python.  Content is
-# available under GNU Free Documentation License 1.2 unless otherwise
-# noted.
-def _getitem(s, depth=0):
-    out = [""]
-    while s:
-        c = s[0]
-        if depth and (c == ',' or c == '}'):
-            return out, s
-        if c == '{':
-            x = _getgroup(s[1:], depth+1)
-            if x:
-                out, s = [a+b for a in out for b in x[0]], x[1]
-                continue
-        if c == '\\' and len(s) > 1:
-            s, c = s[1:], c + s[1]
+    def _check_version(self, value):
+        if (value is None):
+            return False
+        pat = re.compile(r'v\d{8}')
+        return pat.fullmatch(value) is not None
 
-        out, s = [a+c for a in out], s[1:]
+    def _check_variable_id(self, value):
+        # TODO: Is there any method to check ?
+        return value is not None
 
-    return out, s
-
-
-def _getgroup(s, depth):
-    out, comma = [], False
-    while s:
-        g, s = _getitem(s, depth)
-        if not s:
-            break
-        out += g
-
-        if s[0] == '}':
-            if comma:
-                return out, s[1:]
-            return ['{' + a + '}' for a in out], s[1:]
-
-        if s[0] == ',':
-            comma, s = True, s[1:]
-
-    return None
+    def _check_variant_label(self, value):
+        if (value is None):
+            return False
+        pat = re.compile(r'r\d+i\d+p\d+f\d+')
+        return pat.fullmatch(value) is not None
 
 
 if __name__ == "__main__":
