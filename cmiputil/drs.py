@@ -662,7 +662,7 @@ class DRS:
     def splitFileName(self, fname, validate=False):
         """Split filename to attributes for DRS.
 
-        If ``varidate=False``, just split only. So if the filename
+        If ``varidate=False``, just split only. So if the `fname`
         consist of the same number of components with DRS-valid
         filename, no error happens. You should set `validate=True` or
         use :meth:`isValidValueForAttr` by yourself.
@@ -729,15 +729,21 @@ class DRS:
                     raise ValueError(f'"{v}" is invalid for <{a}>')
         return res
 
-    def splitDirName(self, dname):
-        """
-        Split dirname to attributes for DRS.
+    def splitDirName(self, dname, validate=False):
+        """Split dirname to attributes for DRS.
+
+        If ``varidate=False``, just split only. So if the `dname`
+        consist of the same number of components with DRS-valid
+        directory name, no error happens. You should set
+        `validate=True` or use :meth:`isValidValueForAttr` by
+        yourself.
 
         Args:
             dname (path-like) : directory name
+            validate(bool) : validate the resulting attribute/value pair
 
         Returns:
-            dict: attribute and it's value, ``{}`` if `dname` is not enough.
+            dict: attribute and it's value
 
         Note:
             Instance members keep untouched, give :meth:`set` the
@@ -745,38 +751,42 @@ class DRS:
 
         Examples:
 
-            >>> dname = ('CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
-            >>> drs.DRS().splitDirName(dname)
-            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
+        >>> dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
+        >>> drs.DRS().splitDirName(dname)
+        {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
 
         With `prefix`;
 
-            >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
-            >>> drs.DRS().splitDirName(dname)
-            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': '/work/data/CMIP6'}
+        >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
+        >>> drs.DRS().splitDirName(dname)
+        {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': '/work/data/CMIP6'}
 
-        TODO:
-            - Validate the result, even if `dname` has enough numbers
-              of components.
-            - Should raise exeption or return null list if invalid ???
+        Invalid case;
+
+        >>> dname = 'Some/Invalid/Path'
+        >>> drs.DRS().splitDirName(dname)
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid dirname: "Some/Invalid/Path"
+        >>> dname = 'Some/Invalid/but/has/occasionally/the/same/number/of/component/'
+        >>> drs.DRS().splitDirName(dname)
+        {'activity_id': 'Invalid', 'experiment_id': 'occasionally', 'grid_label': 'of', 'institution_id': 'but', 'mip_era': 'Some', 'source_id': 'has', 'table_id': 'same', 'variable_id': 'number', 'variant_label': 'the', 'version': 'component', 'prefix': ''}
+        >>> drs.DRS().splitDirName(dname, validate=True)
+        Traceback (most recent call last):
+            ...
+        ValueError: "Invalid" is invalid for <activity_id>
         """
         res = {}
 
         d = Path(dname)
 
         try:
-            (version,
-             grid_label,
-             variable_id,
-             table_id,
-             member_id,
-             experiment_id,
-             source_id,
-             institution_id,
-             activity_id,
+            (version, grid_label,  variable_id, table_id, member_id,
+             experiment_id, source_id, institution_id, activity_id,
              mip_era) = d.parts[-1:-11:-1]
         except ValueError:
-            return res
+            raise ValueError(f'Invalid dirname: "{dname}"')
+
 
         try:
             (sub_experiment_id, variant_label) = member_id.split('-')
@@ -788,6 +798,11 @@ class DRS:
                 res[k] = eval(k)
             except NameError:
                 pass
+
+        if validate:
+            for a, v in res.items():
+                if not self.isValidValueForAttr(v, a):
+                    raise ValueError(f'"{v}" is invalid for <{a}>')
 
         if (len(d.parts) > 10):
             res["prefix"] = str(Path(*d.parts[:-10]))
