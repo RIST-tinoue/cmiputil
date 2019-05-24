@@ -291,7 +291,7 @@ class DRS:
             if hasattr(self, a):
                 v = getattr(self, a)
                 if (type(v) is list):
-                    v = ','.join(v)
+                    v = ', '.join(v)
                 res.append("{}='{}'".format(a, v))
         res = (self.__class__.__name__
                + '(' + ', '.join(res) + ')')
