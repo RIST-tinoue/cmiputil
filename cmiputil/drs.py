@@ -250,25 +250,23 @@ class DRS:
 
 
         Examples:
+            >>> drs.DRS(filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
+            DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1')
+            >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/')
+            DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
 
-        >>> drs.DRS(filename='tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc')
-        DRS(experiment_id='piControl', grid_label='gn', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1')
-        >>> drs.DRS(dirname='/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/')
-        DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
+            Do or not sanitize;
 
-        Do or not sanitize;
-
-        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
-        >>> attrs['table_id'] = 'INVALID'
-        >>> d = drs.DRS(**attrs)
-        >>> d.table_id
-        Traceback (most recent call last):
-            ...
-        AttributeError: 'DRS' object has no attribute 'table_id'
-        >>> d = drs.DRS(**attrs, do_sanitize=False)
-        >>> d.table_id
-        'INVALID'
-
+            >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+            >>> attrs['table_id'] = 'INVALID'
+            >>> d = drs.DRS(**attrs)
+            >>> d.table_id
+            Traceback (most recent call last):
+                ...
+            AttributeError: 'DRS' object has no attribute 'table_id'
+            >>> d = drs.DRS(**attrs, do_sanitize=False)
+            >>> d.table_id
+            'INVALID'
         """
         if (not self.__class__._cvs):
             self.__class__._cvs = ConVoc()
@@ -357,20 +355,20 @@ class DRS:
 
         Examples:
 
-        >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d
-        DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
-        >>> d.set(experiment_id='amip')
-        >>> d.experiment_id
-        'amip'
-        >>> d.set(experiment_id='invalid_experiment')
-        >>> d.experiment_id
-        Traceback (most recent call last):
-            ...
-        AttributeError: 'DRS' object has no attribute 'experiment_id'
+            >>> d = drs.DRS(**drs.sample_attrs)
+            >>> d
+            DRS(activity_id='CMIP', experiment_id='piControl', grid_label='gn', institution_id='MIROC', mip_era='CMIP6', source_id='MIROC6', table_id='Amon', time_range='320001-329912', variable_id='tas', variant_label='r1i1p1f1', version='v20181212')
+            >>> d.set(experiment_id='amip')
+            >>> d.experiment_id
+            'amip'
+            >>> d.set(experiment_id='invalid_experiment')
+            >>> d.experiment_id
+            Traceback (most recent call last):
+                ...
+            AttributeError: 'DRS' object has no attribute 'experiment_id'
 
-        In the last example, invalid value for `experiment_id` is
-        sanitized since ``do_sanitize=True`` by default.
+            In the last example, invalid value for `experiment_id` is
+            sanitized since ``do_sanitize=True`` by default.
 
         """
         attribs = {a: argv[a] for a in argv.keys()
@@ -415,56 +413,56 @@ class DRS:
 
         Examples:
 
-        Usual case;
+            Usual case;
 
-        >>> str(drs.DRS(**drs.sample_attrs).fileName())
-        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
+            >>> str(drs.DRS(**drs.sample_attrs).fileName())
+            'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
 
-        With ``sub_experiment_id``;
+            With ``sub_experiment_id``;
 
-        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).fileName())
-        'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
+            >>> str(drs.DRS(**drs.sample_attrs_w_subexp).fileName())
+            'rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc'
 
-        No ``time_range``;
+            No ``time_range``;
 
-        >>> str(drs.DRS(**drs.sample_attrs_no_time_range).fileName(w_time_range=False))
-        'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
+            >>> str(drs.DRS(**drs.sample_attrs_no_time_range).fileName(w_time_range=False))
+            'areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc'
 
-        With prefix;
+            With prefix;
 
-        >>> prefix=Path('/data/CMIP6/')
-        >>> str(drs.DRS(**drs.sample_attrs).fileName(prefix))
-        '/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
+            >>> prefix=Path('/data/CMIP6/')
+            >>> str(drs.DRS(**drs.sample_attrs).fileName(prefix))
+            '/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
 
-        Invalid value for valid attribute;
+            Invalid value for valid attribute;
 
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> attrs.update({'table_id': 'invalid'})
-        >>> str(drs.DRS(**attrs).fileName())
-        'tas_*_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
-        >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
-        Traceback (most recent call last):
-           ...
-        AttributeError: 'DRS' object has no attribute 'table_id'
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> attrs.update({'table_id': 'invalid'})
+            >>> str(drs.DRS(**attrs).fileName())
+            'tas_*_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc'
+            >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
+            Traceback (most recent call last):
+               ...
+            AttributeError: 'DRS' object has no attribute 'table_id'
 
 
-        Missing attributes;
+            Missing attributes;
 
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> del attrs['time_range']
-        >>> str(drs.DRS(**attrs).fileName())
-        'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc'
-        >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
-        Traceback (most recent call last):
-           ...
-        AttributeError: 'DRS' object has no attribute 'time_range'
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> del attrs['time_range']
+            >>> str(drs.DRS(**attrs).fileName())
+            'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc'
+            >>> str(drs.DRS(**attrs).fileName(allow_asterisk=False))
+            Traceback (most recent call last):
+               ...
+            AttributeError: 'DRS' object has no attribute 'time_range'
 
-        Allow multi values;
+            Allow multi values;
 
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> str(drs.DRS(**attrs).fileName())
-        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_320001-329912.nc'
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> attrs.update({'experiment_id':'amip, piControl'})
+            >>> str(drs.DRS(**attrs).fileName())
+            'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_320001-329912.nc'
         """
         attr = {}
         for a in self.filenameAttribs + self.filenameAttribsOptional:
@@ -508,21 +506,19 @@ class DRS:
 
         Examples:
 
-        Brace expansion,
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> attrs.update({'experiment_id':'amip, piControl'})
+            >>> del attrs['time_range']
+            >>> str(drs.DRS(**attrs).fileName())
+            'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
 
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> del attrs['time_range']
-        >>> str(drs.DRS(**attrs).fileName())
-        'tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc'
+            >>> dlist = drs.DRS(**attrs).fileNameList() # doctest: +SKIP
+            >>> [str(d) for d in dlist]  # doctest: +SKIP
+            ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc',
+             'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
 
-        >>> dlist = drs.DRS(**attrs).fileNameList() # doctest: +SKIP
-        >>> [str(d) for d in dlist]  # doctest: +SKIP
-        ['tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc',
-         'tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc']
-
-        The last example will return ``[]`` if expanded files do not
-        exist.
+            The last example will return ``[]`` if expanded files do not
+            exist.
 
         """
         fname = self.fileName(prefix=prefix)
@@ -549,44 +545,44 @@ class DRS:
 
         Examples:
 
-        Usual case;
+            Usual case;
 
-        >>> str(drs.DRS(**drs.sample_attrs).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
+            >>> str(drs.DRS(**drs.sample_attrs).dirName())
+            'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
 
-        With ``sub_experiment_id``;
+            With ``sub_experiment_id``;
 
-        >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName())
-        'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
+            >>> str(drs.DRS(**drs.sample_attrs_w_subexp).dirName())
+            'CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110'
 
-        Invalid value for valid attribute;
+            Invalid value for valid attribute;
 
-        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
-        >>> attrs['table_id'] = 'invalid'
-        >>> str(drs.DRS(**attrs).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/*/tas/gn/v20181212'
-        >>> str(drs.DRS(**attrs).dirName(allow_asterisk=False))
-        Traceback (most recent call last):
-            ...
-        AttributeError: 'DRS' object has no attribute 'table_id'
+            >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+            >>> attrs['table_id'] = 'invalid'
+            >>> str(drs.DRS(**attrs).dirName())
+            'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/*/tas/gn/v20181212'
+            >>> str(drs.DRS(**attrs).dirName(allow_asterisk=False))
+            Traceback (most recent call last):
+                ...
+            AttributeError: 'DRS' object has no attribute 'table_id'
 
-        Missing attributes;
+            Missing attributes;
 
-        >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
-        >>> del attrs['experiment_id']
-        >>> str(drs.DRS(**attrs).dirName(prefix='/data/'))
-        '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
-        >>> str(drs.DRS(**attrs).dirName(prefix='/data/', allow_asterisk=False))
-        Traceback (most recent call last):
-            ...
-        AttributeError: 'DRS' object has no attribute 'experiment_id'
+            >>> attrs = {k:v for k,v in drs.sample_attrs.items()}
+            >>> del attrs['experiment_id']
+            >>> str(drs.DRS(**attrs).dirName(prefix='/data/'))
+            '/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212'
+            >>> str(drs.DRS(**attrs).dirName(prefix='/data/', allow_asterisk=False))
+            Traceback (most recent call last):
+                ...
+            AttributeError: 'DRS' object has no attribute 'experiment_id'
 
-        Allow multi values;
+            Allow multi values;
 
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> str(drs.DRS(**attrs).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20181212'
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> attrs.update({'experiment_id':'amip, piControl'})
+            >>> str(drs.DRS(**attrs).dirName())
+            'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20181212'
 
         """
         attr = {}
@@ -633,20 +629,16 @@ class DRS:
             Non-existent directories are omitted.
 
         Examples:
+            >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
+            >>> attrs.update({'experiment_id':'amip, piControl'})
+            >>> del attrs['version']
+            >>> str(drs.DRS(**attrs).dirName())
+            'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
+            >>> drs.DRS(**attrs).dirNameList(prefix='/data')
+            ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214', '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
 
-        Brace expansion,
-
-        >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
-        >>> attrs.update({'experiment_id':'amip, piControl'})
-        >>> del attrs['version']
-        >>> str(drs.DRS(**attrs).dirName())
-        'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
-        >>> drs.DRS(**attrs).dirNameList(prefix='/data')
-        ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214', '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
-
-        The last example will return ``[]`` if expanded directories do
-        not exist.
-
+            The last example will return ``[]`` if expanded directories do
+            not exist.
 
         TODO:
             Completely re-implment that
@@ -683,21 +675,21 @@ class DRS:
 
         Examples:
 
-        >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
-        >>> drs.DRS().splitFileName(fname)
-        {'experiment_id': 'piControl', 'grid_label': 'gn', 'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range': '320001-329912', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1'}
-        >>> fname='invalid_very_long_file_name.nc'
-        >>> drs.DRS().splitFileName(fname)
-        Traceback (most recent call last):
-            ...
-        ValueError: Invalid filename: "invalid_very_long_file_name.nc"
-        >>> fname='invalid_but_same_length_with_drs.nc'
-        >>> drs.DRS().splitFileName(fname)
-        {'experiment_id': 'length', 'grid_label': 'drs', 'source_id': 'same', 'table_id': 'but', 'variable_id': 'invalid', 'variant_label': 'with'}
-        >>> drs.DRS().splitFileName(fname, validate=True)
-        Traceback (most recent call last):
-            ...
-        ValueError: "length" is invalid for <experiment_id>
+            >>> fname = "tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc"
+            >>> drs.DRS().splitFileName(fname)
+            {'experiment_id': 'piControl', 'grid_label': 'gn', 'source_id': 'MIROC6', 'table_id': 'Amon', 'time_range': '320001-329912', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1'}
+            >>> fname='invalid_very_long_file_name.nc'
+            >>> drs.DRS().splitFileName(fname)
+            Traceback (most recent call last):
+                ...
+            ValueError: Invalid filename: "invalid_very_long_file_name.nc"
+            >>> fname='invalid_but_same_length_with_drs.nc'
+            >>> drs.DRS().splitFileName(fname)
+            {'experiment_id': 'length', 'grid_label': 'drs', 'source_id': 'same', 'table_id': 'but', 'variable_id': 'invalid', 'variant_label': 'with'}
+            >>> drs.DRS().splitFileName(fname, validate=True)
+            Traceback (most recent call last):
+                ...
+            ValueError: "length" is invalid for <experiment_id>
         """
         try:
             (variable_id, table_id, source_id, experiment_id, member_id,
@@ -751,30 +743,30 @@ class DRS:
 
         Examples:
 
-        >>> dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
-        >>> drs.DRS().splitDirName(dname)
-        {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
+            >>> dname = 'CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212'
+            >>> drs.DRS().splitDirName(dname)
+            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': ''}
 
-        With `prefix`;
+            With `prefix`;
 
-        >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
-        >>> drs.DRS().splitDirName(dname)
-        {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': '/work/data/CMIP6'}
+            >>> dname = ('/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')
+            >>> drs.DRS().splitDirName(dname)
+            {'activity_id': 'CMIP', 'experiment_id': 'piControl', 'grid_label': 'gn', 'institution_id': 'MIROC', 'mip_era': 'CMIP6', 'source_id': 'MIROC6', 'table_id': 'Amon', 'variable_id': 'tas', 'variant_label': 'r1i1p1f1', 'version': 'v20181212', 'prefix': '/work/data/CMIP6'}
 
-        Invalid case;
+            Invalid case;
 
-        >>> dname = 'Some/Invalid/Path'
-        >>> drs.DRS().splitDirName(dname)
-        Traceback (most recent call last):
-            ...
-        ValueError: Invalid dirname: "Some/Invalid/Path"
-        >>> dname = 'Some/Invalid/but/has/occasionally/the/same/number/of/component/'
-        >>> drs.DRS().splitDirName(dname)
-        {'activity_id': 'Invalid', 'experiment_id': 'occasionally', 'grid_label': 'of', 'institution_id': 'but', 'mip_era': 'Some', 'source_id': 'has', 'table_id': 'same', 'variable_id': 'number', 'variant_label': 'the', 'version': 'component', 'prefix': ''}
-        >>> drs.DRS().splitDirName(dname, validate=True)
-        Traceback (most recent call last):
-            ...
-        ValueError: "Invalid" is invalid for <activity_id>
+            >>> dname = 'Some/Invalid/Path'
+            >>> drs.DRS().splitDirName(dname)
+            Traceback (most recent call last):
+                ...
+            ValueError: Invalid dirname: "Some/Invalid/Path"
+            >>> dname = 'Some/Invalid/but/has/occasionally/the/same/number/of/component/'
+            >>> drs.DRS().splitDirName(dname)
+            {'activity_id': 'Invalid', 'experiment_id': 'occasionally', 'grid_label': 'of', 'institution_id': 'but', 'mip_era': 'Some', 'source_id': 'has', 'table_id': 'same', 'variable_id': 'number', 'variant_label': 'the', 'version': 'component', 'prefix': ''}
+            >>> drs.DRS().splitDirName(dname, validate=True)
+            Traceback (most recent call last):
+                ...
+            ValueError: "Invalid" is invalid for <activity_id>
         """
         res = {}
 
@@ -832,21 +824,21 @@ class DRS:
 
         Examples:
 
-        >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
-        ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
-        ...       'Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_'
-        ...       'dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
-        >>> drs.DRS().isValidPath(url)
-        True
-        >>> drs.DRS().isValidPath(url, separated=True)
-        ({'experiment_id': True, 'grid_label': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'time_range': True, 'variable_id': True, 'variant_label': True}, {'activity_id': True, 'experiment_id': True, 'grid_label': True, 'institution_id': True, 'mip_era': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'variable_id': True, 'variant_label': True, 'version': True})
-        >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
-        ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
-        ...       'Amon/rsdscs/gr/v20190110')
-        >>> drs.DRS().isValidPath(url)
-        False
-        >>> drs.DRS().isValidPath(url, directory=True)
-        True
+            >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
+            ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
+            ...       'Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_'
+            ...       'dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
+            >>> drs.DRS().isValidPath(url)
+            True
+            >>> drs.DRS().isValidPath(url, separated=True)
+            ({'experiment_id': True, 'grid_label': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'time_range': True, 'variable_id': True, 'variant_label': True}, {'activity_id': True, 'experiment_id': True, 'grid_label': True, 'institution_id': True, 'mip_era': True, 'source_id': True, 'sub_experiment_id': True, 'table_id': True, 'variable_id': True, 'variant_label': True, 'version': True})
+            >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
+            ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
+            ...       'Amon/rsdscs/gr/v20190110')
+            >>> drs.DRS().isValidPath(url)
+            False
+            >>> drs.DRS().isValidPath(url, directory=True)
+            True
         """
         p = Path(path)
         if (directory):
@@ -888,17 +880,17 @@ class DRS:
 
         Args:
           silent(bool): no message even if something is invalid.
+
         Return:
           bool: all attributes are valid or not.
 
         Examples:
-
-        >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d.isValid()
-        True
-        >>> d.activity_id = 'InvalidMIP'
-        >>> d.isValid()
-        False
+            >>> d = drs.DRS(**drs.sample_attrs)
+            >>> d.isValid()
+            True
+            >>> d.activity_id = 'InvalidMIP'
+            >>> d.isValid()
+            False
         """
         return self._validate(silent=silent, delete_invalid=False)
 
@@ -916,17 +908,17 @@ class DRS:
 
         Examples:
 
-        >>> d = drs.DRS()
-        >>> d.isValidValueForAttr('Amon', 'table_id')
-        True
-        >>> d.isValidValueForAttr('Invalid', 'source_id')
-        False
-        >>> d.isValidValueForAttr('piControl', 'experiment_id')
-        True
-        >>> d.isValidValueForAttr('piControl', 'experiments_id')
-        Traceback (most recent call last):
-            ...
-        AttributeError: ('Invalid Attribute for DRS:', 'experiments_id')
+            >>> d = drs.DRS()
+            >>> d.isValidValueForAttr('Amon', 'table_id')
+            True
+            >>> d.isValidValueForAttr('Invalid', 'source_id')
+            False
+            >>> d.isValidValueForAttr('piControl', 'experiment_id')
+            True
+            >>> d.isValidValueForAttr('piControl', 'experiments_id')
+            Traceback (most recent call last):
+                ...
+            AttributeError: ('Invalid Attribute for DRS:', 'experiments_id')
         """
         if attr == 'sub_experiment_id':
             # TODO:
@@ -995,24 +987,21 @@ class DRS:
         Args:
             silent(bool): do it silently or not
 
-        Raise:
-            nothing
-
         Returns:
             nothing
 
         Examples:
 
-        >>> d = drs.DRS(**drs.sample_attrs)
-        >>> d.activity_id = 'InvalidMIP'
-        >>> hasattr(d, 'activity_id')
-        True
-        >>> d.doSanitize()
-        >>> hasattr(d, 'activity_id')
-        False
+            >>> d = drs.DRS(**drs.sample_attrs)
+            >>> d.activity_id = 'InvalidMIP'
+            >>> hasattr(d, 'activity_id')
+            True
+            >>> d.doSanitize()
+            >>> hasattr(d, 'activity_id')
+            False
 
-        For above case, You should use ``d.set(activity_id='...')``
-        instead of setting an attribute directly. See :meth:`set`.
+            For above case, You should use ``d.set(activity_id='...')``
+            instead of setting an attribute directly. See :meth:`set`.
         """
         self._validate(silent=silent, delete_invalid=True)
 
