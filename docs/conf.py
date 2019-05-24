@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, '/home/tinoue/2019Tougou/cmiputil/cmiputil')
+sys.path.insert(0, '../cmiputil')
 
 
 # -- Project information -----------------------------------------------------
@@ -28,6 +28,7 @@ author = 'T.Inoue'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'sphinx.ext.napoleon',
@@ -59,11 +60,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 # html_theme = 'classic'
 # html_theme = 'sphinxdoc'
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 # html_theme = 'pyramid'
 # html_theme = 'agogo'
 # html_theme = 'nature'
-# html_theme = 'bizstyle'
+html_theme = 'bizstyle'
+# html_theme = 'cloud'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -72,13 +74,18 @@ html_static_path = ['_static']
 
 
 # -- Extension configuration -------------------------------------------------
+autosummary_generate = True
+
+
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
 
 napoleon_include_init_with_doc = False
-napoleon_use_ivar = True
+napoleon_use_ivar = False
 napoleon_use_param = True
 napoleon_use_rtype = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = True
 # -- Options for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.

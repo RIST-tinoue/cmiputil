@@ -1,39 +1,25 @@
-cmiputil package
-================
+README of cmiputil package
+==========================
 
-..
-   Submodules
-   ----------
-
-cmiputil.convoc module
-----------------------
-
-.. automodule:: cmiputil.convoc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cmiputil.drs module
--------------------
-
-.. automodule:: cmiputil.drs
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cmiputil.esgfsearch module
---------------------------
-
-.. automodule:: cmiputil.esgfsearch
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. include::  ../README.rst
+   :start-line: 3
 
 
-Module contents
----------------
+Summary
+=======
 
-.. automodule:: cmiputil
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+.. autosummary::
+
+   cmiputil.esgfsearch
+   cmiputil.drs
+   cmiputil.convoc
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

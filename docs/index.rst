@@ -7,17 +7,14 @@
 `cmiputil`
 ==========
 
-
-.. include::  ../README.rst
-   :start-line: 3
-
-
 .. toctree::
    :maxdepth: 4
-   :caption: Documents:
+   :caption: Table Of Contents:
 
    cmiputil
-
+   cmiputil.convoc
+   cmiputil.drs
+   cmiputil.esgfsearch
 
 
 Indices and tables
