@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, '../cmiputil')
+sys.path.insert(0, '../bin')
 
 
 # -- Project information -----------------------------------------------------
@@ -34,6 +35,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
     'sphinx.ext.doctest',
+    'sphinxarg.ext'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
