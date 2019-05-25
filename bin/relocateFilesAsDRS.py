@@ -5,14 +5,14 @@ Relocate CMIP6 datafiles depending on their global attributes.
 
 Input file(s) must be valid CMIP6 CF-Compliant netCDF. Relocation
 directory will be constructed by DRS, under current directory by
-default, or under prefix(-p).
+default, or under prefix(``-p``).
 
-DRS demands that directory must be contains "version" as the last
-part, but since that is "the only DRS element that is not stored as
-a global attribute" (see http://goo.gl/v1drZl), this is not
+DRS demands that directory must be contains the attribute <version> as
+the last part, but since that is "the only DRS element that is not
+stored as a global attribute" (see http://goo.gl/v1drZl), this is not
 decided by the filename nor global attributes.
 
-So you have to specify "--verstr" (or "-v").
+So you have to specify it via ``--verstr`` (or ``-v``).
 """
 
 from cmiputil import drs
@@ -134,8 +134,7 @@ def doRelocateFile(s, d, overwrite=False):
     return df
 
 
-if (__name__ == '__main__'):
-
+def my_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         'files', nargs='+', type=str, metavar='nc_file')
@@ -152,6 +151,12 @@ if (__name__ == '__main__'):
     parser.add_argument(
         '-d', '--debug', action='store_true', default=False)
 
+    return parser
+
+
+if (__name__ == '__main__'):
+
+    parser = my_parser()
     args = parser.parse_args()
 
     if (args.debug):
