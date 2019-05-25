@@ -323,8 +323,8 @@ class DRS:
 
         with nc.Dataset(file, "r") as ds:
             attrs = {a: getattr(ds, a, None)
-                     for a in drs.self.requiredAttribs}
-        attrs = {a: v for a, v in attrs.items() if v != 'none'}
+                     for a in self.requiredAttribs}
+        attrs = {a: v for a, v in attrs.items() if (v and v != 'none')}
         return attrs
 
     def set(self, do_sanitize=True, **argv):
