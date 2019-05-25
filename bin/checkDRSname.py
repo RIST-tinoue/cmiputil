@@ -11,9 +11,10 @@ import argparse
 from pprint import pprint
 import sys
 
-__version__ = '0.1'
 __author__ = 'T.Inoue'
-__date__ = '2019/04/28'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190525'
+__date__ = '2019/05/25'
 
 
 def isValidFileAsDRS(f, verbose=True):
@@ -41,15 +42,25 @@ if __name__ == '__main__':
         'files', nargs='+', type=str, metavar='nc_file')
     parser.add_argument(
         '-v', '--verbose', action="store_true", default=False)
+    parser.add_argument(
+        '-q', '--quiet', action="store_true", default=False)
 
     args = parser.parse_args()
 
     count = 0
     for f in args.files:
-        if (not isValidFileAsDRS(f, args.verbose)):
-            print("{} is invalid.".format(f))
-            count += 1
+        # if (not isValidFileAsDRS(f, args.verbose)):
+        #     count += 1
+        # else:
+        #     if not args.quiet:
+        #         print(f'{f} is valid.')
+        if isValidFileAsDRS(f, args.verbose):
+            if not args.quiet:
+                print(f'{f} is valid.')
         else:
-            print("{} is valid.".format(f))
+            if not args.quiet:
+                print(f'{f} is invalid.')
+            count +=1
+
     if (count > 0):
         sys.exit(1)
