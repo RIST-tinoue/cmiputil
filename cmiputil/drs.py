@@ -677,7 +677,7 @@ class DRS:
             >>> drs.DRS().splitFileName(fname)
             Traceback (most recent call last):
                 ...
-            ValueError: Invalid filename: "invalid_very_long_file_name.nc"
+            ValueError: not follow the name template: "invalid_very_long_file_name.nc"
             >>> fname='invalid_but_same_length_with_drs.nc'
             >>> drs.DRS().splitFileName(fname)
             {'experiment_id': 'length', 'grid_label': 'drs', 'source_id': 'same', 'table_id': 'but', 'variable_id': 'invalid', 'variant_label': 'with'}
@@ -690,7 +690,7 @@ class DRS:
             (variable_id, table_id, source_id, experiment_id, member_id,
              grid_label) = Path(fname).stem.split('_', 5)
         except ValueError:
-            raise ValueError(f'Invalid filename: "{fname}"')
+            raise ValueError(f'not follow the name template: "{fname}"')
 
         try:
             (grid_label, time_range) = grid_label.split('_')
