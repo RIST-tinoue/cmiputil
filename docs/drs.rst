@@ -1,7 +1,7 @@
 cmiputil.drs module
 -------------------
 
-.. automodule:: cmiputil.drs
+.. automodule:: drs
     :members:
     :undoc-members:
     :show-inheritance:

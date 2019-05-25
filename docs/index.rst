@@ -7,15 +7,31 @@
 `cmiputil`
 ==========
 
+README
+======
+
+.. include::  ../README.rst
+   :start-line: 4
+
+Modules
+=======
+
 .. toctree::
    :maxdepth: 4
-   :caption: Table Of Contents:
 
-   cmiputil
-   cmiputil.convoc
-   cmiputil.drs
-   cmiputil.esgfsearch
+   convoc
+   drs
+   esgfsearch
 
+
+Sample Apps
+===========
+
+.. toctree::
+   :maxdepth: 4
+
+   checkDRSname
+   relocateFilesAsDRS
 
 Indices and tables
 ==================
@@ -23,3 +39,9 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+TODO list
+=========
+
+.. todolist::

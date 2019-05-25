@@ -1,7 +1,7 @@
 cmiputil.convoc module
 ----------------------
 
-.. automodule:: cmiputil.convoc
+.. automodule:: convoc
     :members:
     :undoc-members:
     :show-inheritance:

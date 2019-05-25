@@ -1,7 +1,7 @@
 cmiputil.esgfsearch module
 --------------------------
 
-.. automodule:: cmiputil.esgfsearch
+.. automodule:: esgfsearch
     :members:
     :undoc-members:
     :show-inheritance:
