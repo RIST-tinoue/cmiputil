@@ -164,9 +164,6 @@ class DRS:
         - ``self.a == '*'`` : set as is     <- not implemented yet
         - ``type(self.a) == list`` : multiple values for brace expansion.
 
-    Todo:
-        Make check methods accept ``*`` as a value.
-
     """
 
     #: Attributes managed in this class.
@@ -917,7 +914,14 @@ class DRS:
             Traceback (most recent call last):
                 ...
             AttributeError: ('Invalid Attribute for DRS:', 'experiments_id')
+            >>> d.isValidValueForAttr('*', 'institution_id')
+            True
+            >>> d.isValidValueForAttr('MIROC*', 'source_id')
+            True
         """
+        if '*' in value:
+            return True
+
         if attr == 'sub_experiment_id':
             # TODO:
             # Currently, value of <sub_experiment_id> used in
