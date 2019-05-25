@@ -20,9 +20,10 @@ import netCDF4 as nc
 import argparse
 from pathlib import Path
 
-__version__ = '0.1'
 __author__ = 'T.Inoue'
-__date__ = '2019/04/27'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190525'
+__date__ = '2019/05/25'
 
 verstr_default = 'v00000000'
 
@@ -42,26 +43,30 @@ def relocationPath(ncfile, verstr=None, prefix=None):
     path-like : path for given file
     """
 
-    with nc.Dataset(ncfile, "r") as ds:
-        attrs = {a: getattr(ds, a, None) for a in drs.DRS.requiredAttribs}
-    attrs = {a: v for a, v in attrs.items() if v != 'none'}
+    d = drs.DRS(file=ncfile)
 
+    # get <version> from dirname of given ncfile.
     p = Path(ncfile)
     if (p.is_file()):
         p = p.parent
-    d_attrs = drs.DRS().splitDirName(p)
+    try:
+        d_attrs = drs.DRS().splitDirName(p.parent)
+    except ValueError:
+        d_attrs = {}
+
+    # get <time_range> from filename of given ncfile
+    f_attrs = drs.DRS().splitFileName(ncfile)
+    d.set(time_range=f_attrs['time_range'])
 
     if (verstr):
-        attrs['version'] = verstr
-    elif (hasattr(attrs, 'version')):
-        attrs['version'] = getattr(attrs, 'version')
-    elif (hasattr(d_attrs, 'version')):
-        attrs['version'] = getattr(d_attrs, 'version')
+        d.set(version=verstr)
+    if not hasattr(d, 'version') and hasattr(d_attrs, 'version'):
+        d.set(version=getattr(d_attrs, 'version'))
     else:
-        attrs['version'] = verstr_default
+        d.set(version=verstr_default)
 
-    d = drs.DRS(**attrs)
-    return Path(d.dirName(prefix=prefix), d.fileName())
+    return ( d.dirName(prefix=prefix, allow_asterisk=False)
+             / d.fileName(allow_asterisk=False))
 
 
 def validFileNameFrom(ncfile):
@@ -117,8 +122,8 @@ def doRelocateFile(s, d, overwrite=False):
 
     print(sf, '->', df)
 
-    if (not Path(s).exists()):
-        raise FileNotFoundError(s)
+    # if (not Path(s).exists()):
+    #     raise FileNotFoundError(s)
 
     if (df.exists() and not overwrite):
         raise FileExistsError(df)
