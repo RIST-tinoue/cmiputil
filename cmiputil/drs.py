@@ -28,34 +28,32 @@ hyphen must not appear in <variable_id>.  Underscores are prohibited
 throughout except as shown in the template.
 
 The <member_id> is constructed from the <sub_experiment_id> and
-<variant_label> using the following algorithm:
+<variant_label> using the following algorithm::
 
-|    if <sub_experiment_id> == “none”
-|        <member_id> = <variant_label>
-|    else
-|        <member_id> = <sub_experiment_id>-<variant_label>
-|    endif
+    if <sub_experiment_id> == "none"
+        <member_id> = <variant_label>
+    else
+        <member_id> = <sub_experiment_id>-<variant_label>
+    endif
 
-The <time_range> is a string generated consistent with the following:
+The <time_range> is a string generated consistent with the following::
 
-|    if frequency == “fx” then
-|        <time_range>=””
-|    else
-|        <time_range> = N1-N2
-|        where N1 and N2 are integers of the form
-|        ‘yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]’ (expressed as a string,where
-|        where ‘yyyy’, ‘MM’, ‘dd’, ‘hh’ ‘mm’ and ‘ss’ are integer year,
-|        month, day, hour, minute, and second, respectively)
-|    endif
+    if frequency == "fx" then
+        <time_range>=""
+    else
+        <time_range> = N1-N2
+    endif
 
-where <suffix> is defined as follows:
+where N1 and N2 are integers of the form ``yyyy[MM[dd[hh[mm[ss]]]]][<suffix>]``
+(expressed as a string, where ``yyyy``, ``MM``, ``dd``, ``hh``, ``mm`` and
+``ss`` are integer year, month, day, hour, minute, and second, respectively),
+where <suffix> is defined as follows::
 
-| if the variable identified by variable_id has a time dimension with
-| a “climatology” attribute then
-|         <suffix> = “-clim”
-|    else
-|         <suffix> = “”
-|    endif
+    if the variable identified by variable_id has a time dimension with a “climatology” attribute then
+         <suffix> = "-clim"
+    else
+         <suffix> = ""
+    endif
 
 and where the precision of the time_range strings is determined by the
 <frequency> global attribute.
@@ -90,7 +88,7 @@ attributes as follows::
 
 Note:
 
-- <version> has the form “vYYYYMMDD” (e.g., “v20160314”), indicating a
+- <version> has the form "vYYYYMMDD" (e.g., "v20160314"), indicating a
   representative date for the version.  Note that files contained in a
   single <version> subdirectory at the end of the directory path
   should represent all the available time-samples reported from the
