@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Check file/directory name is valid as DRS.
-
 """
 
 from cmiputil import drs
@@ -14,9 +13,19 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190525'
 __date__ = '2019/05/25'
 
+desc = __doc__+"""
+If (one of) given file(s) is(are) invalid, exit with code 1.
+If verbose (-v), the reason is also shown.
+"""
+
+epilog="""
+"""
 
 def my_parser():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=desc,
+        epilog=epilog)
     parser.add_argument(
         'files', nargs='+', type=str, metavar='nc_file')
     parser.add_argument(
