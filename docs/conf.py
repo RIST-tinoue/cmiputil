@@ -12,8 +12,8 @@
 #
 import os
 import sys
-sys.path.insert(0, '../cmiputil')
-sys.path.insert(0, '../bin')
+sys.path.insert(0, os.path.abspath('../cmiputil'))
+sys.path.insert(0, os.path.abspath('../bin'))
 
 
 # -- Project information -----------------------------------------------------
