@@ -11,23 +11,20 @@ This version uses
 `siphon <https://www.unidata.ucar.edu/software/siphon/>`_ and
 `xarray <http://xarray.pydata.org/>`_.
 
-See ``if (__name__ == '__main__'):`` section in the source file for
-the example usage.
-
-
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190509'
 __date__ = '2019/05/09'
 
-from cmiputil.drs import DRS
+from cmiputil import drs
 from pathlib import Path
 import urllib3
 import json
 import xarray as xr
 import netCDF4 as nc
 from siphon.catalog import TDSCatalog
+from pprint import pprint
 
 
 class NotFoundError(Exception):
@@ -65,50 +62,52 @@ fields_default = dict(keyword_defaults)
 fields_default.update(facet_defaults)
 
 
-# from contextlib import contextmanager
-# import time
-
-# @contextmanager
-# def timer(name):
-#     """
-#     Use as:
-
-#          with timer('process train'):
-#              hogehoge()
+def getDefaultFields():
+    return fields_default
 
 
-#     """
+def setDefaultFields(fields, update=False):
+    global fields_default
+    if (update):
+        fields_default.update(fields)
+    else:
+        fields_default = fields
 
-#     t0 = time.time()
-#     yield
-#     # print(f'[{name}] done in {time.time() - t0:.0f} s')
 
-
-def getCatURLs(fields, base_url=None):
+def getCatURLs(params=None, base_url=None):
     """
     Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
 
     Args:
         fields(dict): keyword parameters and facet parameters.
         base_url : base URL of the ESGF search service.
+
     Raises:
         NotFoundError: raised if no catalog found.
+
     Return:
         list of str:  TDS catalog URLs found.
 
     If `base_url` is None, :data:`.search_service` +
     :data:`.service_type` is used.
 
-    `field` is initialized by :data:`.keyword_defautls` and
-    :data:`.facet_defaults`.
+    `field` is to *update* (use `update()` method of python dict) to
+    :data:`fields_defaults`.  You can/must set it via
+    :meth:`setDefaultFields` beforehand.
+
+    TODO:
+        - How to enable *a negative facet* of RESTful API ?
 
     """
-    if (base_url is None):
+
+    if params:
+        fields_default.update(params)
+    if not base_url:
         base_url = search_service+service_type
 
     http = urllib3.PoolManager()
     try:
-        r = http.request('GET', base_url, fields=fields)
+        r = http.request('GET', base_url, fields=fields_default)
     except Exception as e:
         print('Error in http.request():')
         print(e.args)
@@ -229,12 +228,12 @@ def getLocalPath(fields, base_dir=None):
         >>> str(getLocalPath(params, base_dir='~/Data/'))
         '~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
     """
-    d = DRS(allow_asterisk=True, **fields)
-    p = Path(d.dirName(prefix=base_dir))
-    f = Path(d.fileName())
+    d = drs.DRS(**fields)
+    p = d.dirName(prefix=base_dir)
+    f = d.fileName()
     return p / f
 
+
 if (__name__ == '__main__'):
-    from cmiputil import drs
     import doctest
     doctest.testmod()
