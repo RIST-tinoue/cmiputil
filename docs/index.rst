@@ -22,7 +22,7 @@ Modules
    convoc
    drs
    esgfsearch
-
+   timer
 
 Sample Apps
 ===========
