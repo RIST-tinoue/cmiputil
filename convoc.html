@@ -1,0 +1,440 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>cmiputil.convoc module &mdash; cmiputil  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cmiputil.drs module" href="drs.html" />
+    <link rel="prev" title="cmiputil" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> cmiputil
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">cmiputil</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>cmiputil.convoc module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/convoc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-convoc">
+<span id="cmiputil-convoc-module"></span><h1>cmiputil.convoc module<a class="headerlink" href="#module-convoc" title="Permalink to this headline">¶</a></h1>
+<p>Access CMIP6 Controlled Vocabularies(CVs).</p>
+<p>A CV, in simplest form, is a list of the permitted values that can be
+assigned to a given global attribute, such as &lt;activity_id&gt;,
+&lt;experiment_id&gt;, etc.</p>
+<p>For some attributes, such as &lt;source_id&gt;, its value is a key-value
+pair, whose value is again dict of key-value.</p>
+<p>CVs are maintained as json files. You should clone them from github,
+and set a environment variable <cite>CVPATH</cite>, which is a colon separated
+string.</p>
+<dl class="exception">
+<dt id="convoc.ControlledVocabulariesError">
+<em class="property">exception </em><code class="descclassname">convoc.</code><code class="descname">ControlledVocabulariesError</code><a class="reference internal" href="_modules/convoc.html#ControlledVocabulariesError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ControlledVocabulariesError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Base exception class for convoc.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="convoc.InvalidCVAttribError">
+<em class="property">exception </em><code class="descclassname">convoc.</code><code class="descname">InvalidCVAttribError</code><a class="reference internal" href="_modules/convoc.html#InvalidCVAttribError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.InvalidCVAttribError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#convoc.ControlledVocabulariesError" title="convoc.ControlledVocabulariesError"><code class="xref py py-class docutils literal notranslate"><span class="pre">convoc.ControlledVocabulariesError</span></code></a></p>
+<p>Error for invalid attribute as a Controlled Vocabulary</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="convoc.InvalidCVKeyError">
+<em class="property">exception </em><code class="descclassname">convoc.</code><code class="descname">InvalidCVKeyError</code><a class="reference internal" href="_modules/convoc.html#InvalidCVKeyError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.InvalidCVKeyError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#convoc.ControlledVocabulariesError" title="convoc.ControlledVocabulariesError"><code class="xref py py-class docutils literal notranslate"><span class="pre">convoc.ControlledVocabulariesError</span></code></a></p>
+<p>Error for invalid key as a Controlled Vocabulary for valid attribute.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="convoc.InvalidCVPathError">
+<em class="property">exception </em><code class="descclassname">convoc.</code><code class="descname">InvalidCVPathError</code><a class="reference internal" href="_modules/convoc.html#InvalidCVPathError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.InvalidCVPathError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#convoc.ControlledVocabulariesError" title="convoc.ControlledVocabulariesError"><code class="xref py py-class docutils literal notranslate"><span class="pre">convoc.ControlledVocabulariesError</span></code></a></p>
+<p>Error for invalid path as a Controlled Vocabulary</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="convoc.ConVoc">
+<em class="property">class </em><code class="descclassname">convoc.</code><code class="descname">ConVoc</code><span class="sig-paren">(</span><em>paths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for accessing CMIP6 Controlled Vocabularies.</p>
+<p>This class reads CV from corresponding json file on demand and
+keep as a member.</p>
+<p>See <a class="reference internal" href="#convoc.ConVoc.setSearchPath" title="convoc.ConVoc.setSearchPath"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setSearchPath()</span></code></a> for the argument <cite>path</cite>.</p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span> <span class="o">=</span> <span class="n">ConVoc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">activity</span> <span class="o">=</span> <span class="n">cvs</span><span class="o">.</span><span class="n">getAttrib</span><span class="p">(</span><span class="s1">&#39;activity_id&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">activity</span><span class="p">[</span><span class="s1">&#39;CFMIP&#39;</span><span class="p">]</span>
+<span class="go">&#39;Cloud Feedback Model Intercomparison Project&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="s1">&#39;CFMIP&#39;</span><span class="p">,</span> <span class="s1">&#39;activity_id&#39;</span><span class="p">)</span>
+<span class="go">&#39;Cloud Feedback Model Intercomparison Project&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="s1">&#39;MIROC-ES2H&#39;</span><span class="p">,</span> <span class="s1">&#39;source_id&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="s1">&#39;MIROC-ES2M&#39;</span><span class="p">,</span> <span class="s1">&#39;source_id&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>In the below example, instance member attribute <cite>experiment_id</cite> is
+set AFTER <a class="reference internal" href="#convoc.ConVoc.isValidValueForAttr" title="convoc.ConVoc.isValidValueForAttr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">isValidValueForAttr()</span></code></a>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">cvs</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="s1">&#39;historical&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">cvs</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>In the below, example, <cite>table_id</cite> has only keys with no value,
+<a class="reference internal" href="#convoc.ConVoc.getValue" title="convoc.ConVoc.getValue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getValue()</span></code></a> return nothing (not <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="s1">&#39;Amon&#39;</span><span class="p">,</span> <span class="s1">&#39;table_id&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="s1">&#39;Amon&#39;</span><span class="p">,</span> <span class="s1">&#39;table_id&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Invalid attribute raises InvalidCVAttribError.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">getAttrib</span><span class="p">(</span><span class="s1">&#39;invalid_attr&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">InvalidCVAttribError</span>: <span class="n">Invalid attribute as a CV: invalid_attr</span>
+</pre></div>
+</div>
+<p>Invalid key for valid attribute raises KeyError.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cvs</span><span class="o">.</span><span class="n">getValue</span><span class="p">(</span><span class="s1">&#39;CCMIP&#39;</span><span class="p">,</span> <span class="s1">&#39;activity_id&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">KeyError</span>: <span class="n">&#39;CCMIP&#39;</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="convoc.ConVoc.getAttrib">
+<code class="descname">getAttrib</code><span class="sig-paren">(</span><em>attr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.getAttrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.getAttrib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return values of given <cite>attr</cite>.</p>
+<p><cite>attr</cite> must be valid and it’s json file must be in CV search
+path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>attr</strong> (<em>str</em>) – attribute to get.
+must be in <a class="reference internal" href="#convoc.ConVoc.managedAttribs" title="convoc.ConVoc.managedAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managedAttribs</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#convoc.InvalidCVAttribError" title="convoc.InvalidCVAttribError"><strong>InvalidCVAttribError</strong></a> – if <cite>attr</cite> is invalid</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>str or dict or “”</em> – CV values for <cite>attr</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="convoc.ConVoc.getSearchPath">
+<code class="descname">getSearchPath</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.getSearchPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.getSearchPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return search paths for CV.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list of path-like</em> – search path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="convoc.ConVoc.getValue">
+<code class="descname">getValue</code><span class="sig-paren">(</span><em>key</em>, <em>attr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.getValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.getValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return current value of <cite>key</cite> of attribute <cite>attr</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – key to be get it’s value.</p></li>
+<li><p><strong>attr</strong> (<em>str</em>) – attribute, must be in <a class="reference internal" href="#convoc.ConVoc.managedAttribs" title="convoc.ConVoc.managedAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managedAttribs</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#convoc.InvalidCVAttribError" title="convoc.InvalidCVAttribError"><strong>InvalidCVAttribError</strong></a> – if <cite>attr</cite> is invalid</p></li>
+<li><p><strong>KeyError</strong> – if <cite>key</cite> is invalid for <cite>attr</cite></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>object</em> – value of <cite>key</cite>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if <cite>key</cite> has no value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="convoc.ConVoc.isValidValueForAttr">
+<code class="descname">isValidValueForAttr</code><span class="sig-paren">(</span><em>key</em>, <em>attr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.isValidValueForAttr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.isValidValueForAttr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if given <cite>key</cite> is in CV <cite>attr</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – to be checked</p></li>
+<li><p><strong>attr</strong> (<em>str</em>) – attribute, must be in <a class="reference internal" href="#convoc.ConVoc.managedAttribs" title="convoc.ConVoc.managedAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managedAttribs</span></code></a></p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#convoc.InvalidCVAttribError" title="convoc.InvalidCVAttribError"><strong>InvalidCVAttribError</strong></a> – if <cite>attr</cite> is invalid</p></li>
+<li><p><strong>KeyError</strong> – if <cite>key</cite> is invalid for <cite>attr</cite></p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="convoc.ConVoc.setAttrib">
+<code class="descname">setAttrib</code><span class="sig-paren">(</span><em>attr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.setAttrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.setAttrib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read CV json file for <cite>attr</cite> and set members of self.</p>
+<p>If <cite>attr</cite> is already read and set, do nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>attr</strong> (<em>str</em>) – attribute to be read and set,
+must be in <a class="reference internal" href="#convoc.ConVoc.managedAttribs" title="convoc.ConVoc.managedAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managedAttribs</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#convoc.InvalidCVAttribError" title="convoc.InvalidCVAttribError"><strong>InvalidCVAttribError</strong></a> – if <cite>attr</cite> is invalid.</p></li>
+<li><p><a class="reference internal" href="#convoc.InvalidCVPathError" title="convoc.InvalidCVPathError"><strong>InvalidCVPathError</strong></a> – if a valid CV file not found.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nothing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="convoc.ConVoc.setSearchPath">
+<code class="descname">setSearchPath</code><span class="sig-paren">(</span><em>paths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc.setSearchPath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc.setSearchPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set search path for CV json files.</p>
+<p>Directories taken from a colon separated string in the order
+below:</p>
+<ol class="arabic simple">
+<li><p>given <cite>path</cite></p></li>
+<li><p>environment variable <cite>CVPATH</cite></p></li>
+<li><p><a class="reference internal" href="#convoc.ConVoc.DEFAULT_CVPATH" title="convoc.ConVoc.DEFAULT_CVPATH"><code class="xref py py-attr docutils literal notranslate"><span class="pre">DEFAULT_CVPATH</span></code></a></p></li>
+</ol>
+<p>Non-existent directories are omitted silently.  You have to
+specify ‘.’ explicitly if necessary.  Note that the order is
+meaningful.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – a colon separated string</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#convoc.InvalidCVPathError" title="convoc.InvalidCVPathError"><strong>InvalidCVPathError</strong></a> – Unless valid path is set.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="convoc.ConVoc.DEFAULT_CVPATH">
+<code class="descname">DEFAULT_CVPATH</code><em class="property"> = './:./CMIP6_CVs:~/CMIP6_CVs:~/Data/CMIP6_CVs'</em><a class="headerlink" href="#convoc.ConVoc.DEFAULT_CVPATH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="convoc.ConVoc.managedAttribs">
+<code class="descname">managedAttribs</code><em class="property"> = ('activity_id', 'experiment_id', 'frequency', 'grid_label', 'institution_id', 'license', 'nominal_resolution', 'realm', 'required_global_attributes', 'source_id', 'source_type', 'sub_experiment_id', 'table_id')</em><a class="headerlink" href="#convoc.ConVoc.managedAttribs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attributes managed by this class. Note that this is the CLASS
+attribute, not an instance attribute.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="drs.html" class="btn btn-neutral float-right" title="cmiputil.drs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="cmiputil" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, RIST
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

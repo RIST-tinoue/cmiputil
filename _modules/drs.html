@@ -1,0 +1,1363 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>drs &mdash; cmiputil  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> cmiputil
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer.html">cmiputil.timer module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cmiputil</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>drs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for drs</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># coding:utf-8</span>
+
+<span class="sd">&quot;&quot;&quot;CMIP6 Data Reference Syntax (DRS).</span>
+
+<span class="sd">(Excerpt from http://goo.gl/v1drZl)</span>
+
+<span class="sd">File name template:</span>
+<span class="sd">-------------------</span>
+
+<span class="sd">DRS compilent filename consists of several global attributes as</span>
+<span class="sd">follows::</span>
+
+<span class="sd">    filename = &lt;variable_id&gt;</span>
+<span class="sd">                _&lt;table_id&gt;</span>
+<span class="sd">                  _&lt;source_id&gt;</span>
+<span class="sd">                    _&lt;experiment_id &gt;</span>
+<span class="sd">                      _&lt;member_id&gt;</span>
+<span class="sd">                        _&lt;grid_label&gt;</span>
+<span class="sd">                          [_&lt;time_range&gt;].nc</span>
+
+<span class="sd">For time-invariant fields, the last segment (&lt;time_range&gt;) above is</span>
+<span class="sd">omitted.</span>
+
+<span class="sd">All strings appearing in the file name are constructed using only the</span>
+<span class="sd">following characters: a-z, A-Z, 0-9, and the hyphen (&quot;-&quot;), except the</span>
+<span class="sd">hyphen must not appear in &lt;variable_id&gt;.  Underscores are prohibited</span>
+<span class="sd">throughout except as shown in the template.</span>
+
+<span class="sd">The &lt;member_id&gt; is constructed from the &lt;sub_experiment_id&gt; and</span>
+<span class="sd">&lt;variant_label&gt; using the following algorithm::</span>
+
+<span class="sd">    if &lt;sub_experiment_id&gt; == &quot;none&quot;</span>
+<span class="sd">        &lt;member_id&gt; = &lt;variant_label&gt;</span>
+<span class="sd">    else</span>
+<span class="sd">        &lt;member_id&gt; = &lt;sub_experiment_id&gt;-&lt;variant_label&gt;</span>
+<span class="sd">    endif</span>
+
+<span class="sd">The &lt;time_range&gt; is a string generated consistent with the following::</span>
+
+<span class="sd">    if frequency == &quot;fx&quot; then</span>
+<span class="sd">        &lt;time_range&gt;=&quot;&quot;</span>
+<span class="sd">    else</span>
+<span class="sd">        &lt;time_range&gt; = N1-N2</span>
+<span class="sd">    endif</span>
+
+<span class="sd">where N1 and N2 are integers of the form ``yyyy[MM[dd[hh[mm[ss]]]]][&lt;suffix&gt;]``</span>
+<span class="sd">(expressed as a string, where ``yyyy``, ``MM``, ``dd``, ``hh``, ``mm`` and</span>
+<span class="sd">``ss`` are integer year, month, day, hour, minute, and second, respectively),</span>
+<span class="sd">where &lt;suffix&gt; is defined as follows::</span>
+
+<span class="sd">    if the variable identified by variable_id has a time dimension with a “climatology” attribute then</span>
+<span class="sd">         &lt;suffix&gt; = &quot;-clim&quot;</span>
+<span class="sd">    else</span>
+<span class="sd">         &lt;suffix&gt; = &quot;&quot;</span>
+<span class="sd">    endif</span>
+
+<span class="sd">and where the precision of the time_range strings is determined by the</span>
+<span class="sd">&lt;frequency&gt; global attribute.</span>
+
+<span class="sd">Example when there is no &lt;sub_experiment_id&gt;::</span>
+
+<span class="sd">    tas_Amon_GFDL-CM4_historical_r1i1p1f1_gn_196001-199912.nc</span>
+
+<span class="sd">Example with a &lt;sub_experiment_id&gt;::</span>
+
+<span class="sd">    pr_day_CNRM-CM6-1_dcppA-hindcast_s1960-r2i1p1f1_gn_198001-198412.nc</span>
+
+
+
+<span class="sd">Directory structure template:</span>
+<span class="sd">-----------------------------</span>
+
+<span class="sd">DRS complient directory structure consists of several global</span>
+<span class="sd">attributes as follows::</span>
+
+<span class="sd">    Directory structure = &lt;mip_era&gt;/</span>
+<span class="sd">                            &lt;activity_id&gt;/</span>
+<span class="sd">                              &lt;institution_id&gt;/</span>
+<span class="sd">                                &lt;source_id&gt;/</span>
+<span class="sd">                                  &lt;experiment_id&gt;/</span>
+<span class="sd">                                    &lt;member_id&gt;/</span>
+<span class="sd">                                      &lt;table_id&gt;/</span>
+<span class="sd">                                        &lt;variable_id&gt;/</span>
+<span class="sd">                                          &lt;grid_label&gt;/</span>
+<span class="sd">                                            &lt;version&gt;</span>
+
+
+<span class="sd">Note:</span>
+
+<span class="sd">- &lt;version&gt; has the form &quot;vYYYYMMDD&quot; (e.g., &quot;v20160314&quot;), indicating a</span>
+<span class="sd">  representative date for the version.  Note that files contained in a</span>
+<span class="sd">  single &lt;version&gt; subdirectory at the end of the directory path</span>
+<span class="sd">  should represent all the available time-samples reported from the</span>
+<span class="sd">  simulation; a time-series can be split across several files, but all</span>
+<span class="sd">  the files must be found in the same subdirectory.  This implies that</span>
+<span class="sd">  &lt;version&gt; will not generally be the actual date that all files in</span>
+<span class="sd">  the subdirectory were written or published.</span>
+<span class="sd">- If multiple activities are listed in the global attribute, the first</span>
+<span class="sd">  one is used in the directory structure.</span>
+
+
+<span class="sd">Example when there is no &lt;sub-experiment_id&gt;::</span>
+
+<span class="sd">     CMIP6/CMIP/NOAA-GFDL/GFDL-CM4/1pctCO2/r1i1p1f1/Amon/tas/gn/v20150322</span>
+
+<span class="sd">Example with a &lt;sub_experiment_id&gt;::</span>
+
+<span class="sd">     CMIP6/DCPP/CNRM-CERFACS/CNRM-CM6-1/dcppA-hindcast/s1960-r2i1p1f3/day/pr/gn/v20160215</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190523&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/05/23&#39;</span>
+
+<span class="kn">from</span> <span class="nn">cmiputil.convoc</span> <span class="k">import</span> <span class="n">ConVoc</span>
+<span class="kn">import</span> <span class="nn">netCDF4</span> <span class="k">as</span> <span class="nn">nc</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="c1"># from pprint import pprint</span>
+
+
+<div class="viewcode-block" id="DRS"><a class="viewcode-back" href="../drs.html#drs.DRS">[docs]</a><span class="k">class</span> <span class="nc">DRS</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class for CMIP6 DRS.</span>
+
+<span class="sd">    This class contains attributes necessary to construct a file</span>
+<span class="sd">    name/directory name that is valid for CMIP6 DRS (Data Reference</span>
+<span class="sd">    Syntax).  See above and http://goo.gl/v1drZl for details about DRS</span>
+<span class="sd">    as well as CMIP6 global attributes, etc.</span>
+
+<span class="sd">    Instance member variables of this class are:</span>
+
+<span class="sd">    - ``activity_id``</span>
+<span class="sd">    - ``experiment_id``</span>
+<span class="sd">    - ``grid_label``</span>
+<span class="sd">    - ``institution_id``</span>
+<span class="sd">    - ``mip_era``</span>
+<span class="sd">    - ``source_id``</span>
+<span class="sd">    - ``source_id``</span>
+<span class="sd">    - ``sub_experiment_id``</span>
+<span class="sd">    - ``table_id``</span>
+<span class="sd">    - ``time_range``</span>
+<span class="sd">    - ``variable_id``</span>
+<span class="sd">    - ``variant_label``</span>
+<span class="sd">    - ``version``</span>
+<span class="sd">    - ``member_id``</span>
+
+<span class="sd">    Note that ``member_id`` is not able to set directly, this is</span>
+<span class="sd">    constructed by ``sub_experiment_id`` (omittable) and</span>
+<span class="sd">    ``variant_label``, via decorated method :meth:`member_id`.</span>
+
+<span class="sd">    You can use the class member :attr:`requiredAttribs`,</span>
+<span class="sd">    :attr:`filenameAttribs`, :attr:`filenameAttribsOptional`,</span>
+<span class="sd">    :attr:`dirnameAttribs` to know necessary attributes to set this</span>
+<span class="sd">    class and a filename/dirname valid for DRS.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Attributes as the class member,</span>
+
+<span class="sd">        - ``hasattr(self, a) is False`` : not set explicitly</span>
+<span class="sd">        - ``self.a == None`` : not set explicitly</span>
+<span class="sd">        - ``self.a == &#39;*&#39;`` : set as is     &lt;- not implemented yet</span>
+<span class="sd">        - ``type(self.a) == list`` : multiple values for brace expansion.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#: Attributes managed in this class.</span>
+    <span class="n">requiredAttribs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">&#39;activity_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;experiment_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;grid_label&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;institution_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;mip_era&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;table_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;time_range&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;variable_id&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;variant_label&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;version&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1">#: Attributes necessary to construct dirname.</span>
+    <span class="n">dirnameAttribs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;mip_era&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;activity_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;institution_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;source_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;experiment_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;member_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;table_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;grid_label&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;version&quot;</span><span class="p">)</span>
+
+    <span class="c1">#: Attributes necessary to construct filename.</span>
+    <span class="n">filenameAttribs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;variable_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;table_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;source_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;experiment_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;member_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;grid_label&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1">#: Attributes optional to construct filename.</span>
+    <span class="n">filenameAttribsOptional</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;time_range&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1">#: list of &lt;experiment_id&gt; that have sub_experiment</span>
+    <span class="n">_experiments_w_sub</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#: ConVoc instance</span>
+    <span class="n">_cvs</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">do_sanitize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            file(path-like): CMIP6 netCDF file.</span>
+<span class="sd">            filename(str): filename to be used to set attributes.</span>
+<span class="sd">            dirname(str): dirname to be used to set attributes.</span>
+<span class="sd">            kw(dict): attribute-value pairs</span>
+<span class="sd">            do_sanitize(bool): do sanitize or not</span>
+
+<span class="sd">        If `file` is given, it must be a valid CMIP6 netCDF file, and</span>
+<span class="sd">        attributes in that file are read and set.</span>
+
+<span class="sd">        Else if `filename` is given, it must be a valid filename as DRS,</span>
+<span class="sd">        and attributes are set from components consist of that name.</span>
+
+<span class="sd">        Else if `dirname` is given, it must be a valid directory name as</span>
+<span class="sd">        DRS, and attributes are set from components consist of that</span>
+<span class="sd">        name.</span>
+
+<span class="sd">        Else attributes are set from `**kw` dict.</span>
+
+<span class="sd">        If `do_sanitize` is ``True``, remove invalid attribute values,</span>
+<span class="sd">        else set as-is.</span>
+
+<span class="sd">        You can sanitize *after* via :meth:`doSanitize`.</span>
+
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS(filename=&#39;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&#39;)</span>
+<span class="sd">            DRS(experiment_id=&#39;piControl&#39;, grid_label=&#39;gn&#39;, mip_era=&#39;CMIP6&#39;, source_id=&#39;MIROC6&#39;, table_id=&#39;Amon&#39;, time_range=&#39;320001-329912&#39;, variable_id=&#39;tas&#39;, variant_label=&#39;r1i1p1f1&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS(dirname=&#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212/&#39;)</span>
+<span class="sd">            DRS(activity_id=&#39;CMIP&#39;, experiment_id=&#39;piControl&#39;, grid_label=&#39;gn&#39;, institution_id=&#39;MIROC&#39;, mip_era=&#39;CMIP6&#39;, source_id=&#39;MIROC6&#39;, table_id=&#39;Amon&#39;, variable_id=&#39;tas&#39;, variant_label=&#39;r1i1p1f1&#39;, version=&#39;v20181212&#39;)</span>
+
+<span class="sd">            Do or not sanitize;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k:v for k,v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs[&#39;table_id&#39;] = &#39;INVALID&#39;</span>
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS(**attrs)</span>
+<span class="sd">            &gt;&gt;&gt; d.table_id</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;table_id&#39;</span>
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS(**attrs, do_sanitize=False)</span>
+<span class="sd">            &gt;&gt;&gt; d.table_id</span>
+<span class="sd">            &#39;INVALID&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_cvs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_cvs</span> <span class="o">=</span> <span class="n">ConVoc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mip_era</span> <span class="o">=</span> <span class="s1">&#39;CMIP6&#39;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAttrsFromGA</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitFileName</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitDirName</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="n">kw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">do_sanitize</span><span class="o">=</span><span class="n">do_sanitize</span><span class="p">,</span> <span class="o">**</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Since now attributes of self allow to be a list, but at</span>
+        <span class="c1"># setter values must be a comma-separated str, must convert</span>
+        <span class="c1"># list to str.</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=&#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+               <span class="o">+</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{!a}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+               <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">typecheck</span> <span class="o">=</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+               <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span>
+               <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="ow">and</span> <span class="n">typecheck</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DRS.getAttrsFromGA"><a class="viewcode-back" href="../drs.html#drs.DRS.getAttrsFromGA">[docs]</a>    <span class="k">def</span> <span class="nf">getAttrsFromGA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtain requiered attributes from the global attributes defined</span>
+<span class="sd">        in a valid netCDF file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file(str or path-like?): filename of a valid netCDF file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: whose keys are from :attr:`DRS.requiredAttribs`.</span>
+
+<span class="sd">        TODO:</span>
+<span class="sd">            Should this be the member of this class ??</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="n">nc</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">}</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="n">v</span> <span class="ow">and</span> <span class="n">v</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">attrs</span></div>
+
+<div class="viewcode-block" id="DRS.set"><a class="viewcode-back" href="../drs.html#drs.DRS.set">[docs]</a>    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_sanitize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">argv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set instance attributes, if attribute is in :attr:`requiredAttribs`.</span>
+
+<span class="sd">        In `argv`,</span>
+
+<span class="sd">        - missing attributes are left unset/untouched,</span>
+<span class="sd">        - attribute with invalid value is sanitized via</span>
+<span class="sd">          :meth:`doSanitize` if ``do_sanitize=True``,</span>
+<span class="sd">        - unnecessary attributes are neglected.</span>
+
+<span class="sd">        Each of attributes are checked by</span>
+<span class="sd">        :meth:`isValidValueForAttr()` before set.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            argv (dict): attribute/value pairs</span>
+<span class="sd">            do_sanitize(bool): remove invalid values via :meth:`doSanitize`</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            nothing</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS(**drs.sample_attrs)</span>
+<span class="sd">            &gt;&gt;&gt; d</span>
+<span class="sd">            DRS(activity_id=&#39;CMIP&#39;, experiment_id=&#39;piControl&#39;, grid_label=&#39;gn&#39;, institution_id=&#39;MIROC&#39;, mip_era=&#39;CMIP6&#39;, source_id=&#39;MIROC6&#39;, table_id=&#39;Amon&#39;, time_range=&#39;320001-329912&#39;, variable_id=&#39;tas&#39;, variant_label=&#39;r1i1p1f1&#39;, version=&#39;v20181212&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; d.set(experiment_id=&#39;amip&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; d.experiment_id</span>
+<span class="sd">            &#39;amip&#39;</span>
+<span class="sd">            &gt;&gt;&gt; d.set(experiment_id=&#39;invalid_experiment&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; d.experiment_id</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;experiment_id&#39;</span>
+
+<span class="sd">            In the last example, invalid value for `experiment_id` is</span>
+<span class="sd">            sanitized since ``do_sanitize=True`` by default.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attribs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">argv</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">argv</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                   <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attribs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">vv</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># self.set_member_id()</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">do_sanitize</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doSanitize</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DRS.fileName"><a class="viewcode-back" href="../drs.html#drs.DRS.fileName">[docs]</a>    <span class="k">def</span> <span class="nf">fileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">w_time_range</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct filename from current instance member attributes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prefix(path-like): prepend to the resulting filename</span>
+<span class="sd">            w_time_range(bool): result contains &lt;time_range&gt; part or not</span>
+<span class="sd">            allow_asterisk(bool): allow result contains ``*``</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AttributeError: any attributes are missing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            path-like: filename</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            By definition, including &lt;time_range&gt; part or not is</span>
+<span class="sd">            decided by the attribute &lt;frequency&gt; is &#39;fx&#39; or not.</span>
+<span class="sd">            &lt;frequency&gt; is the same with the attribute &lt;table_id&gt;, so</span>
+<span class="sd">            in this method if ``self.table_id == &#39;fx&#39;`` force</span>
+<span class="sd">            `w_time_range` to be ``True``.</span>
+<span class="sd">            If ``self.table_id = &#39;*&#39;`` or set multi values and you</span>
+<span class="sd">            want force &lt;time_range&gt; part to be omitted, set</span>
+<span class="sd">            ``w_time_range=False`` explicitly.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            Usual case;</span>
+
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs).fileName())</span>
+<span class="sd">            &#39;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&#39;</span>
+
+<span class="sd">            With ``sub_experiment_id``;</span>
+
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs_w_subexp).fileName())</span>
+<span class="sd">            &#39;rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker_s1950-r1i1p1f1_gr_192001-201412.nc&#39;</span>
+
+<span class="sd">            No ``time_range``;</span>
+
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs_no_time_range).fileName(w_time_range=False))</span>
+<span class="sd">            &#39;areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc&#39;</span>
+
+<span class="sd">            With prefix;</span>
+
+<span class="sd">            &gt;&gt;&gt; prefix=Path(&#39;/data/CMIP6/&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs).fileName(prefix))</span>
+<span class="sd">            &#39;/data/CMIP6/tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&#39;</span>
+
+<span class="sd">            Invalid value for valid attribute;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs.update({&#39;table_id&#39;: &#39;invalid&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName())</span>
+<span class="sd">            &#39;tas_*_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName(allow_asterisk=False))</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">               ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;table_id&#39;</span>
+
+
+<span class="sd">            Missing attributes;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; del attrs[&#39;time_range&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName())</span>
+<span class="sd">            &#39;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName(allow_asterisk=False))</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">               ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;time_range&#39;</span>
+
+<span class="sd">            Allow multi values;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs.update({&#39;experiment_id&#39;:&#39;amip, piControl&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName())</span>
+<span class="sd">            &#39;tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_320001-329912.nc&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenameAttribs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filenameAttribsOptional</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">allow_asterisk</span><span class="p">):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span><span class="o">+</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;}&#39;</span>
+            <span class="n">attr</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;table_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fx&#39;</span><span class="p">):</span>
+            <span class="n">w_time_range</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">w_time_range</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{variable_id}</span><span class="s2">_</span><span class="si">{table_id}</span><span class="s2">_</span><span class="si">{source_id}</span><span class="s2">_</span><span class="si">{experiment_id}</span><span class="s2">&quot;</span>
+                 <span class="s2">&quot;_</span><span class="si">{member_id}</span><span class="s2">_</span><span class="si">{grid_label}</span><span class="s2">_</span><span class="si">{time_range}</span><span class="s2">.nc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">{variable_id}</span><span class="s2">_</span><span class="si">{table_id}</span><span class="s2">_</span><span class="si">{source_id}</span><span class="s2">_</span><span class="si">{experiment_id}</span><span class="s2">&quot;</span>
+                 <span class="s2">&quot;_</span><span class="si">{member_id}</span><span class="s2">_</span><span class="si">{grid_label}</span><span class="s2">.nc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">/</span> <span class="n">f</span>
+
+        <span class="k">return</span> <span class="n">f</span></div>
+
+<div class="viewcode-block" id="DRS.fileNameList"><a class="viewcode-back" href="../drs.html#drs.DRS.fileNameList">[docs]</a>    <span class="k">def</span> <span class="nf">fileNameList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of filenames constructed by the instance member</span>
+<span class="sd">        attributes that may contains &#39;*&#39; and/or braces.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        list of str: filenames</span>
+
+<span class="sd">        Todo:</span>
+<span class="sd">            Since non-existent files are omitted, this method seems</span>
+<span class="sd">            useless. Implement pathNameList() to obtain a list of</span>
+<span class="sd">            path(dir/file)</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs.update({&#39;experiment_id&#39;:&#39;amip, piControl&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; del attrs[&#39;time_range&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).fileName())</span>
+<span class="sd">            &#39;tas_Amon_MIROC6_{amip,piControl}_r1i1p1f1_gn_*.nc&#39;</span>
+
+<span class="sd">            &gt;&gt;&gt; dlist = drs.DRS(**attrs).fileNameList() # doctest: +SKIP</span>
+<span class="sd">            &gt;&gt;&gt; [str(d) for d in dlist]  # doctest: +SKIP</span>
+<span class="sd">            [&#39;tas_Amon_MIROC6_amip_r1i1p1f1_gn_*.nc&#39;,</span>
+<span class="sd">             &#39;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_*.nc&#39;]</span>
+
+<span class="sd">            The last example will return ``[]`` if expanded files do not</span>
+<span class="sd">            exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="n">flist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expandbrace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">ff</span> <span class="ow">in</span> <span class="n">flist</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DRS.dirName"><a class="viewcode-back" href="../drs.html#drs.DRS.dirName">[docs]</a>    <span class="k">def</span> <span class="nf">dirName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct directory name by DRS from :class:`DRS` instance members.</span>
+
+<span class="sd">        If `allow_asterisk` is ``True``, invalid</span>
+
+<span class="sd">        If you want glob/brace expaned list, use :meth:`dirNameList` instead.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prefix (Path-like): prepend to the result path.</span>
+<span class="sd">            allow_asterisk: allow result contains ``*`` or not.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AttributeError: any attributes are missing or invalid and</span>
+<span class="sd">                            ``allow_asterisk=False``</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Path-like : directory name</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            Usual case;</span>
+
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs).dirName())</span>
+<span class="sd">            &#39;CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span>
+
+<span class="sd">            With ``sub_experiment_id``;</span>
+
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**drs.sample_attrs_w_subexp).dirName())</span>
+<span class="sd">            &#39;CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110&#39;</span>
+
+<span class="sd">            Invalid value for valid attribute;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k:v for k,v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs[&#39;table_id&#39;] = &#39;invalid&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName())</span>
+<span class="sd">            &#39;CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/*/tas/gn/v20181212&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName(allow_asterisk=False))</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;table_id&#39;</span>
+
+<span class="sd">            Missing attributes;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k:v for k,v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; del attrs[&#39;experiment_id&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName(prefix=&#39;/data/&#39;))</span>
+<span class="sd">            &#39;/data/CMIP6/CMIP/MIROC/MIROC6/*/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName(prefix=&#39;/data/&#39;, allow_asterisk=False))</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            AttributeError: &#39;DRS&#39; object has no attribute &#39;experiment_id&#39;</span>
+
+<span class="sd">            Allow multi values;</span>
+
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs.update({&#39;experiment_id&#39;:&#39;amip, piControl&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName())</span>
+<span class="sd">            &#39;CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dirnameAttribs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">allow_asterisk</span><span class="p">:</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span><span class="o">+</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;}&#39;</span>
+            <span class="n">attr</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;mip_era&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;activity_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;institution_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;source_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;experiment_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;member_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;table_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;variable_id&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;grid_label&quot;</span><span class="p">],</span>
+           <span class="n">attr</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="o">/</span> <span class="n">d</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+<div class="viewcode-block" id="DRS.dirNameList"><a class="viewcode-back" href="../drs.html#drs.DRS.dirNameList">[docs]</a>    <span class="k">def</span> <span class="nf">dirNameList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return list of directory name constructed by DRS from</span>
+<span class="sd">        :class:`DRS` instance members, that contains asterisk and/or</span>
+<span class="sd">        braces</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prefix(path-like): dirname to prepend.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list of path-like: directory names</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Non-existent directories are omitted.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; attrs = {k: v for k, v in drs.sample_attrs.items()}</span>
+<span class="sd">            &gt;&gt;&gt; attrs.update({&#39;experiment_id&#39;:&#39;amip, piControl&#39;})</span>
+<span class="sd">            &gt;&gt;&gt; del attrs[&#39;version&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName())</span>
+<span class="sd">            &#39;CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS(**attrs).dirNameList(prefix=&#39;/data&#39;)</span>
+<span class="sd">            [&#39;/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214&#39;, &#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;]</span>
+
+<span class="sd">            The last example will return ``[]`` if expanded directories do</span>
+<span class="sd">            not exist.</span>
+
+<span class="sd">        TODO:</span>
+<span class="sd">            Completely re-implment that</span>
+
+<span class="sd">            - get list use glob (asterisk expansion) only</span>
+<span class="sd">            - filter out using regex by brace list</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>  <span class="c1"># may contain &#39;*&#39; and braces</span>
+        <span class="n">plist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expandbrace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dname</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">plist</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DRS.splitFileName"><a class="viewcode-back" href="../drs.html#drs.DRS.splitFileName">[docs]</a>    <span class="k">def</span> <span class="nf">splitFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split filename to attributes for DRS.</span>
+
+<span class="sd">        If ``varidate=False``, just split only. So if the `fname`</span>
+<span class="sd">        consist of the same number of components with DRS-valid</span>
+<span class="sd">        filename, no error happens. You should set `validate=True` or</span>
+<span class="sd">        use :meth:`isValidValueForAttr` by yourself.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fname (Path-like) : filename</span>
+<span class="sd">            validate(bool) : validate the resulting attribute/value pair</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: if `fname` is invalid for DRS.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: attribute and it&#39;s value</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Instance members keep untouched, give :meth:`set` the</span>
+<span class="sd">            result of this method.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; fname = &quot;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&quot;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitFileName(fname)</span>
+<span class="sd">            {&#39;experiment_id&#39;: &#39;piControl&#39;, &#39;grid_label&#39;: &#39;gn&#39;, &#39;source_id&#39;: &#39;MIROC6&#39;, &#39;table_id&#39;: &#39;Amon&#39;, &#39;time_range&#39;: &#39;320001-329912&#39;, &#39;variable_id&#39;: &#39;tas&#39;, &#39;variant_label&#39;: &#39;r1i1p1f1&#39;}</span>
+<span class="sd">            &gt;&gt;&gt; fname=&#39;invalid_very_long_file_name.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitFileName(fname)</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            ValueError: not follow the name template: &quot;invalid_very_long_file_name.nc&quot;</span>
+<span class="sd">            &gt;&gt;&gt; fname=&#39;invalid_but_same_length_with_drs.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitFileName(fname)</span>
+<span class="sd">            {&#39;experiment_id&#39;: &#39;length&#39;, &#39;grid_label&#39;: &#39;drs&#39;, &#39;source_id&#39;: &#39;same&#39;, &#39;table_id&#39;: &#39;but&#39;, &#39;variable_id&#39;: &#39;invalid&#39;, &#39;variant_label&#39;: &#39;with&#39;}</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitFileName(fname, validate=True)</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            ValueError: &quot;length&quot; is invalid for &lt;experiment_id&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">variable_id</span><span class="p">,</span> <span class="n">table_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">,</span> <span class="n">experiment_id</span><span class="p">,</span> <span class="n">member_id</span><span class="p">,</span>
+             <span class="n">grid_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;not follow the name template: &quot;</span><span class="si">{fname}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">grid_label</span><span class="p">,</span> <span class="n">time_range</span><span class="p">)</span> <span class="o">=</span> <span class="n">grid_label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># time_range = None</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">sub_experiment_id</span><span class="p">,</span> <span class="n">variant_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">member_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">variant_label</span> <span class="o">=</span> <span class="n">member_id</span>
+            <span class="c1"># sub_experiment_id = None</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;&quot;</span><span class="si">{v}</span><span class="s1">&quot; is invalid for &lt;</span><span class="si">{a}</span><span class="s1">&gt;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="DRS.splitDirName"><a class="viewcode-back" href="../drs.html#drs.DRS.splitDirName">[docs]</a>    <span class="k">def</span> <span class="nf">splitDirName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dname</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split dirname to attributes for DRS.</span>
+
+<span class="sd">        If ``varidate=False``, just split only. So if the `dname`</span>
+<span class="sd">        consist of the same number of components with DRS-valid</span>
+<span class="sd">        directory name, no error happens. You should set</span>
+<span class="sd">        `validate=True` or use :meth:`isValidValueForAttr` by</span>
+<span class="sd">        yourself.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dname (path-like) : directory name</span>
+<span class="sd">            validate(bool) : validate the resulting attribute/value pair</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: attribute and it&#39;s value</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Instance members keep untouched, give :meth:`set` the</span>
+<span class="sd">            result of this method.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; dname = &#39;CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitDirName(dname)</span>
+<span class="sd">            {&#39;activity_id&#39;: &#39;CMIP&#39;, &#39;experiment_id&#39;: &#39;piControl&#39;, &#39;grid_label&#39;: &#39;gn&#39;, &#39;institution_id&#39;: &#39;MIROC&#39;, &#39;mip_era&#39;: &#39;CMIP6&#39;, &#39;source_id&#39;: &#39;MIROC6&#39;, &#39;table_id&#39;: &#39;Amon&#39;, &#39;variable_id&#39;: &#39;tas&#39;, &#39;variant_label&#39;: &#39;r1i1p1f1&#39;, &#39;version&#39;: &#39;v20181212&#39;, &#39;prefix&#39;: &#39;&#39;}</span>
+
+<span class="sd">            With `prefix`;</span>
+
+<span class="sd">            &gt;&gt;&gt; dname = (&#39;/work/data/CMIP6/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitDirName(dname)</span>
+<span class="sd">            {&#39;activity_id&#39;: &#39;CMIP&#39;, &#39;experiment_id&#39;: &#39;piControl&#39;, &#39;grid_label&#39;: &#39;gn&#39;, &#39;institution_id&#39;: &#39;MIROC&#39;, &#39;mip_era&#39;: &#39;CMIP6&#39;, &#39;source_id&#39;: &#39;MIROC6&#39;, &#39;table_id&#39;: &#39;Amon&#39;, &#39;variable_id&#39;: &#39;tas&#39;, &#39;variant_label&#39;: &#39;r1i1p1f1&#39;, &#39;version&#39;: &#39;v20181212&#39;, &#39;prefix&#39;: &#39;/work/data/CMIP6&#39;}</span>
+
+<span class="sd">            Invalid case;</span>
+
+<span class="sd">            &gt;&gt;&gt; dname = &#39;Some/Invalid/Path&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitDirName(dname)</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            ValueError: Invalid dirname: &quot;Some/Invalid/Path&quot;</span>
+<span class="sd">            &gt;&gt;&gt; dname = &#39;Some/Invalid/but/has/occasionally/the/same/number/of/component/&#39;</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitDirName(dname)</span>
+<span class="sd">            {&#39;activity_id&#39;: &#39;Invalid&#39;, &#39;experiment_id&#39;: &#39;occasionally&#39;, &#39;grid_label&#39;: &#39;of&#39;, &#39;institution_id&#39;: &#39;but&#39;, &#39;mip_era&#39;: &#39;Some&#39;, &#39;source_id&#39;: &#39;has&#39;, &#39;table_id&#39;: &#39;same&#39;, &#39;variable_id&#39;: &#39;number&#39;, &#39;variant_label&#39;: &#39;the&#39;, &#39;version&#39;: &#39;component&#39;, &#39;prefix&#39;: &#39;&#39;}</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().splitDirName(dname, validate=True)</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            ValueError: &quot;Invalid&quot; is invalid for &lt;activity_id&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dname</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">grid_label</span><span class="p">,</span>  <span class="n">variable_id</span><span class="p">,</span> <span class="n">table_id</span><span class="p">,</span> <span class="n">member_id</span><span class="p">,</span>
+             <span class="n">experiment_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">,</span> <span class="n">institution_id</span><span class="p">,</span> <span class="n">activity_id</span><span class="p">,</span>
+             <span class="n">mip_era</span><span class="p">)</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">11</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Invalid dirname: &quot;</span><span class="si">{dname}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">sub_experiment_id</span><span class="p">,</span> <span class="n">variant_label</span><span class="p">)</span> <span class="o">=</span> <span class="n">member_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">variant_label</span> <span class="o">=</span> <span class="n">member_id</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;&quot;</span><span class="si">{v}</span><span class="s1">&quot; is invalid for &lt;</span><span class="si">{a}</span><span class="s1">&gt;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">):</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="o">.</span><span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">10</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="DRS.isValidPath"><a class="viewcode-back" href="../drs.html#drs.DRS.isValidPath">[docs]</a>    <span class="k">def</span> <span class="nf">isValidPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">separated</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if given `path` is DRS compliant.</span>
+
+<span class="sd">        `path` may be a URL obtained by ESGF Search function. See</span>
+<span class="sd">        :mod:`cmiputil.esgfsearch` for details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (Path-like) : pathname to be checked</span>
+<span class="sd">            directory (bool) : treat `path` is a directory</span>
+<span class="sd">            separated (bool) : return a tuple of two dicts</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool or list of bool : valid or not (see below)</span>
+
+<span class="sd">        If `separate` is True, return a tuple of two dicts, first</span>
+<span class="sd">        element is for the filename, second is for the directory name,</span>
+<span class="sd">        both dicts&#39; key/value shows that each attributes are valid or</span>
+<span class="sd">        not. If `directory` is ``True``, first elements is ``{&#39;all&#39;: True}``.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; url = (&#39;http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/&#39;</span>
+<span class="sd">            ...       &#39;IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/&#39;</span>
+<span class="sd">            ...       &#39;Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_&#39;</span>
+<span class="sd">            ...       &#39;dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().isValidPath(url)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().isValidPath(url, separated=True)</span>
+<span class="sd">            ({&#39;experiment_id&#39;: True, &#39;grid_label&#39;: True, &#39;source_id&#39;: True, &#39;sub_experiment_id&#39;: True, &#39;table_id&#39;: True, &#39;time_range&#39;: True, &#39;variable_id&#39;: True, &#39;variant_label&#39;: True}, {&#39;activity_id&#39;: True, &#39;experiment_id&#39;: True, &#39;grid_label&#39;: True, &#39;institution_id&#39;: True, &#39;mip_era&#39;: True, &#39;source_id&#39;: True, &#39;sub_experiment_id&#39;: True, &#39;table_id&#39;: True, &#39;variable_id&#39;: True, &#39;variant_label&#39;: True, &#39;version&#39;: True})</span>
+<span class="sd">            &gt;&gt;&gt; url = (&#39;http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/&#39;</span>
+<span class="sd">            ...       &#39;IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/&#39;</span>
+<span class="sd">            ...       &#39;Amon/rsdscs/gr/v20190110&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().isValidPath(url)</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; drs.DRS().isValidPath(url, directory=True)</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">dname</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">dname</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">f_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitFileName</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">f_res</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f_res</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">f_attr</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">a</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">f_attr</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f_res</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">dname</span> <span class="o">!=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">d_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitDirName</span><span class="p">(</span><span class="n">dname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">d_res</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d_res</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">d_attr</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">a</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">d_attr</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d_res</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">separated</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f_res</span><span class="p">,</span> <span class="n">d_res</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">f_res</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">d_res</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="DRS.isValid"><a class="viewcode-back" href="../drs.html#drs.DRS.isValid">[docs]</a>    <span class="k">def</span> <span class="nf">isValid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if attributes are valid as DRS.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          silent(bool): no message even if something is invalid.</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">          bool: all attributes are valid or not.</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS(**drs.sample_attrs)</span>
+<span class="sd">            &gt;&gt;&gt; d.isValid()</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; d.activity_id = &#39;InvalidMIP&#39;</span>
+<span class="sd">            &gt;&gt;&gt; d.isValid()</span>
+<span class="sd">            False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">delete_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DRS.isValidValueForAttr"><a class="viewcode-back" href="../drs.html#drs.DRS.isValidValueForAttr">[docs]</a>    <span class="k">def</span> <span class="nf">isValidValueForAttr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check `value` is valid for the attribute `attr`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            value (object) : value for `attr`</span>
+<span class="sd">            attr (object) : global attribute</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            AttributeError: raises when `attr` is invalid for DRS.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: whether `value` is valid for the attribute `attr`</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS()</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;Amon&#39;, &#39;table_id&#39;)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;Invalid&#39;, &#39;source_id&#39;)</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;piControl&#39;, &#39;experiment_id&#39;)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;piControl&#39;, &#39;experiments_id&#39;)</span>
+<span class="sd">            Traceback (most recent call last):</span>
+<span class="sd">                ...</span>
+<span class="sd">            AttributeError: (&#39;Invalid Attribute for DRS:&#39;, &#39;experiments_id&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;*&#39;, &#39;institution_id&#39;)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; d.isValidValueForAttr(&#39;MIROC*&#39;, &#39;source_id&#39;)</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">:</span>
+            <span class="c1"># TODO:</span>
+            <span class="c1"># Currently, value of &lt;sub_experiment_id&gt; used in</span>
+            <span class="c1"># published datasets is only &#39;s1920&#39;, which is not in CVs.</span>
+            <span class="c1"># So avoid check tentatively</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;s1920&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">managedAttribs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;time_range&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_time_range</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;version&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_version</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_variable_id</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_variant_label</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;mip_era&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;cmip6&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Invalid Attribute for DRS:&#39;</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DRS.getAttribs"><a class="viewcode-back" href="../drs.html#drs.DRS.getAttribs">[docs]</a>    <span class="k">def</span> <span class="nf">getAttribs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return current instance attributes defined of</span>
+<span class="sd">        :attr:`requiredAttribs` and their values.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: attribute-value pairs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)}</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">member_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Getter for the attribute &lt;member_id&gt;.</span>
+
+<span class="sd">        See the definition of this attribute in :mod:`cmiputil.drs`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_experiments_w_sub</span><span class="p">:</span>
+            <span class="n">exps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">getAttrib</span><span class="p">(</span><span class="s1">&#39;experiment_id&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">_experiments_w_sub</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exps</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">exps</span><span class="p">[</span><span class="n">e</span><span class="p">][</span><span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;none&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;variant_label&#39;</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">)):</span>
+                <span class="n">subexp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sub_experiment_id</span>
+                <span class="n">varlab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant_label</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{subexp}</span><span class="s2">-</span><span class="si">{varlab}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant_label</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     return None</span>
+
+<div class="viewcode-block" id="DRS.doSanitize"><a class="viewcode-back" href="../drs.html#drs.DRS.doSanitize">[docs]</a>    <span class="k">def</span> <span class="nf">doSanitize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sanitize instances.</span>
+
+<span class="sd">        That is, remove invalid values for valid attributes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            silent(bool): do it silently or not</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            nothing</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            &gt;&gt;&gt; d = drs.DRS(**drs.sample_attrs)</span>
+<span class="sd">            &gt;&gt;&gt; d.activity_id = &#39;InvalidMIP&#39;</span>
+<span class="sd">            &gt;&gt;&gt; hasattr(d, &#39;activity_id&#39;)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; d.doSanitize()</span>
+<span class="sd">            &gt;&gt;&gt; hasattr(d, &#39;activity_id&#39;)</span>
+<span class="sd">            False</span>
+
+<span class="sd">            For above case, You should use ``d.set(activity_id=&#39;...&#39;)``</span>
+<span class="sd">            instead of setting an attribute directly. See :meth:`set`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">,</span> <span class="n">delete_invalid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete_invalid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">fmt</span> <span class="o">=</span> <span class="s1">&#39;Warining: &lt;</span><span class="si">{}</span><span class="s1">&gt; has invalid value &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requiredAttribs</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="c1"># res[a] = True # tentative</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">vv</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">vv</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">}</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">res</span><span class="p">[</span><span class="n">a</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">silent</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">vv</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">vals</span><span class="p">[</span><span class="n">vv</span><span class="p">]]))</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">delete_invalid</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="n">vv</span> <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">vv</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">res</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">silent</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">delete_invalid</span><span class="p">):</span>
+                        <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_expandbrace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_getitem</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_check_time_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="c1"># TODO: precision and `-clim` depends on the attribute `frequency`.</span>
+        <span class="c1">#       but I don&#39;t need quality assurance.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># pat = re.compile(r&#39;\d{4,8}(-clim)?-\d{4,8}(-clim)?&#39;)</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{4}</span><span class="s1">(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;(-clim)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;-&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{4}</span><span class="s1">(\d\d(\d\d(\d\d(\d\d(\d\d)?)?)?)?)?&#39;</span>
+                         <span class="sa">r</span><span class="s1">&#39;(-clim)?&#39;</span>
+                         <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_check_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;v\d</span><span class="si">{8}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_check_variable_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="c1"># TODO: Is there any method to check ?</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_check_variant_label</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;r\d+i\d+p\d+f\d+&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<span class="c1"># Below two methods are borrowed from</span>
+<span class="c1"># https://rosettacode.org/wiki/Brace_expansion#Python.</span>
+<span class="c1"># Stated that &quot;Content is available under GNU Free Documentation</span>
+<span class="c1"># License 1.2 unless otherwise noted&quot;.</span>
+<span class="k">def</span> <span class="nf">_getitem</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
+    <span class="k">while</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="ow">and</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;{&#39;</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">_getgroup</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">x</span><span class="p">:</span>
+                <span class="n">out</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">c</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">out</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="n">c</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">_getgroup</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">comma</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">False</span>
+    <span class="k">while</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">g</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">_getitem</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="n">g</span>
+
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span><span class="p">:</span>
+            <span class="n">comma</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="n">sample_attrs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;activity_id&#39;</span><span class="p">:</span> <span class="s1">&#39;CMIP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;piControl&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;grid_label&#39;</span><span class="p">:</span> <span class="s1">&#39;gn&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;institution_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;table_id&#39;</span><span class="p">:</span> <span class="s1">&#39;Amon&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;time_range&#39;</span><span class="p">:</span> <span class="s1">&#39;320001-329912&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;v20181212&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;non_necessary_attribute&#39;</span><span class="p">:</span> <span class="s1">&#39;hoge&#39;</span>
+<span class="p">}</span>
+<span class="n">sample_fname</span> <span class="o">=</span> <span class="s2">&quot;tas_Amon_MIROC6_piControl_r1i1p1f1_gn_320001-329912.nc&quot;</span>
+<span class="n">sample_dname</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;CMIP6/CMIP/MIROC/MIROC6/piControl/&quot;</span>
+                <span class="s2">&quot;r1i1p1f1/Amon/tas/gn/v20181212&quot;</span><span class="p">)</span>
+
+<span class="n">sample_attrs_w_subexp</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;activity_id&#39;</span><span class="p">:</span> <span class="s1">&#39;DCPP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;dcppC-atl-pacemaker&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;grid_label&#39;</span><span class="p">:</span> <span class="s1">&#39;gr&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;institution_id&#39;</span><span class="p">:</span> <span class="s1">&#39;IPSL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;IPSL-CM6A-LR&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sub_experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;s1950&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;table_id&#39;</span><span class="p">:</span> <span class="s1">&#39;Amon&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;time_range&#39;</span><span class="p">:</span> <span class="s1">&#39;192001-201412&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span> <span class="s1">&#39;rsdscs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;v20190110&#39;</span><span class="p">}</span>
+<span class="n">sample_fname_w_subexp</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;rsdscs_Amon_IPSL-CM6A-LR_dcppC-atl-pacemaker&#39;</span>
+                         <span class="s1">&#39;_s1950-r1i1p1f1_gr_192001-201412.nc&#39;</span><span class="p">)</span>
+<span class="n">sample_dname_w_subexp</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;CMIP6/DCPP/IPSL/IPSL-CM6A-LR/dcppC-atl-pacemaker/&#39;</span>
+                         <span class="s1">&#39;s1950-r1i1p1f1/Amon/rsdscs/gr/v20190110&#39;</span><span class="p">)</span>
+
+<span class="n">sample_attrs_no_time_range</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;activity_id&#39;</span><span class="p">:</span> <span class="s1">&#39;CMIP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;grid_label&#39;</span><span class="p">:</span> <span class="s1">&#39;gn&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;institution_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mip_era&#39;</span><span class="p">:</span> <span class="s1">&#39;CMIP6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;prefix&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;table_id&#39;</span><span class="p">:</span> <span class="s1">&#39;fx&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span> <span class="s1">&#39;areacella&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;v20190311&#39;</span><span class="p">}</span>
+<span class="n">sample_fname_no_time_range</span> <span class="o">=</span> <span class="s1">&#39;areacella_fx_MIROC6_historical_r1i1p1f1_gn.nc&#39;</span>
+<span class="n">sample_dname_no_time_range</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/&#39;</span>
+                              <span class="s1">&#39;fx/areacella/gn/v20190311/&#39;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">drs</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, RIST
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="cmiputil package" href="cmiputil.html" /> 
+    <link rel="next" title="cmiputil.convoc module" href="convoc.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -79,9 +79,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Documents:</span></p>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+</ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="cmiputil.html">cmiputil package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
 </ul>
 
             
@@ -148,9 +154,10 @@
             
   <div class="section" id="cmiputil">
 <h1><cite>cmiputil</cite><a class="headerlink" href="#cmiputil" title="Permalink to this headline">¶</a></h1>
-<p>A small package for CMIP6/ESGF data users.</p>
+<div class="section" id="readme">
+<h2>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="what-is-this">
-<h2>What is this ?<a class="headerlink" href="#what-is-this" title="Permalink to this headline">¶</a></h2>
+<h3>What is this ?<a class="headerlink" href="#what-is-this" title="Permalink to this headline">¶</a></h3>
 <p>This is a collection of small python modules for CMIP6/ESGF data users.</p>
 <p>These modules has been developed to support researchers who use
 CMIP6 data via ESGF, under the ongoing project called <a class="reference external" href="http://www.jamstec.go.jp/tougou/eng">TOUGOU Program</a>.</p>
@@ -160,15 +167,16 @@ CMIP6 data via ESGF, under the ongoing project called <a class="reference extern
 THREDDS.</p></li>
 <li><p><cite>drs</cite>: Handle DRS-complient directory name and file name.</p></li>
 <li><p><cite>convoc</cite>: Handle CMIP6 CVs.</p></li>
+<li><p><cite>timer</cite>: Measure execution time.</p></li>
 </ul>
 </div>
 <div class="section" id="you-may-want">
-<h2>You may want<a class="headerlink" href="#you-may-want" title="Permalink to this headline">¶</a></h2>
+<h3>You may want<a class="headerlink" href="#you-may-want" title="Permalink to this headline">¶</a></h3>
 <p>If you want to search and <em>download</em> datasets, you should use <a class="reference external" href="https://github.com/Prodiguer/synda">synda</a>, which is highly comprehensive
 useful and reliable.</p>
 </div>
 <div class="section" id="requirement">
-<h2>Requirement<a class="headerlink" href="#requirement" title="Permalink to this headline">¶</a></h2>
+<h3>Requirement<a class="headerlink" href="#requirement" title="Permalink to this headline">¶</a></h3>
 <p>This package has been developed under this environment only:</p>
 <ul class="simple">
 <li><p>python 3.6.8</p></li>
@@ -184,7 +192,7 @@ useful and reliable.</p>
 </ul>
 </div>
 <div class="section" id="install">
-<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<h3>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h3>
 <p>You can get from <a class="reference external" href="https://github.com/RIST-tinoue/cmiputil">https://github.com/RIST-tinoue/cmiputil</a></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/RIST-tinoue/cmiputil
 $ cd cmiputil
@@ -193,7 +201,7 @@ $ python ./setup.py develop   # &lt;- strongly recommended for a while.
 </div>
 </div>
 <div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3
 &gt;&gt;&gt; from cmiputil import esgfsearch
 &gt;&gt;&gt; help(esgfsearch)
@@ -203,46 +211,109 @@ $ python ./setup.py develop   # &lt;- strongly recommended for a while.
 &gt;&gt;&gt; help(convoc)
 </pre></div>
 </div>
-<p>See also each source files, tests, and sample apprications.</p>
+<p>See also each pydoc, tests, and sample applications.</p>
 </div>
 <div class="section" id="document">
-<h2>Document<a class="headerlink" href="#document" title="Permalink to this headline">¶</a></h2>
+<h3>Document<a class="headerlink" href="#document" title="Permalink to this headline">¶</a></h3>
 <p>See <a class="reference external" href="https://rist-tinoue.github.io/cmiputil/index.html">HTML
 Documentation</a>.</p>
 </div>
+<div class="section" id="plan">
+<h3>Plan<a class="headerlink" href="#plan" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>use config file</p></li>
+<li><p>seamless collaboration with synda.</p></li>
+</ul>
+</div>
 <div class="section" id="author">
-<h2>Author<a class="headerlink" href="#author" title="Permalink to this headline">¶</a></h2>
+<h3>Author<a class="headerlink" href="#author" title="Permalink to this headline">¶</a></h3>
 <p>Takahiro Inoue</p>
 <p>Copyright © 2019, RIST</p>
 </div>
 <div class="section" id="licence">
-<h2>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h2>
+<h3>Licence<a class="headerlink" href="#licence" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://github.com/RIST-tinoue/cmiputil/blob/master/LICENSE">BSD 3-Clause
 License</a></p>
+</div>
+</div>
+<div class="section" id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Documents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="cmiputil.html">cmiputil package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cmiputil.html#module-cmiputil.convoc">cmiputil.convoc module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cmiputil.html#module-cmiputil.drs">cmiputil.drs module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cmiputil.html#file-name-template">File name template:</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cmiputil.html#directory-structure-template">Directory structure template:</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="drs.html#file-name-template">File name template:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drs.html#directory-structure-template">Directory structure template:</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="cmiputil.html#module-cmiputil.esgfsearch">cmiputil.esgfsearch module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cmiputil.html#module-cmiputil">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="sample-apps">
+<h2>Sample Apps<a class="headerlink" href="#sample-apps" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="checkDRSname.html#module-checkDRSname">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="checkDRSname.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="checkDRSname.html#Positional Arguments">Positional Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="checkDRSname.html#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="relocateFilesAsDRS.html#module-relocateFilesAsDRS">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relocateFilesAsDRS.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="relocateFilesAsDRS.html#Positional Arguments">Positional Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relocateFilesAsDRS.html#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </div>
+</div>
 <div class="section" id="indices-and-tables">
-<h3>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h3>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
 </div>
+<div class="section" id="todo-list">
+<h2>TODO list<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>Completely re-implment that</p>
+<ul class="simple">
+<li><p>get list use glob (asterisk expansion) only</p></li>
+<li><p>filter out using regex by brace list</p></li>
+</ul>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.dirNameList, line 25.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>Since non-existent files are omitted, this method seems
+useless. Implement pathNameList() to obtain a list of
+path(dir/file)</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#index-1"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.fileNameList, line 7.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>Should this be the member of this class ??</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#index-2"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.getAttrsFromGA, line 9.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
+</ul>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="esgfsearch.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/esgfsearch.py:docstring of esgfsearch.getCatURLs, line 18.)</p>
 </div>
 </div>
 
@@ -254,7 +325,7 @@ License</a></p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="cmiputil.html" class="btn btn-neutral float-right" title="cmiputil package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="convoc.html" class="btn btn-neutral float-right" title="cmiputil.convoc module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>

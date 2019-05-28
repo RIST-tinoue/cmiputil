@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python Module Index &mdash; cmiputil  documentation</title>
+  <title>cmiputil.timer module &mdash; cmiputil  documentation</title>
   
 
   
@@ -35,13 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
- 
-
-    <script type="text/javascript">
-      DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
-    </script>
-
-
+    <link rel="next" title="checkDRSname program" href="checkDRSname.html" />
+    <link rel="prev" title="cmiputil.esgfsearch module" href="esgfsearch.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -85,11 +80,11 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.timer module</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
@@ -139,10 +134,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Python Module Index</li>
+      <li>cmiputil.timer module</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/timer.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -154,70 +153,43 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+  <div class="section" id="module-timer">
+<span id="cmiputil-timer-module"></span><h1>cmiputil.timer module<a class="headerlink" href="#module-timer" title="Permalink to this headline">¶</a></h1>
+<p>Measuer execution time.</p>
+<p>Bollowed from <a class="reference external" href="https://qiita.com/kazuhirokomoda/items/1e9b7ebcacf264b2d814">https://qiita.com/kazuhirokomoda/items/1e9b7ebcacf264b2d814</a></p>
+<dl class="function">
+<dt id="timer.timer">
+<code class="descclassname">timer.</code><code class="descname">timer</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/timer.html#timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#timer.timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Measure execution time, contextmanager version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> – identifier of measurement period.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">timer</span> <span class="k">import</span> <span class="n">timer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">timer</span><span class="p">(</span><span class="s1">&#39;process train&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">hogehoge</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
 
-   <h1>Python Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-c"><strong>c</strong></a> | 
-   <a href="#cap-d"><strong>d</strong></a> | 
-   <a href="#cap-e"><strong>e</strong></a> | 
-   <a href="#cap-r"><strong>r</strong></a> | 
-   <a href="#cap-t"><strong>t</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-c"><td></td><td>
-       <strong>c</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="checkDRSname.html#module-checkDRSname"><code class="xref">checkDRSname</code></a></td><td>
-       <em></em></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="convoc.html#module-convoc"><code class="xref">convoc</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-d"><td></td><td>
-       <strong>d</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="drs.html#module-drs"><code class="xref">drs</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-e"><td></td><td>
-       <strong>e</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="esgfsearch.html#module-esgfsearch"><code class="xref">esgfsearch</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-r"><td></td><td>
-       <strong>r</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="relocateFilesAsDRS.html#module-relocateFilesAsDRS"><code class="xref">relocateFilesAsDRS</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-t"><td></td><td>
-       <strong>t</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="timer.html#module-timer"><code class="xref">timer</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+</div>
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="checkDRSname.html" class="btn btn-neutral float-right" title="checkDRSname program" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="esgfsearch.html" class="btn btn-neutral float-left" title="cmiputil.esgfsearch module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

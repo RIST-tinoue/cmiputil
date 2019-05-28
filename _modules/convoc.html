@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>cmiputil.convoc &mdash; cmiputil  documentation</title>
+  <title>convoc &mdash; cmiputil  documentation</title>
   
 
   
@@ -17,24 +17,24 @@
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
   
     
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
     
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
     
 
   
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -48,7 +48,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home"> cmiputil
+            <a href="../index.html" class="icon icon-home"> cmiputil
           
 
           
@@ -61,7 +61,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -78,9 +78,15 @@
               
             
             
-              <p class="caption"><span class="caption-text">Documents:</span></p>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer.html">cmiputil.timer module</a></li>
+</ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../cmiputil.html">cmiputil package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
 </ul>
 
             
@@ -95,7 +101,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../../index.html">cmiputil</a>
+          <a href="../index.html">cmiputil</a>
         
       </nav>
 
@@ -124,11 +130,11 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../index.html">Module code</a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
         
-      <li>cmiputil.convoc</li>
+      <li>convoc</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -143,7 +149,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for cmiputil.convoc</h1><div class="highlight"><pre>
+  <h1>Source code for convoc</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
@@ -173,27 +179,27 @@
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 
 
-<div class="viewcode-block" id="ControlledVocabulariesError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ControlledVocabulariesError">[docs]</a><span class="k">class</span> <span class="nc">ControlledVocabulariesError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="ControlledVocabulariesError"><a class="viewcode-back" href="../convoc.html#convoc.ControlledVocabulariesError">[docs]</a><span class="k">class</span> <span class="nc">ControlledVocabulariesError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="s2">&quot;Base exception class for convoc.&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="InvalidCVAttribError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.InvalidCVAttribError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVAttribError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidCVAttribError"><a class="viewcode-back" href="../convoc.html#convoc.InvalidCVAttribError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVAttribError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
     <span class="s2">&quot;Error for invalid attribute as a Controlled Vocabulary&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="InvalidCVKeyError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.InvalidCVKeyError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVKeyError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidCVKeyError"><a class="viewcode-back" href="../convoc.html#convoc.InvalidCVKeyError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVKeyError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
     <span class="s2">&quot;Error for invalid key as a Controlled Vocabulary for valid attribute.&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="InvalidCVPathError"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.InvalidCVPathError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVPathError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
+<div class="viewcode-block" id="InvalidCVPathError"><a class="viewcode-back" href="../convoc.html#convoc.InvalidCVPathError">[docs]</a><span class="k">class</span> <span class="nc">InvalidCVPathError</span><span class="p">(</span><span class="n">ControlledVocabulariesError</span><span class="p">):</span>
     <span class="s2">&quot;Error for invalid path as a Controlled Vocabulary&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="ConVoc"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc">[docs]</a><span class="k">class</span> <span class="nc">ConVoc</span><span class="p">:</span>
+<div class="viewcode-block" id="ConVoc"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc">[docs]</a><span class="k">class</span> <span class="nc">ConVoc</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class for accessing CMIP6 Controlled Vocabularies.</span>
 
@@ -274,7 +280,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setSearchPath</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
         <span class="k">pass</span>
 
-<div class="viewcode-block" id="ConVoc.setSearchPath"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.setSearchPath">[docs]</a>    <span class="k">def</span> <span class="nf">setSearchPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.setSearchPath"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.setSearchPath">[docs]</a>    <span class="k">def</span> <span class="nf">setSearchPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set search path for CV json files.</span>
 
@@ -310,7 +316,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidCVPathError</span><span class="p">(</span><span class="s1">&#39;No valid CVPATH set.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ConVoc.getSearchPath"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.getSearchPath">[docs]</a>    <span class="k">def</span> <span class="nf">getSearchPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.getSearchPath"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.getSearchPath">[docs]</a>    <span class="k">def</span> <span class="nf">getSearchPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return search paths for CV.</span>
 
@@ -320,7 +326,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cvpath</span></div>
 
-<div class="viewcode-block" id="ConVoc.setAttrib"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.setAttrib">[docs]</a>    <span class="k">def</span> <span class="nf">setAttrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.setAttrib"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.setAttrib">[docs]</a>    <span class="k">def</span> <span class="nf">setAttrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Read CV json file for `attr` and set members of self.</span>
 
@@ -357,7 +363,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="ConVoc.getAttrib"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.getAttrib">[docs]</a>    <span class="k">def</span> <span class="nf">getAttrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.getAttrib"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.getAttrib">[docs]</a>    <span class="k">def</span> <span class="nf">getAttrib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return values of given `attr`.</span>
 
@@ -376,7 +382,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">setAttrib</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)[</span><span class="n">attr</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="ConVoc.isValidValueForAttr"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.isValidValueForAttr">[docs]</a>    <span class="k">def</span> <span class="nf">isValidValueForAttr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.isValidValueForAttr"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.isValidValueForAttr">[docs]</a>    <span class="k">def</span> <span class="nf">isValidValueForAttr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if given `key` is in CV `attr`.</span>
 
@@ -392,7 +398,7 @@
         <span class="n">cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAttrib</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">cv</span></div>
 
-<div class="viewcode-block" id="ConVoc.getValue"><a class="viewcode-back" href="../../cmiputil.html#cmiputil.convoc.ConVoc.getValue">[docs]</a>    <span class="k">def</span> <span class="nf">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+<div class="viewcode-block" id="ConVoc.getValue"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.getValue">[docs]</a>    <span class="k">def</span> <span class="nf">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return current value of `key` of attribute `attr`.</span>
 

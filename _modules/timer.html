@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overview: module code &mdash; cmiputil  documentation</title>
+  <title>timer &mdash; cmiputil  documentation</title>
   
 
   
@@ -132,7 +132,9 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Overview: module code</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>timer</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -147,12 +149,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="convoc.html">convoc</a></li>
-<li><a href="drs.html">drs</a></li>
-<li><a href="esgfsearch.html">esgfsearch</a></li>
-<li><a href="timer.html">timer</a></li>
-</ul>
+  <h1>Source code for timer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Measuer execution time.</span>
+
+<span class="sd">Bollowed from https://qiita.com/kazuhirokomoda/items/1e9b7ebcacf264b2d814</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<div class="viewcode-block" id="timer"><a class="viewcode-back" href="../timer.html#timer.timer">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">timer</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure execution time, contextmanager version.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       name : identifier of measurement period.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from timer import timer</span>
+<span class="sd">    &gt;&gt;&gt; with timer(&#39;process train&#39;):</span>
+<span class="sd">    ...     hogehoge()</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">yield</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;[</span><span class="si">{name}</span><span class="s1">] done in {time.time() - t0:.0f} s&#39;</span><span class="p">)</span></div>
+
+</pre></div>
 
            </div>
            

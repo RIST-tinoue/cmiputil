@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python Module Index &mdash; cmiputil  documentation</title>
+  <title>checkDRSname program &mdash; cmiputil  documentation</title>
   
 
   
@@ -35,13 +35,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
- 
-
-    <script type="text/javascript">
-      DOCUMENTATION_OPTIONS.COLLAPSE_INDEX = true;
-    </script>
-
-
+    <link rel="next" title="relocateFilesAsDRS program" href="relocateFilesAsDRS.html" />
+    <link rel="prev" title="cmiputil.timer module" href="timer.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -91,8 +86,16 @@
 <li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">checkDRSname program</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-checkDRSname">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
 </ul>
 
@@ -139,10 +142,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Python Module Index</li>
+      <li>checkDRSname program</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/checkDRSname.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -154,70 +161,57 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-
-   <h1>Python Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-c"><strong>c</strong></a> | 
-   <a href="#cap-d"><strong>d</strong></a> | 
-   <a href="#cap-e"><strong>e</strong></a> | 
-   <a href="#cap-r"><strong>r</strong></a> | 
-   <a href="#cap-t"><strong>t</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-c"><td></td><td>
-       <strong>c</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="checkDRSname.html#module-checkDRSname"><code class="xref">checkDRSname</code></a></td><td>
-       <em></em></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="convoc.html#module-convoc"><code class="xref">convoc</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-d"><td></td><td>
-       <strong>d</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="drs.html#module-drs"><code class="xref">drs</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-e"><td></td><td>
-       <strong>e</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="esgfsearch.html#module-esgfsearch"><code class="xref">esgfsearch</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-r"><td></td><td>
-       <strong>r</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="relocateFilesAsDRS.html#module-relocateFilesAsDRS"><code class="xref">relocateFilesAsDRS</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-t"><td></td><td>
-       <strong>t</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="timer.html#module-timer"><code class="xref">timer</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+  <div class="section" id="checkdrsname-program">
+<h1>checkDRSname program<a class="headerlink" href="#checkdrsname-program" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-checkDRSname">
+<span id="description"></span><h2>Description<a class="headerlink" href="#module-checkDRSname" title="Permalink to this headline">¶</a></h2>
+<p>Check file/directory name is valid as DRS.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p><p>Check file/directory name is valid as DRS.</p>
+<p>If (one of) given file(s) is(are) invalid, exit with code 1.
+If verbose (-v), the reason is also shown.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">checkDRSname</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">q</span><span class="p">]</span> <span class="n">nc_file</span> <span class="p">[</span><span class="n">nc_file</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Positional Arguments">
+<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>nc_file</kbd></dt>
+<dd></dd>
+</dl>
+</div>
+<div class="section" id="Named Arguments">
+<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
+<dl class="option-list">
+<dt><kbd>-v, --verbose</kbd></dt>
+<dd><p>Default: False</p>
+</dd>
+<dt><kbd>-q, --quiet</kbd></dt>
+<dd><p>Default: False</p>
+</dd>
+</dl>
+</div>
+<p></p>
+</div>
+</div>
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="relocateFilesAsDRS.html" class="btn btn-neutral float-right" title="relocateFilesAsDRS program" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="timer.html" class="btn btn-neutral float-left" title="cmiputil.timer module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
