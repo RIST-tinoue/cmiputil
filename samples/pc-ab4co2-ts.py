@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from cmiputil import esgfsearch
+from cmiputil.timer import timer
 from pprint import pprint
 from os.path import basename
+from pathlib import Path
+import json
 from cftime import num2date
 import matplotlib.pyplot as plt
 
@@ -15,9 +18,14 @@ def composeMeta(datasets):
     Returns `meta` dictionary.
 
     """
+    if datasets is None:
+        return None
+
     # print(type(datasets))
     meta = {}
     for ds in datasets:
+        if not ds:
+            continue
         # print(type(ds))
         dsname = basename(ds.further_info_url)
         print("Compose meta info for:", dsname)
@@ -28,24 +36,9 @@ def composeMeta(datasets):
             raise IndexError
 
         times = ds['time']
-        # if 'units' in times:
-        #     t_units = times.units
-        # else:
-        #     t_units = None
-        try:
-            t_units = times.units
-        except AttributeError:
-            t_units = None
-
-        try:
-            t_size = times.size
-        except AttributeError:
-            t_size = None
-
-        try:
-            var_id = var.name
-        except AttributeError:
-            var_id = var.id
+        t_units = getattr(times, 'units', None)
+        t_size = getattr(times, 'size', None)
+        var_id = getattr(var, 'name')
 
         meta.setdefault(ds.experiment_id, []).append({
             # No filepath() or path related attributes in xarray.dataset.
@@ -59,14 +52,40 @@ def composeMeta(datasets):
             'branch_time': ds.branch_time_in_parent,
             't_units': t_units,
             't_size': t_size,
-            't_range': num2date(times[[0, -1]], times.units)
+            't_range': str(num2date(times[[0, -1]], times.units))
         })
 
     return meta
 
 
+def drawPlot(datasets):
+    fig = plt.figure(figsize=(16, 8))
+    ax = fig.add_subplot(111)
+    ax.set_title('tas')
+    ax.set_xlabel('time')
+    ax.set_ylabel('K')
+
+    for d in datasets:
+        label = d.source_id+': '+d.experiment_id+': '+d.variant_label
+        print(label)
+        times = num2date(d['time'], d['time'].units)
+        # Just a quick hack, should get area averaged.
+        values = d['tas'].sel(lon=0, lat=0, method='nearest')
+
+        try:
+            ax.plot(times, values, label=label)
+            ax.legend()
+        except RuntimeError as e:
+            print('Skip error:', e.args)
+            continue
+
+    print('Ready to plot...')
+    plt.show()
+    print('Done.')
+
+
 if (__name__ == '__main__'):
-    params_update = {
+    params = {
         # 'source_id': 'MIROC6',
         # 'source_id': 'CNRM-CM6-1',
         # 'source_id': 'IPSL-CM6A-LR',    #<- not found error for aggregation dataset
@@ -81,52 +100,22 @@ if (__name__ == '__main__'):
         'variable': 'tas',
     }
 
-    params = esgfsearch.fields_default
-    params.update(params_update)
-    print('Search params(keywords and facets):')
-    pprint(params) 
-
     urls = esgfsearch.getCatURLs(params)
 
-    datasets = []
-    for url in urls:
-        print("Processing Catalog:", url)
+    aggregate = False
+    netcdf = False
+    with timer('getting Datasets'):
+        datasets = [esgfsearch.getDataset(url, aggregate=aggregate, netcdf=netcdf)
+                     for url in urls]
 
-        # d = getDataset(url, netcdf=True)
-        # d = getDataset(url, netcdf=False)
-        d = esgfsearch.getDataset(url, aggregate=False, netcdf=False)
-        # d = getDataset(url)
-        if (d is not None):
-            datasets.append(d)
-
-    # pprint(datasets)
-
-    if (len(datasets) > 0):
-        meta = {}
+    with timer('constructing meta info'):
         meta = composeMeta(datasets)
-        print('meta info:')
-        pprint(meta)
+        outfile = 'meta_info.json'
+        Path(outfile).write_text(json.dumps(meta, indent=4))
+        print(f'meta info wriiten to {outfile}')
 
-    # draw timeseries of each dataset
-    fig = plt.figure(figsize=(16, 8))
-    ax = fig.add_subplot(111)
-    ax.set_title('tas')
-    ax.set_xlabel('time')
-    ax.set_ylabel('K')
 
-    for d in datasets:
-        label = d.source_id+': '+d.experiment_id+': '+d.variant_label
-        print(label)
-        times = num2date(d['time'], d['time'].units)
-        values = d['tas'].sel(lon=0, lat=0, method='nearest')
+    with timer('drawing graph'):
+        # draw timeseries of each dataset
+        drawPlot(datasets)
 
-        try:
-            ax.plot(times, values, label=label)
-            ax.legend()
-        except RuntimeError as e:
-            print('Skip error:', e.args)
-            continue
-
-    print('Ready to plot...')
-    plt.show()
-    print('Done.')

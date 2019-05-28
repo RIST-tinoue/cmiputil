@@ -4,7 +4,7 @@
 # xarray with OPeNDAP Aggregation version.
 # Using xarray's plot()
 
-from cmiputil.esgfsearch import fields_default, getCatURLs, getDataset
+from cmiputil.esgfsearch import getCatURLs, getDataset
 import matplotlib.pyplot as plt
 from pprint import pprint
 
@@ -12,7 +12,7 @@ from pprint import pprint
 if (__name__ == '__main__'):
 
     # setup for search API.
-    params_update = {
+    params = {
         # 'source_id': 'MIROC6',
         # 'source_id': 'MRI-ESM2-0',
         # 'source_id': 'CNRM-CM6-1',
@@ -34,32 +34,26 @@ if (__name__ == '__main__'):
         'variable': 'tas',
     }
 
-    params = fields_default
-    params.update(params_update)
-    print('Search params(keywords and facets):')
-    pprint(params)
-
     # Do search, return list of catalog URLs
     urls = getCatURLs(params)
 
     # get Catalog, then Aggregated datasets.
-    datasets = []
-    for url in urls:
-        print("Processing Catalog:", url)
-        d = getDataset(url)
-        if (d is not None):
-            datasets.append(d)
+    aggregate = True
+    netcdf = False
+    datasets = [getDataset(url, aggregate=aggregate, netcdf=netcdf)
+                for url in urls]
+    datasets = [d for d in datasets if d]
     print('Num of datasets:', len(datasets))
-    if (len(datasets) == 0):  # nothing found
-        raise Exception('Nothing found')
 
     # draw timeseries of each dataset
     fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
 
     for d in datasets:
+        # Just a quick hack, should get temporal/spatial averaged.
+        print(type(d))
         vals = d['tas'].sel(lon=0, lat=0, method='nearest')
-        vals.plot(ax=ax,add_legend=True)
+        vals.plot(ax=ax, add_legend=True)
         ax.legend()
     print('Ready to show plot...')
     plt.show()

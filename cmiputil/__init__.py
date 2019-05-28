@@ -3,5 +3,6 @@
 from . import convoc
 from . import drs
 from . import esgfsearch
+from . import timer
 
-__version__ = '0.2'
+__version__ = '0.3'
