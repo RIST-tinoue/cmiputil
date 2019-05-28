@@ -20,7 +20,7 @@ Currently there are a few modules listed below:
    THREDDS.
 -  `drs`: Handle DRS-complient directory name and file name.
 -  `convoc`: Handle CMIP6 CVs.
-
+-  `timer`: Measure execution time.
 
 You may want
 ------------
@@ -77,6 +77,13 @@ Document
 
 See `HTML
 Documentation <https://rist-tinoue.github.io/cmiputil/index.html>`__.
+
+Plan
+----
+
+- use config file
+- seamless collaboration with synda.
+
 
 Author
 ------
