@@ -62,11 +62,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 # html_theme = 'classic'
 # html_theme = 'sphinxdoc'
-# html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_rtd_theme'
 # html_theme = 'pyramid'
 # html_theme = 'agogo'
 # html_theme = 'nature'
-html_theme = 'bizstyle'
+# html_theme = 'bizstyle'
 # html_theme = 'cloud'
 
 # Add any paths that contain custom static files (such as style sheets) here,
