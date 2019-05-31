@@ -62,11 +62,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'alabaster'
 # html_theme = 'classic'
 # html_theme = 'sphinxdoc'
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 # html_theme = 'pyramid'
 # html_theme = 'agogo'
 # html_theme = 'nature'
-# html_theme = 'bizstyle'
+html_theme = 'bizstyle'
 # html_theme = 'cloud'
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -88,6 +88,14 @@ napoleon_use_param = True
 napoleon_use_rtype = False
 napoleon_use_admonition_for_examples = False
 napoleon_use_admonition_for_notes = True
+
+
+# set the theme path to point to cloud's theme data
+# import cloud_sptheme as csp
+# html_theme_path = [csp.get_theme_dir()]
+
+# # [optional] set some of the options listed above...
+# html_theme_options = { "roottarget": "index" }
 # -- Options for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.

@@ -122,6 +122,15 @@ import glob
 # from pprint import pprint
 
 
+def getDefaultConf():
+    """
+    Set default values for config file.
+
+    Currently no need to use config file, do nothing.
+    """
+    pass
+
+
 class DRS:
     """Class for CMIP6 DRS.
 
