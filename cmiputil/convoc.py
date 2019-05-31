@@ -11,20 +11,28 @@ assigned to a given global attribute, such as <activity_id>,
 For some attributes, such as <source_id>, its value is a key-value
 pair, whose value is again dict of key-value.
 
-CVs are maintained as json files. You should clone them from github,
-and set a environment variable `CVPATH`, which is a colon separated
-string.
+CVs are maintained as json files. You should clone them from github.
+
+Search path for CVs is set in the order below:
+
+1) `paths` given to the constructor or :meth:`ConVoc.setSearchPath`
+2) ``CMIP6_CVs_dir`` in section ``[ConVoc]`` in config file.
+3) current directory
+
+Non-existent directories are omitted silently.  You have to
+specify ``'.'`` explicitly if necessary.  Note that the order is
+meaningful.
+
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190509'
-__date__ = '2019/05/09'
+__version__ = 'v20190530'
+__date__ = '2019/05/30'
 
+from cmiputil import config
 from pathlib import Path
 from os.path import expandvars    # hey, pathlib doesn't have expandvars !?
 import json
-from os import environ
-from pprint import pprint
 
 
 class ControlledVocabulariesError(Exception):
@@ -47,6 +55,27 @@ class InvalidCVPathError(ControlledVocabulariesError):
     pass
 
 
+#: path to be written to the sample config file, via :func:`getDefaultConf`
+DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs:/data/CMIP6_CVs"
+
+
+def getDefaultConf():
+    """
+    Return default values for config file.
+
+    Intended to be called before config.Conf.writeSampleConf()
+
+    Example:
+       >>> conf = config.Conf('')
+       >>> conf.setDefaultSection()
+       >>> conf.read_dict(getDefaultConf())
+       >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
+    """
+    res = {}
+    res['ConVoc'] = {'cmip6_cvs_dir': DEFAULT_CVPATH}
+    return res
+
+
 class ConVoc:
     """
     Class for accessing CMIP6 Controlled Vocabularies.
@@ -56,55 +85,54 @@ class ConVoc:
 
     See :meth:`setSearchPath()` for the argument `path`.
 
+    Args:
+        conf (path-like): config file
+        paths (str): a colon separated string
+
     Examples:
+        >>> cvs = ConVoc()
+        >>> activity = cvs.getAttrib('activity_id')
+        >>> activity['CFMIP']
+        'Cloud Feedback Model Intercomparison Project'
+        >>> cvs.getValue('CFMIP', 'activity_id')
+        'Cloud Feedback Model Intercomparison Project'
 
-    >>> cvs = ConVoc()
-    >>> activity = cvs.getAttrib('activity_id')
-    >>> activity['CFMIP']
-    'Cloud Feedback Model Intercomparison Project'
-    >>> cvs.getValue('CFMIP', 'activity_id')
-    'Cloud Feedback Model Intercomparison Project'
+        >>> cvs.isValidValueForAttr('MIROC-ES2H', 'source_id')
+        True
+        >>> cvs.isValidValueForAttr('MIROC-ES2M', 'source_id')
+        False
 
-    >>> cvs.isValidValueForAttr('MIROC-ES2H', 'source_id')
-    True
-    >>> cvs.isValidValueForAttr('MIROC-ES2M', 'source_id')
-    False
+        In the below example, instance member attribute `experiment_id` is
+        set AFTER :meth:`isValidValueForAttr()`.
 
-    In the below example, instance member attribute `experiment_id` is
-    set AFTER :meth:`isValidValueForAttr()`.
+        >>> hasattr(cvs, 'experiment_id')
+        False
+        >>> cvs.isValidValueForAttr('historical', 'experiment_id')
+        True
+        >>> hasattr(cvs, 'experiment_id')
+        True
 
-    >>> hasattr(cvs, 'experiment_id')
-    False
-    >>> cvs.isValidValueForAttr('historical', 'experiment_id')
-    True
-    >>> hasattr(cvs, 'experiment_id')
-    True
+        In the below,  example, `table_id` has only keys with no value,
+        :meth:`getValue()` return nothing (not ``None``).
 
+        >>> cvs.isValidValueForAttr('Amon', 'table_id')
+        True
+        >>> cvs.getValue('Amon', 'table_id')
 
-    In the below, example, `table_id` has only keys with no value,
-    :meth:`getValue()` return nothing (not ``None``).
+        Invalid attribute raises InvalidCVAttribError.
 
-    >>> cvs.isValidValueForAttr('Amon', 'table_id')
-    True
-    >>> cvs.getValue('Amon', 'table_id')
+        >>> cvs.getAttrib('invalid_attr')
+        Traceback (most recent call last):
+          ...
+        InvalidCVAttribError: Invalid attribute as a CV: invalid_attr
 
-    Invalid attribute raises InvalidCVAttribError.
+        Invalid key for valid attribute raises KeyError.
 
-    >>> cvs.getAttrib('invalid_attr')
-    Traceback (most recent call last):
-      ...
-    InvalidCVAttribError: Invalid attribute as a CV: invalid_attr
-
-    Invalid key for valid attribute raises KeyError.
-
-    >>> cvs.getValue('CCMIP', 'activity_id')
-    Traceback (most recent call last):
-      ...
-    KeyError: 'CCMIP'
+        >>> cvs.getValue('CCMIP', 'activity_id')
+        Traceback (most recent call last):
+          ...
+        KeyError: 'CCMIP'
     """
-
-    DEFAULT_CVPATH = "./:./CMIP6_CVs:~/CMIP6_CVs:~/Data/CMIP6_CVs"
-
     managedAttribs = (
         'activity_id',
         'experiment_id',
@@ -124,38 +152,35 @@ class ConVoc:
     attribute, not an instance attribute.
     """
 
-    def __init__(self, paths=None):
+    def __init__(self, conf=None, paths=''):
+        """
+        """
+        conf = config.Conf(conf)
+        self.conf = conf['ConVoc']
         self.setSearchPath(paths)
-        pass
 
-    def setSearchPath(self, paths=None):
+    def setSearchPath(self, paths=''):
         """
         Set search path for CV json files.
 
-        Directories taken from a colon separated string in the order
-        below:
-
-        1) given `path`
-        2) environment variable `CVPATH`
-        3) :attr:`DEFAULT_CVPATH`
-
-        Non-existent directories are omitted silently.  You have to
-        specify '.' explicitly if necessary.  Note that the order is
-        meaningful.
+        `paths` must be a colon separated string of serach path.
 
         Args:
-            path(str): a colon separated string
+            paths (str): a colon separated string
+
         Raises:
             InvalidCVPathError: Unless valid path is set.
+
         Returns:
             nothing
         """
-
-        if (paths is None):
-            paths = environ.get('CVPATH', self.DEFAULT_CVPATH)
+        if not paths:
+            try:
+                paths = self.conf['cmip6_cvs_dir']
+            except KeyError:
+                pass
 
         p = [Path(expandvars(d)) for d in paths.split(':')]
-
         p = [d.expanduser() for d in p]
         p = [d for d in p if d.is_dir()]
 
