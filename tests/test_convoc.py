@@ -20,7 +20,7 @@ class test_ConVoc(unittest.TestCase):
     def test_00_init01(self):
         "Test constructor."
         cvs = convoc.ConVoc()
-        self.assertTrue(isinstance(cvs, convoc.ConVoc))
+        self.assertIsInstance(cvs, convoc.ConVoc)
 
     def test_00_init02(self):
         "Give search path as an argument of constructor."
@@ -57,7 +57,6 @@ class test_ConVoc(unittest.TestCase):
             ))
         conffile = Path('/tmp/cmiputil.conf')
         conffile.write_text(configlines)
-
         with self.assertRaises(convoc.InvalidCVPathError):
             cvs = convoc.ConVoc(conf=conffile)
 
@@ -65,7 +64,6 @@ class test_ConVoc(unittest.TestCase):
         "Get actual table_id CV."
         attr = 'table_id'
         ref = ('CFday', 'Efx',  'IyrGre', 'SImon')
-
         cv = convoc.ConVoc().getAttrib(attr)
         self.assertEqual(len(cv), 43)
         res = (cv[10], cv[20], cv[30], cv[40])
@@ -74,32 +72,27 @@ class test_ConVoc(unittest.TestCase):
     def test_02_getAttrib02(self):
         "Invalid CV attribute, expect InvalidCVAttribError raises."
         attr = 'invalid_attr'
-
         cvs = convoc.ConVoc()
         with self.assertRaises(convoc.InvalidCVAttribError):
             cvs.getAttrib(attr)
 
     def test_02_getAttrib03(self):
         "Get several actual CVs sequently."
-
         cvs = convoc.ConVoc()
         cv = cvs.getAttrib('activity_id')
         for k in ('PAMIP', 'C4MIP', 'LS3MIP'):
-            self.assertTrue(k in cv)
-
+            self.assertIn(k, cv)
         cv = cvs.getAttrib('source_id')
         for k in ('MIROC6', 'NICAM16-7S', 'MRI-AGCM3-2'):
-            self.assertTrue(k in cv)
-
+            self.assertIn(k, cv)
         cv = cvs.getAttrib('grid_label')
         for k in ('gn', 'gr', 'grz'):
-            self.assertTrue(k in cv)
+            self.assertIn(k, cv)
 
     def test_03_isValidValueForAttr01(self):
         "Check actual activity_id CV."
         attr = 'activity_id'
         key = 'CMIP'
-
         res = convoc.ConVoc().isValidValueForAttr(key, attr)
         self.assertTrue(res)
 
@@ -107,7 +100,6 @@ class test_ConVoc(unittest.TestCase):
         "Invalid CV attribute, expect InvalidCVAttribError"
         attr = 'invalid_attr'
         key = "CMIP"
-
         with self.assertRaises(convoc.InvalidCVAttribError):
             res = convoc.ConVoc().isValidValueForAttr(key, attr)
             self.assertFalse(res)
@@ -116,7 +108,6 @@ class test_ConVoc(unittest.TestCase):
         "Invalid key for valid CV"
         attr = 'activity_id'
         key = 'invalid_key'
-
         res = convoc.ConVoc().isValidValueForAttr(key, attr)
         self.assertFalse(res)
 
@@ -125,7 +116,6 @@ class test_ConVoc(unittest.TestCase):
         attr = 'realm'
         key = 'atmos'
         ref = "Atmosphere"
-
         res = convoc.ConVoc().getValue(key, attr)
         self.assertEqual(ref, res)
 
@@ -134,14 +124,11 @@ class test_ConVoc(unittest.TestCase):
         attr = 'realm'
         key = 'atmos'
         ref = "Atmosphere"
-
         res = convoc.ConVoc().getValue(key, attr)
         self.assertEqual(ref, res)
-
         attr = 'activity_id'
         key = 'OMIP'
         ref = "Ocean Model Intercomparison Project"
-
         res = convoc.ConVoc().getValue(key, attr)
         self.assertEqual(ref, res)
 
@@ -150,7 +137,6 @@ class test_ConVoc(unittest.TestCase):
         attr = 'invalid_attr'
         key = 'OMIP'
         ref = "Ocean Model Intercomparison Project"
-
         with self.assertRaises(convoc.InvalidCVAttribError):
             res = convoc.ConVoc().getValue(key, attr)
             self.assertEqual(ref, res)
@@ -160,7 +146,6 @@ class test_ConVoc(unittest.TestCase):
         attr = 'activity_id'
         key = 'invalid_key'
         ref = "Ocean Model Intercomparison Project"
-
         with self.assertRaises(KeyError):
             res = convoc.ConVoc().getValue(key, attr)
             self.assertEqual(ref, res)
@@ -170,7 +155,6 @@ class test_ConVoc(unittest.TestCase):
         attr = 'nominal_resolution'
         key = '1 km'
         ref = None
-
         res = convoc.ConVoc().getValue(key, attr)
         self.assertEqual(ref, res)
 
