@@ -17,7 +17,7 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190509'
 __date__ = '2019/05/09'
 
-from cmiputil import drs
+from cmiputil import drs, config
 from pathlib import Path
 import urllib3
 import json
@@ -61,6 +61,25 @@ facet_defaults = {
 fields_default = dict(keyword_defaults)
 fields_default.update(facet_defaults)
 
+
+def getDefaultConf():
+    """
+    Set default values for config file.
+
+    Intended to be called before config.Conf.writeSampleConf()
+
+    Example:
+       >>> conf = config.Conf('')
+       >>> conf.setDefaultSection()
+       >>> conf.read_dict(getDefaultConf())
+       >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
+    """
+    res = {}
+    res['ESGFSearch'] = {'search_service': search_service,
+                         'service_type': service_type}
+    res['ESGFSearch.keywords'] =  keyword_defaults
+    res['ESGFSearch.facets'] = facet_defaults
+    return res
 
 def getDefaultFields():
     return fields_default
