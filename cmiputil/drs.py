@@ -928,6 +928,9 @@ class DRS:
             >>> d.isValidValueForAttr('MIROC*', 'source_id')
             True
         """
+        if value is None:
+            return False
+
         if '*' in value:
             return True
 
