@@ -4,7 +4,7 @@
 # xarray with OPeNDAP Aggregation version.
 # Using xarray's plot()
 
-from cmiputil.esgfsearch import getCatURLs, getDataset
+from cmiputil import esgfsearch
 import matplotlib.pyplot as plt
 from pprint import pprint
 
@@ -34,13 +34,15 @@ if (__name__ == '__main__'):
         'variable': 'tas',
     }
 
+    es = esgfsearch.ESGFSearch()
+
     # Do search, return list of catalog URLs
-    urls = getCatURLs(params)
+    urls = es.getCatURLs(params)
 
     # get Catalog, then Aggregated datasets.
     aggregate = True
     netcdf = False
-    datasets = [getDataset(url, aggregate=aggregate, netcdf=netcdf)
+    datasets = [es.getDataset(url, aggregate=aggregate, netcdf=netcdf)
                 for url in urls]
     datasets = [d for d in datasets if d]
     print('Num of datasets:', len(datasets))
