@@ -13,16 +13,20 @@ README
 .. include::  ../README.rst
    :start-line: 4
 
+
 Modules
 =======
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    convoc
    drs
    esgfsearch
    timer
+   config
+
+
 
 Sample Apps
 ===========
@@ -30,8 +34,11 @@ Sample Apps
 .. toctree::
    :maxdepth: 4
 
+   createSampleConf
    checkDRSname
    relocateFilesAsDRS
+
+
 
 Indices and tables
 ==================
