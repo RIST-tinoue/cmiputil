@@ -6,7 +6,6 @@ create meta info.
 See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
 for the detail ESGF RESTful API.
 
-
 This version uses
 `siphon <https://www.unidata.ucar.edu/software/siphon/>`_ and
 `xarray <http://xarray.pydata.org/>`_.
@@ -14,8 +13,8 @@ This version uses
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190509'
-__date__ = '2019/05/09'
+__version__ = 'v20190602'
+__date__ = '2019/06/02'
 
 from cmiputil import drs, config
 from pathlib import Path
@@ -32,14 +31,39 @@ class NotFoundError(Exception):
 
 
 class ESGFSearch():
+    """
+    Search by ESGF RESTful API, get to the datafile via OPenDAP.
 
-    def __init__(self):
-        self.search_service = search_service_default
-        self.service_type = service_type_default
-        self.keywords = keywords_default
-        self.facets = facets_default
-        self.fields = self.keywords.copy()
-        self.fields.update(self.facets)
+
+    If `conffile` is ``None``, use default conffile, defined in
+    :mod:`config`.
+
+    This class read below sections from conffile;
+
+    - [ESGFSearch]
+        - `cmip6_data_dir`: CMIP6 date directory
+        - `search_service`: the base URL of the search service at a ESGF Index Node
+        - `service_type`: ``search`` or ``wget``
+    - [ESGFSearch.keywords]
+    - [ESGFSearch.facets]
+
+
+    Args:
+        conffile (path-like): configure file
+    """
+    def __init__(self, conffile=None):
+        # self.search_service = search_service_default
+        # self.service_type = service_type_default
+        # self.keywords = keywords_default
+        # self.facets = facets_default
+        # self.params = self.keywords.copy()
+        # self.params.update(self.facets)
+
+        self.conf = config.Conf(conffile)
+        self.search_service = self.conf['ESGFSearch']['search_service']
+        self.service_type = self.conf['ESGFSearch']['service_type']
+        self.params = dict(self.conf['ESGFSearch.keywords'].items())
+        self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
 
     def getCatURLs(self, params=None, base_url=None):
         """
@@ -58,23 +82,20 @@ class ESGFSearch():
         If `base_url` is None, :data:`.search_service` +
         :data:`.service_type` is used.
 
-        `field` is to *update* (use `update()` method of python dict) to
-        :data:`fields_defaults`.  You can/must set it via
-        :meth:`setDefaultFields` beforehand.
+        `params` is to *update* (use `update()` method of python dict)
+        to the ones read from conf file.
 
         TODO:
             - How to enable *a negative facet* of RESTful API ?
-
         """
-
         if params:
-            fields_default.update(params)
+            self.params.update(params)
         if not base_url:
             base_url = self.search_service + self.service_type
 
         http = urllib3.PoolManager()
         try:
-            r = http.request('GET', base_url, fields=fields_default)
+            r = http.request('GET', base_url, fields=self.params)
         except Exception as e:
             print('Error in http.request():')
             print(e.args)
@@ -88,7 +109,7 @@ class ESGFSearch():
         result = json.loads(r.data.decode())
 
         if (result['response']['numFound'] == 0):
-            raise NotFoundError('GetCatURLs: No catalog found.')
+            raise NotFoundError('No catalog found.')
 
         urls = []
         for r in result['response']['docs']:
@@ -99,7 +120,6 @@ class ESGFSearch():
                     urls.append(url)
 
         return urls
-
 
     def getDataset(self, url, aggregate=True, netcdf=False):
         """
@@ -124,13 +144,13 @@ class ESGFSearch():
             cat = TDSCatalog(url)
         except Exception as e:
             print('Error in siphon.TDSCatalog():', e.args)
-            raise e
+            raise
 
-        if (aggregate):
+        if aggregate:
             # construct base url
             data_url = cat.base_tds_url
             for s in cat.services[:]:
-                if (s.service_type == 'OpenDAP'):
+                if (s.service_type.lower == 'opendap'):
                     data_url += s.base
                     break
 
@@ -170,14 +190,14 @@ class ESGFSearch():
         return ds
 
 
-    def getLocalPath(self, fields, base_dir=None):
+    def getLocalPath(self, params, base_dir=None):
         """
         Search local data directory for CMIP6 data.
 
         Using same interface with getCatURLs()
 
         Args:
-            fields(dict): keyword parameters and facet parameters.
+            params(dict): keyword parameters and facet parameters.
             base_url : base path for local data directory.
         Raises:
             NotFoundError: raised if no paths found.
@@ -190,12 +210,12 @@ class ESGFSearch():
         Example:
             >>> params_update = {'source_id': 'MIROC6', 'experiment_id': 'historical',
             ...    'variant_label': 'r1i1p1f1', 'variable': 'tas', }
-            >>> params = fields_default
+            >>> params = params_default
             >>> params.update(params_update)
             >>> str(getLocalPath(params, base_dir='~/Data/'))
             '~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
         """
-        d = drs.DRS(**fields)
+        d = drs.DRS(**params)
         p = d.dirName(prefix=base_dir)
         f = d.fileName()
         return p / f
@@ -229,8 +249,8 @@ facets_default = {
     'variant_label': 'r1i1p1f1',
     }
 
-fields_default = dict(keywords_default)
-fields_default.update(facets_default)
+# params_default = dict(keywords_default)
+# params_default.update(facets_default)
 
 
 def getDefaultConf():
