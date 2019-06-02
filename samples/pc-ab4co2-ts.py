@@ -100,12 +100,13 @@ if (__name__ == '__main__'):
         'variable': 'tas',
     }
 
-    urls = esgfsearch.getCatURLs(params)
+    es = esgfsearch.ESGFSearch()
+    urls = es.getCatURLs(params)
 
     aggregate = False
     netcdf = False
     with timer('getting Datasets'):
-        datasets = [esgfsearch.getDataset(url, aggregate=aggregate, netcdf=netcdf)
+        datasets = [es.getDataset(url, aggregate=aggregate, netcdf=netcdf)
                      for url in urls]
 
     with timer('constructing meta info'):
