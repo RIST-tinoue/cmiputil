@@ -49,7 +49,7 @@ class Conf(configparser.ConfigParser):
         self.read(self.files)
 
     def setDefaultSection(self):
-        self['DEFAULT'] = conf_default
+        self['cmiputil'] = conf_default
 
     def writeSampleConf(self, fname, overwrite=False):
         """
