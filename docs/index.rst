@@ -37,7 +37,7 @@ Sample Apps
    createSampleConf
    checkDRSname
    relocateFilesAsDRS
-
+   draw-timeseries
 
 
 Indices and tables
