@@ -52,18 +52,24 @@ class ESGFSearch():
         conffile (path-like): configure file
     """
     def __init__(self, conffile=None):
-        # self.search_service = search_service_default
-        # self.service_type = service_type_default
-        # self.keywords = keywords_default
-        # self.facets = facets_default
-        # self.params = self.keywords.copy()
-        # self.params.update(self.facets)
 
         self.conf = config.Conf(conffile)
+
         self.search_service = self.conf['ESGFSearch']['search_service']
         self.service_type = self.conf['ESGFSearch']['service_type']
+        self.aggregate = aggregate_default
+        if (self.conf.has_option('ESGFSearch', 'aggregate')):
+            self.aggregate = self.conf.getboolean('ESGFSearch','aggregate')
+        self.dataset_xarray = dataset_xarray_default
+        if (self.conf.has_option('ESGFSearch', 'dataset_xarray')):
+            self.dataset_xarray = self.conf.getboolean('ESGFSearch','dataset_xarray')
+
+
+
         self.params = dict(self.conf['ESGFSearch.keywords'].items())
         self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
+
+        self.debug = False
 
     def getCatURLs(self, params=None, base_url=None):
         """
@@ -93,6 +99,9 @@ class ESGFSearch():
         if not base_url:
             base_url = self.search_service + self.service_type
 
+        if (self.debug):
+            pprint(self.params)
+
         http = urllib3.PoolManager()
         try:
             r = http.request('GET', base_url, fields=self.params)
@@ -121,7 +130,7 @@ class ESGFSearch():
 
         return urls
 
-    def getDataset(self, url, aggregate=True, netcdf=False):
+    def getDataset(self, url, aggregate=None, datatype_xarray=None):
         """
         From given URL of TDS catalog, return xarray or netCDF4 dataset.
 
@@ -146,7 +155,16 @@ class ESGFSearch():
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
-        if aggregate:
+        if aggregate is not None:
+            self.aggregate = aggregate
+        if datatype_xarray is None:
+            self.datatype_xarray = datatype_xarray
+
+        if self.debug:
+            print('aggregate:',self.aggregate)
+            print('datatype_xarray:',self.datatype_xarray)
+
+        if self.aggregate:
             # construct base url
             data_url = cat.base_tds_url
             for s in cat.services[:]:
@@ -159,11 +177,11 @@ class ESGFSearch():
 
             data_url += ds.url_path
             try:
-                if (netcdf):
-                    ds = nc.Dataset(data_url, 'r')
-                else:
+                if (self.datatype_xarray):
                     ds = xr.open_dataset(data_url,
                                          decode_times=False, decode_cf=False)
+                else:
+                    ds = nc.Dataset(data_url, 'r')
             except ValueError as e:
                 print(e.args)
                 raise e
@@ -178,10 +196,10 @@ class ESGFSearch():
             urls.sort()
 
             try:
-                if (netcdf):
-                    ds = nc.MFDataset(urls)
-                else:
+                if (self.dataset_xarray):
                     ds = xr.open_mfdataset(urls, decode_cf=False)
+                else:
+                    ds = nc.MFDataset(urls)
             except IOError as e:
                 print("Error in xr.open_mfdataset:", e.args)
                 print("  Skip", url)
@@ -231,6 +249,9 @@ search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
 #: Default service type
 service_type_default = 'search'
 
+aggregate_default = True
+dataset_xarray_default = True
+
 #: Default keywords for RESTful API.
 keywords_default = {
     'format': r'application/solr+json',
@@ -267,7 +288,9 @@ def getDefaultConf():
     """
     res = {}
     res['ESGFSearch'] = {'search_service': search_service_default,
-                         'service_type': service_type_default}
+                         'service_type': service_type_default,
+                         'aggregate': aggregate_default,
+                         'datatype_xarray': dataset_xarray_default }
     res['ESGFSearch.keywords'] =  keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
