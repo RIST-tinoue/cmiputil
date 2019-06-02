@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>relocateFilesAsDRS program &#8212; cmiputil  documentation</title>
+    <title>draw-timeseries program &#8212; cmiputil  documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -17,7 +17,7 @@
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="checkDRSname program" href="checkDRSname.html" />
+    <link rel="prev" title="relocateFilesAsDRS program" href="relocateFilesAsDRS.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -33,7 +33,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="checkDRSname.html" title="checkDRSname program"
+          <a href="relocateFilesAsDRS.html" title="relocateFilesAsDRS program"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>
@@ -42,8 +42,8 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">relocateFilesAsDRS program</a><ul>
-<li><a class="reference internal" href="#module-relocateFilesAsDRS">Description</a></li>
+<li><a class="reference internal" href="#">draw-timeseries program</a><ul>
+<li><a class="reference internal" href="#description">Description</a></li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
 <li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
@@ -54,12 +54,12 @@
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="checkDRSname.html"
-                        title="previous chapter">checkDRSname program</a></p>
+  <p class="topless"><a href="relocateFilesAsDRS.html"
+                        title="previous chapter">relocateFilesAsDRS program</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/relocateFilesAsDRS.rst.txt"
+      <li><a href="_sources/draw-timeseries.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -81,56 +81,36 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="relocatefilesasdrs-program">
-<h1>relocateFilesAsDRS program<a class="headerlink" href="#relocatefilesasdrs-program" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="module-relocateFilesAsDRS">
-<span id="description"></span><h2>Description<a class="headerlink" href="#module-relocateFilesAsDRS" title="Permalink to this headline">¶</a></h2>
-<p>Relocate CMIP6 datafiles depending on their global attributes.</p>
+  <div class="section" id="draw-timeseries-program">
+<h1>draw-timeseries program<a class="headerlink" href="#draw-timeseries-program" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><p>Relocate CMIP6 datafiles depending on their global attributes.</p>
+<p><p>Draw time-series of CMIP6 data.</p>
+<p>xarray with OPeNDAP Aggregation version.
+Using xarray’s plot()</p>
 </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">relocateFilesAsDRS</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PREFIX</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">z</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span> <span class="n">VERSTR</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
-                          <span class="n">nc_file</span> <span class="p">[</span><span class="n">nc_file</span> <span class="o">...</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">draw</span><span class="o">-</span><span class="n">timeseries</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFFILE</span><span class="p">]</span> <span class="p">[</span><span class="n">params</span> <span class="p">[</span><span class="n">params</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
 </div>
 <div class="section" id="Positional Arguments">
 <h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
 <dl class="option-list">
-<dt><kbd>nc_file</kbd></dt>
+<dt><kbd>params</kbd></dt>
 <dd></dd>
 </dl>
 </div>
 <div class="section" id="Named Arguments">
 <h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
 <dl class="option-list">
-<dt><kbd>-w, --overwrite</kbd></dt>
-<dd><p>Default: False</p>
-</dd>
-<dt><kbd>-p, --prefix</kbd></dt>
-<dd><p>prefix for relocation directory</p>
-</dd>
-<dt><kbd>-z, --dry_run</kbd></dt>
-<dd><p>Default: False</p>
-</dd>
-<dt><kbd>-v, --verstr</kbd></dt>
-<dd><p>&lt;version&gt; string for DRS</p>
-</dd>
-<dt><kbd>-d, --debug</kbd></dt>
-<dd><p>Default: False</p>
+<dt><kbd>-c, --conffile</kbd></dt>
+<dd><p>config file</p>
 </dd>
 </dl>
 </div>
-<p><p>Input file(s) must be valid CMIP6 CF-Compliant netCDF. Relocation
-directory will be constructed by DRS, under current directory by
-default, or under prefix(<code class="docutils literal notranslate"><span class="pre">-p</span></code>).</p>
-<p>DRS demands that directory must be contains the attribute &lt;version&gt; as
-the last part, but since that is “the only DRS element that is not
-stored as a global attribute” (see <a class="reference external" href="http://goo.gl/v1drZl">http://goo.gl/v1drZl</a>), this is not
-decided by the filename nor global attributes.</p>
-<p>So you have to specify it via <code class="docutils literal notranslate"><span class="pre">--verstr</span></code> (or <code class="docutils literal notranslate"><span class="pre">-v</span></code>).</p>
-</p>
+<p></p>
 </div>
 </div>
 
@@ -150,7 +130,7 @@ decided by the filename nor global attributes.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="checkDRSname.html" title="checkDRSname program"
+          <a href="relocateFilesAsDRS.html" title="relocateFilesAsDRS program"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>

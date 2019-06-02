@@ -1,0 +1,180 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>cmiputil.config module &#8212; cmiputil  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="createSampleConf program" href="createSampleConf.html" />
+    <link rel="prev" title="cmiputil.timer module" href="timer.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="createSampleConf.html" title="createSampleConf program"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="timer.html" title="cmiputil.timer module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="timer.html"
+                        title="previous chapter">cmiputil.timer module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="createSampleConf.html"
+                        title="next chapter">createSampleConf program</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/config.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-config">
+<span id="cmiputil-config-module"></span><h1>cmiputil.config module<a class="headerlink" href="#module-config" title="Permalink to this headline">¶</a></h1>
+<p>Maintain config file for cmiputil package.</p>
+<p>Config file for this package is so called ‘INI file’, handled by
+python standard <cite>configparser</cite> module.</p>
+<p>Default name of config file is <code class="docutils literal notranslate"><span class="pre">cmiputil.conf</span></code>, and searched in
+$HOME then current directory, unless specified by the argument of
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">readConfFile()</span></code>.</p>
+<p>By calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">writeSampleConf()</span></code> you can create a sample config file.
+You have to call <code class="docutils literal notranslate"><span class="pre">putConf()</span></code> in each module in this package beforehand.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>System wide config file ?</p></li>
+<li><p>Inherit configparser class</p></li>
+</ul>
+</div>
+<dl class="class">
+<dt id="config.Conf">
+<em class="property">class </em><code class="descclassname">config.</code><code class="descname">Conf</code><span class="sig-paren">(</span><em>file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></p>
+<dl class="method">
+<dt id="config.Conf.setDefaultSection">
+<code class="descname">setDefaultSection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.setDefaultSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.setDefaultSection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="config.Conf.writeSampleConf">
+<code class="descname">writeSampleConf</code><span class="sig-paren">(</span><em>fname</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.writeSampleConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.writeSampleConf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write sample config file to <cite>fname</cite>.</p>
+<p>You have to set configurations for each module via
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">self.read_dict()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>path-like</em>) – file to be written</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – force overwrite</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">esgfsearch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">Conf</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setDefaultSection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">esgfsearch</span><span class="o">.</span><span class="n">getDefaultConf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeSampleConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="config.conf_default">
+<code class="descclassname">config.</code><code class="descname">conf_default</code><em class="property"> = {'cmip6_data_dir': '/data'}</em><a class="headerlink" href="#config.conf_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>configuration of default section.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="config.conf_dir">
+<code class="descclassname">config.</code><code class="descname">conf_dir</code><em class="property"> = ['/home/tinoue/', './']</em><a class="headerlink" href="#config.conf_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>directory list of the conffile, current, $HOME</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="config.conf_name">
+<code class="descclassname">config.</code><code class="descname">conf_name</code><em class="property"> = 'cmiputil.conf'</em><a class="headerlink" href="#config.conf_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the conffile</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="createSampleConf.html" title="createSampleConf program"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="timer.html" title="cmiputil.timer module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, RIST.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+    </div>
+  </body>
+</html>
