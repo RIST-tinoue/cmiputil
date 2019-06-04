@@ -38,6 +38,23 @@ def my_parser():
 
     return parser
 
+
+def drawFig(datasets):
+    # draw timeseries of each dataset
+    fig = plt.figure(figsize=(16, 8))
+    ax = fig.add_subplot(111)
+
+    for d in datasets:
+        # Just a quick hack, should get temporal/spatial averaged.
+        print(type(d))
+        vals = d['tas'].sel(lon=0, lat=0, method='nearest')
+        vals.plot(ax=ax, add_legend=True)
+        ax.legend()
+    print('Ready to show plot...')
+    plt.show()
+    print('Done.')
+
+
 if (__name__ == '__main__'):
 
     parser = my_parser()
@@ -66,16 +83,4 @@ if (__name__ == '__main__'):
     print('Num of datasets:', len(datasets))
     if (len(datasets) < 1):
         exit(1)
-    # draw timeseries of each dataset
-    fig = plt.figure(figsize=(16, 8))
-    ax = fig.add_subplot(111)
-
-    for d in datasets:
-        # Just a quick hack, should get temporal/spatial averaged.
-        print(type(d))
-        vals = d['tas'].sel(lon=0, lat=0, method='nearest')
-        vals.plot(ax=ax, add_legend=True)
-        ax.legend()
-    print('Ready to show plot...')
-    plt.show()
-    print('Done.')
+    drawFig(datasets)
