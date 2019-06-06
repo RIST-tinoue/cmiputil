@@ -88,9 +88,8 @@
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><p>Draw time-series of CMIP6 data.</p>
-<p>xarray with OPeNDAP Aggregation version.
-Using xarray’s plot()</p>
+<p><p>Draw time-series of CMIP6 data, searched via RESTful API and accessed
+by OPeNDAP.</p>
 </p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">draw</span><span class="o">-</span><span class="n">timeseries</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFFILE</span><span class="p">]</span> <span class="p">[</span><span class="n">params</span> <span class="p">[</span><span class="n">params</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
@@ -99,7 +98,8 @@ Using xarray’s plot()</p>
 <h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
 <dl class="option-list">
 <dt><kbd>params</kbd></dt>
-<dd></dd>
+<dd><p>key=value series of keyword/facet parameters</p>
+</dd>
 </dl>
 </div>
 <div class="section" id="Named Arguments">
@@ -110,7 +110,10 @@ Using xarray’s plot()</p>
 </dd>
 </dl>
 </div>
-<p></p>
+<p><p>This is just a “Proof-of-concept” for accessing CMIP6/ESGF data via
+cmiputil. So process after opening dataset is a sloppy and dirty hack.
+You should implemnt properly by yourself.</p>
+</p>
 </div>
 </div>
 
