@@ -1,7 +1,7 @@
 `cmiputil`
 ==========
 
-A small package for CMIP6/ESGF data users.
+A homemade small package for CMIP6/ESGF data users.
 
 
 
@@ -13,6 +13,7 @@ This is a collection of small python modules for CMIP6/ESGF data users.
 These modules has been developed to support researchers who use
 CMIP6 data via ESGF, under the ongoing project called `TOUGOU Program 
 <http://www.jamstec.go.jp/tougou/eng>`__.
+So this is *NOT* an official CMIP/ESGF product.
 
 Currently there are a few modules listed below:
 
@@ -34,7 +35,7 @@ Requirement
 
 This package has been developed under this environment only:
 
-- python 3.6.8
+- python 3.6.7
 - siphon 0.8.0
 - xarray 0.11.3
 - netCDF4 1.3.1
