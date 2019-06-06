@@ -11,7 +11,7 @@ Usage
 -----
 
 .. argparse::
-   :filename: ../bin/draw-timeseries.py
+   :filename: ../samples/draw-timeseries.py
    :func: my_parser
    :prog: draw-timeseries
 

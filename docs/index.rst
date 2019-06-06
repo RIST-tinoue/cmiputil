@@ -18,7 +18,7 @@ Modules
 =======
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    convoc
    drs
@@ -28,8 +28,8 @@ Modules
 
 
 
-Sample Apps
-===========
+Commands
+========
 
 .. toctree::
    :maxdepth: 4
@@ -37,6 +37,14 @@ Sample Apps
    createSampleConf
    checkDRSname
    relocateFilesAsDRS
+
+
+Sample Apps
+===========
+
+.. toctree::
+   :maxdepth: 4
+
    draw-timeseries
 
 
