@@ -64,7 +64,7 @@ if __name__ == '__main__':
         conf.read_dict(d)
 
     try:
-        conf.writeSampleConf(args.file, overwrite=args.overwrite)
+        conf.writeConf(args.file, overwrite=args.overwrite)
     except Exception:
         raise
     else:

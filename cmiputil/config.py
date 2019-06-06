@@ -14,9 +14,11 @@ constructor, that is read and override the precedence.
 is :attr:`conf_default`.
 
 
-By calling :meth:`writeSampleConf` you can create a sample config
-file.  You have to implement ``getDefaultConf()`` in each module in
-this package beforehand. See :mod:`createSampleConf` for details.
+You can create sample(default) conf file by :mod:`createSampleConf`,
+collect default configuration of each module by ``getDefaultConf()``
+in each module and :meth:`read_dict`, then :meth:`writeConf` to write
+the file.
+
 
 """
 __author__ = 'T.Inoue'
@@ -49,8 +51,8 @@ class Conf(configparser.ConfigParser):
     Args:
         file (str or path-like) or None: config file
 
-    If `file` is ``None``, no conf file is read, even defautl ones.
-    If you want only default conf files, set ``file=""``.
+    If `file` is ``None``, no conf file is read and *blank* instance
+    is created.  If you want only default conf files, set ``file=""``.
     """
     def __init__(self, file=""):
         global _debug
@@ -71,12 +73,12 @@ class Conf(configparser.ConfigParser):
         """
         self[conf_section] = conf_default
 
-    def writeSampleConf(self, fname, overwrite=False):
+    def writeConf(self, fname, overwrite=False):
         """
-        Write sample config file to `fname`.
+        Write current attributes to the `fname`.
 
-        You have to set configurations for each module via
-        :meth:`self.read_dict`
+        You have to set configurations for each module via, for example, 
+        :meth:`self.read_dict`.
 
         Args:
             fname (str or path-like): file to be written
@@ -89,7 +91,7 @@ class Conf(configparser.ConfigParser):
             >>> conf.setDefaultSection()
             >>> d = esgfsearch.getDefaultConf()
             >>> conf.read_dict(d)
-            >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
+            >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
         """
         if ((not Path(fname).is_file()) or overwrite):
             with open(fname, 'w') as f:

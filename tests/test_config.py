@@ -56,12 +56,12 @@ class test_Config(unittest.TestCase):
             self.assertEqual(ref[k],res[k])
 
 
-    def test_writeSampleConf00(self):
+    def test_writeConf00(self):
         ref = self.conftext
 
         conf = config.Conf(None) # to create config file
         conf.read_dict({"ESGFSearch.facets":self.confdict})
-        conf.writeSampleConf(self.conffile, overwrite=True)
+        conf.writeConf(self.conffile, overwrite=True)
         res = Path(self.conffile).read_text().strip()
         self.assertEqual(ref, res)
 
