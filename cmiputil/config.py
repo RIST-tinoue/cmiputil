@@ -66,6 +66,9 @@ class Conf(configparser.ConfigParser):
 
 
     def setDefaultSection(self):
+        """
+        Set "default" section.
+        """
         self[conf_section] = conf_default
 
     def writeSampleConf(self, fname, overwrite=False):
