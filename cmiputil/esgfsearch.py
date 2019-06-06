@@ -51,7 +51,7 @@ class ESGFSearch():
     Args:
         conffile (path-like): configure file
     """
-    def __init__(self, conffile=None):
+    def __init__(self, conffile=""):
 
         self.conf = config.Conf(conffile)
 
@@ -226,12 +226,10 @@ class ESGFSearch():
         :data:`.facet_defaults`.
 
         Example:
-            >>> params_update = {'source_id': 'MIROC6', 'experiment_id': 'historical',
+            >>> params = {'source_id': 'MIROC6', 'experiment_id': 'historical',
             ...    'variant_label': 'r1i1p1f1', 'variable': 'tas', }
-            >>> params = params_default
-            >>> params.update(params_update)
-            >>> str(getLocalPath(params, base_dir='~/Data/'))
-            '~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
+            >>> str(getLocalPath(params, base_dir='/data/'))
+            '/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
         """
         d = drs.DRS(**params)
         p = d.dirName(prefix=base_dir)
@@ -281,7 +279,7 @@ def getDefaultConf():
     Intended to be called before config.Conf.writeSampleConf()
 
     Example:
-       >>> conf = config.Conf('')
+       >>> conf = config.Conf(None)
        >>> conf.setDefaultSection()
        >>> conf.read_dict(getDefaultConf())
        >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)

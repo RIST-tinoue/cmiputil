@@ -14,8 +14,9 @@ constructor, that is read and override the precedence.
 is :attr:`conf_default`.
 
 
-By calling :meth:`writeSampleConf` you can create a sample config file.
-You have to call ``putConf()`` in each module in this package beforehand.
+By calling :meth:`writeSampleConf` you can create a sample config
+file.  You have to implement ``getDefaultConf()`` in each module in
+this package beforehand. See :mod:`createSampleConf` for details.
 
 """
 __author__ = 'T.Inoue'
@@ -44,11 +45,20 @@ conf_default = {'cmip6_data_dir': '/data'}
 
 
 class Conf(configparser.ConfigParser):
-    def __init__(self, file=None):
+    """
+    Args:
+        file (str or path-like) or None: config file
+
+    If `file` is ``None``, no conf file is read, even defautl ones.
+    If you want only default conf files, set ``file=""``.
+    """
+    def __init__(self, file=""):
         global _debug
         super().__init__()
-        self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
-        if file :
+        if file is None:
+            self.files = ""
+        else:
+            self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
             self.files.append(file)
         res = self.read(self.files)
         if (_debug):

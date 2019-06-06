@@ -39,7 +39,7 @@ if __name__ == '__main__':
     parser = my_parser()
     args = parser.parse_args()
 
-    conf = cmiputil.config.Conf('')
+    conf = cmiputil.config.Conf(None)
     conf.setDefaultSection()
 
     try:
@@ -63,5 +63,9 @@ if __name__ == '__main__':
     else:
         conf.read_dict(d)
 
-    conf.writeSampleConf(args.file, overwrite=args.overwrite)
-    print(f'config file "{args.file}" created successfully')
+    try:
+        conf.writeSampleConf(args.file, overwrite=args.overwrite)
+    except Exception:
+        raise
+    else:
+        print(f'config file "{args.file}" created successfully')

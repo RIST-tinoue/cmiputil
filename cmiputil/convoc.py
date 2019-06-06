@@ -66,7 +66,7 @@ def getDefaultConf():
     Intended to be called before config.Conf.writeSampleConf()
 
     Example:
-       >>> conf = config.Conf('')
+       >>> conf = config.Conf(None)
        >>> conf.setDefaultSection()
        >>> conf.read_dict(getDefaultConf())
        >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
@@ -152,10 +152,10 @@ class ConVoc:
     attribute, not an instance attribute.
     """
 
-    def __init__(self, conf=None, paths=''):
+    def __init__(self, conffile='', paths=''):
         """
         """
-        conf = config.Conf(conf)
+        conf = config.Conf(conffile)
         self.conf = conf['ConVoc']
         self.setSearchPath(paths)
 

@@ -39,7 +39,7 @@ class test_ConVoc(unittest.TestCase):
             ))
         conffile = Path('/tmp/cmiputil.conf')
         conffile.write_text(configlines)
-        cvs = convoc.ConVoc(conf=conffile)
+        cvs = convoc.ConVoc(conffile=conffile)
         res = cvs.getSearchPath()
         self.assertEqual(ref, res)
 
@@ -58,7 +58,7 @@ class test_ConVoc(unittest.TestCase):
         conffile = Path('/tmp/cmiputil.conf')
         conffile.write_text(configlines)
         with self.assertRaises(convoc.InvalidCVPathError):
-            cvs = convoc.ConVoc(conf=conffile)
+            cvs = convoc.ConVoc(conffile=conffile)
 
     def test_02_getAttrib01(self):
         "Get actual table_id CV."
