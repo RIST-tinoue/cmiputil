@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Draw time-series of CMIP6 data.
+Draw time-series of CMIP6 data, searched via RESTful API and accessed
+by OPeNDAP.
 
-xarray with OPeNDAP Aggregation version.
-Using xarray's plot()
+This is just a "Proof-of-concept" for accessing CMIP6/ESGF data via
+cmiputil. 
 """
 
 from cmiputil import esgfsearch
@@ -21,8 +22,9 @@ __date__ = '2019/06/02'
 
 desc = __doc__
 epilog = """
+Process after opening dataset is a sloppy and dirty hack.
+You should implemnt properly by yourself.
 """
-
 
 def my_parser():
     parser = argparse.ArgumentParser(
@@ -33,13 +35,30 @@ def my_parser():
         '-c', '--conffile', type=str, default=None,
         help='config file')
     parser.add_argument(
-        'params', type=str, nargs='*', default=None
+        'params', type=str, nargs='*', default=None,
+        help='key=value series of keyword/facet parameters'
     )
 
     return parser
 
-if (__name__ == '__main__'):
 
+def drawFig(datasets):
+    """
+    Draw timeseries of each dataset
+
+    This is just a quick hack, should get temporal/spatial averaged.
+    """
+    fig = plt.figure(figsize=(16, 8))
+    ax = fig.add_subplot(111)
+    for d in datasets:
+        d['tas'].sel(lon=0, lat=0, method='nearest').plot(ax=ax)
+    print('Ready to show plot...')
+    plt.tight_layout()
+    plt.show()
+    print('Done.')
+
+
+def main():
     parser = my_parser()
     a = parser.parse_args()
     pprint(vars(a))
@@ -49,33 +68,23 @@ if (__name__ == '__main__'):
         k, v = p.split('=')
         params[k] = v
 
-
     es = esgfsearch.ESGFSearch(conffile=a.conffile)
 
-    # Do search, return list of catalog URLs
+    # Do search, return a list of catalog URLs
     urls = es.getCatURLs(params)
     print('Catalog URLs:')
     pprint(urls)
 
-    # get Catalog, then Aggregated datasets.
-    aggregate = None
-    datatype_xarray = None
-    datasets = [es.getDataset(url, aggregate=aggregate, datatype_xarray=datatype_xarray)
+    # Get catalog, then get aggregated datasets.
+    datasets = [es.getDataset(url)
                 for url in urls]
-    datasets = [d for d in datasets if d]
     print('Num of datasets:', len(datasets))
     if (len(datasets) < 1):
         exit(1)
-    # draw timeseries of each dataset
-    fig = plt.figure(figsize=(16, 8))
-    ax = fig.add_subplot(111)
 
-    for d in datasets:
-        # Just a quick hack, should get temporal/spatial averaged.
-        print(type(d))
-        vals = d['tas'].sel(lon=0, lat=0, method='nearest')
-        vals.plot(ax=ax, add_legend=True)
-        ax.legend()
-    print('Ready to show plot...')
-    plt.show()
-    print('Done.')
+    # Analyse data, draw figure, or do what you want.
+    drawFig(datasets)
+
+
+if (__name__ == '__main__'):
+    main()
