@@ -57,7 +57,7 @@ def main():
     else:
         conf.read_dict(d)
 
-    conf.writeSampleConf(a.file, overwrite=a.overwrite)
+    conf.writeConf(a.file, overwrite=a.overwrite)
     print(f'config file "{a.file}" created successfully')
 
 
