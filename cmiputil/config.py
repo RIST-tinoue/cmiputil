@@ -7,56 +7,78 @@ Config file for this package is so called 'INI file', handled by
 python standard `configparser` module.
 
 Default name of config file is ``cmiputil.conf``, and searched in
-$HOME then current directory, unless specified by the argument of
-:meth:`readConfFile`.
+$HOME then current directory. If `file` is specified to the
+constructor, that is read and override the precedence.
 
-By calling :meth:`writeSampleConf` you can create a sample config file.
-You have to call ``putConf()`` in each module in this package beforehand.
+"Default" section name is :attr:`conf_section` and the key=value pair
+is :attr:`conf_default`.
 
-TODO:
-    - System wide config file ?
-    - Inherit configparser class
+
+You can create sample(default) conf file by :mod:`createSampleConf`,
+collect default configuration of each module by ``getDefaultConf()``
+in each module and :meth:`read_dict`, then :meth:`writeConf` to write
+the file.
+
 
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190529'
-__date__ = '2019/05/29'
+__version__ = 'v20190606'
+__date__ = '2019/06/06'
 
+_debug = False
 
 import configparser
 import os.path
 from pathlib import Path
 from pprint import pprint
 
+#: directory list of the conffile, order is important.
+conf_dir = [ '~/','./',]
+
 #: name of the conffile
 conf_name = 'cmiputil.conf'
 
-#: directory list of the conffile, current, $HOME
-conf_dir = [os.path.expanduser('~/'), './']
+#: name of the 'default' section
+conf_section = 'cmiputil'
 
 #: configuration of default section.
 conf_default = {'cmip6_data_dir': '/data'}
 
 
 class Conf(configparser.ConfigParser):
-    def __init__(self, file=None):
+    """
+    Args:
+        file (str or path-like) or None: config file
+
+    If `file` is ``None``, no conf file is read and *blank* instance
+    is created.  If you want only default conf files, set ``file=""``.
+    """
+    def __init__(self, file=""):
+        global _debug
         super().__init__()
         if file is None:
-            self.files = [Path(d)/Path(conf_name) for d in conf_dir]
+            self.files = ""
         else:
-            self.files = file
-        self.read(self.files)
+            self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
+            self.files.append(file)
+        res = self.read(self.files)
+        if (_debug):
+            print(f"dbg:read conf file(s):{res}")
+
 
     def setDefaultSection(self):
-        self['cmiputil'] = conf_default
-
-    def writeSampleConf(self, fname, overwrite=False):
         """
-        Write sample config file to `fname`.
+        Set "default" section.
+        """
+        self[conf_section] = conf_default
 
-        You have to set configurations for each module via
-        :meth:`self.read_dict`
+    def writeConf(self, fname, overwrite=False):
+        """
+        Write current attributes to the `fname`.
+
+        You have to set configurations for each module via, for example, 
+        :meth:`self.read_dict`.
 
         Args:
             fname (str or path-like): file to be written
@@ -69,7 +91,7 @@ class Conf(configparser.ConfigParser):
             >>> conf.setDefaultSection()
             >>> d = esgfsearch.getDefaultConf()
             >>> conf.read_dict(d)
-            >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
+            >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
         """
         if ((not Path(fname).is_file()) or overwrite):
             with open(fname, 'w') as f:

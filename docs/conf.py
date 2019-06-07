@@ -104,6 +104,3 @@ todo_include_todos = True
 
 
 show_authors = True
-
-# Hide "Show Source" links
-html_show_sourcelink = False

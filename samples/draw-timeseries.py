@@ -32,7 +32,7 @@ def my_parser():
         description=desc,
         epilog=epilog)
     parser.add_argument(
-        '-c', '--conffile', type=str, default=None,
+        '-c', '--conffile', type=str, default="",
         help='config file')
     parser.add_argument(
         'params', type=str, nargs='*', default=None,
@@ -52,6 +52,7 @@ def drawFig(datasets):
     ax = fig.add_subplot(111)
     for d in datasets:
         d['tas'].sel(lon=0, lat=0, method='nearest').plot(ax=ax)
+    ax.legend()
     print('Ready to show plot...')
     plt.tight_layout()
     plt.show()
@@ -59,9 +60,7 @@ def drawFig(datasets):
 
 
 def main():
-    parser = my_parser()
-    a = parser.parse_args()
-    pprint(vars(a))
+    a = my_parser().parse_args()
 
     params={}
     for p in a.params:

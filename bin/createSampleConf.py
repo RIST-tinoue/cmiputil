@@ -33,7 +33,7 @@ def my_parser():
 def main():
     a = my_parser().parse_args()
 
-    conf = cmiputil.config.Conf('')
+    conf = cmiputil.config.Conf(None)
     conf.setDefaultSection()
 
     try:
@@ -57,7 +57,7 @@ def main():
     else:
         conf.read_dict(d)
 
-    conf.writeSampleConf(a.file, overwrite=a.overwrite)
+    conf.writeConf(a.file, overwrite=a.overwrite)
     print(f'config file "{a.file}" created successfully')
 
 
