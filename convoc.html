@@ -50,13 +50,6 @@
   <h4>Next topic</h4>
   <p class="topless"><a href="drs.html"
                         title="next chapter">cmiputil.drs module</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/convoc.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -123,7 +116,7 @@ meaningful.</p>
 
 <dl class="class">
 <dt id="convoc.ConVoc">
-<em class="property">class </em><code class="descclassname">convoc.</code><code class="descname">ConVoc</code><span class="sig-paren">(</span><em>conf=None</em>, <em>paths=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">convoc.</code><code class="descname">ConVoc</code><span class="sig-paren">(</span><em>conffile=''</em>, <em>paths=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#ConVoc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.ConVoc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for accessing CMIP6 Controlled Vocabularies.</p>
 <p>This class reads CV from corresponding json file on demand and
@@ -315,7 +308,7 @@ attribute, not an instance attribute.</p>
 <dd><p>Return default values for config file.</p>
 <p>Intended to be called before config.Conf.writeSampleConf()</p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setDefaultSection</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">getDefaultConf</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeSampleConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

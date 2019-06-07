@@ -124,7 +124,7 @@
 <span class="sd">    Intended to be called before config.Conf.writeSampleConf()</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">       &gt;&gt;&gt; conf = config.Conf(&#39;&#39;)</span>
+<span class="sd">       &gt;&gt;&gt; conf = config.Conf(None)</span>
 <span class="sd">       &gt;&gt;&gt; conf.setDefaultSection()</span>
 <span class="sd">       &gt;&gt;&gt; conf.read_dict(getDefaultConf())</span>
 <span class="sd">       &gt;&gt;&gt; conf.writeSampleConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
@@ -210,10 +210,10 @@
 <span class="sd">    attribute, not an instance attribute.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conffile</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ConVoc&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSearchPath</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
 

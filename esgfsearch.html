@@ -50,13 +50,6 @@
   <h4>Next topic</h4>
   <p class="topless"><a href="timer.html"
                         title="next chapter">cmiputil.timer module</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/esgfsearch.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -92,7 +85,7 @@ for the detail ESGF RESTful API.</p>
 
 <dl class="class">
 <dt id="esgfsearch.ESGFSearch">
-<em class="property">class </em><code class="descclassname">esgfsearch.</code><code class="descname">ESGFSearch</code><span class="sig-paren">(</span><em>conffile=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">esgfsearch.</code><code class="descname">ESGFSearch</code><span class="sig-paren">(</span><em>conffile=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Search by ESGF RESTful API, get to the datafile via OPenDAP.</p>
 <p>If <cite>conffile</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, use default conffile, defined in
@@ -191,12 +184,10 @@ netCDF4.MFDataset() or None: opened dataset</p>
 <p><cite>field</cite> is initialized by <code class="xref py py-data docutils literal notranslate"><span class="pre">keyword_defautls</span></code> and
 <code class="xref py py-data docutils literal notranslate"><span class="pre">facet_defaults</span></code>.</p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">params_update</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span> <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
 <span class="gp">... </span>   <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span> <span class="s1">&#39;variable&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span> <span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="n">params_default</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params_update</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">getLocalPath</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="s1">&#39;~/Data/&#39;</span><span class="p">))</span>
-<span class="go">&#39;~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">getLocalPath</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="s1">&#39;/data/&#39;</span><span class="p">))</span>
+<span class="go">&#39;/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -209,7 +200,7 @@ netCDF4.MFDataset() or None: opened dataset</p>
 <dd><p>Set default values for config file.</p>
 <p>Intended to be called before config.Conf.writeSampleConf()</p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setDefaultSection</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">getDefaultConf</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeSampleConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -219,7 +210,7 @@ netCDF4.MFDataset() or None: opened dataset</p>
 
 <dl class="data">
 <dt id="esgfsearch.facets_default">
-<code class="descclassname">esgfsearch.</code><code class="descname">facets_default</code><em class="property"> = {'frequency': 'mon', 'project': 'CMIP6', 'table_id': 'Amon', 'variant_label': 'r1i1p1f1'}</em><a class="headerlink" href="#esgfsearch.facets_default" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">esgfsearch.</code><code class="descname">facets_default</code><em class="property"> = {'frequency': 'mon', 'project': 'CMIP6', 'table_id': 'Amon'}</em><a class="headerlink" href="#esgfsearch.facets_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default fasets for RESTful API.</p>
 </dd></dl>
 

@@ -109,7 +109,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        conffile (path-like): configure file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conffile</span><span class="p">)</span>
 
@@ -284,12 +284,10 @@
 <span class="sd">        :data:`.facet_defaults`.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">            &gt;&gt;&gt; params_update = {&#39;source_id&#39;: &#39;MIROC6&#39;, &#39;experiment_id&#39;: &#39;historical&#39;,</span>
+<span class="sd">            &gt;&gt;&gt; params = {&#39;source_id&#39;: &#39;MIROC6&#39;, &#39;experiment_id&#39;: &#39;historical&#39;,</span>
 <span class="sd">            ...    &#39;variant_label&#39;: &#39;r1i1p1f1&#39;, &#39;variable&#39;: &#39;tas&#39;, }</span>
-<span class="sd">            &gt;&gt;&gt; params = params_default</span>
-<span class="sd">            &gt;&gt;&gt; params.update(params_update)</span>
-<span class="sd">            &gt;&gt;&gt; str(getLocalPath(params, base_dir=&#39;~/Data/&#39;))</span>
-<span class="sd">            &#39;~/Data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; str(getLocalPath(params, base_dir=&#39;/data/&#39;))</span>
+<span class="sd">            &#39;/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">base_dir</span><span class="p">)</span>
@@ -325,7 +323,6 @@
     <span class="s1">&#39;project&#39;</span><span class="p">:</span> <span class="s1">&#39;CMIP6&#39;</span><span class="p">,</span>
     <span class="s1">&#39;table_id&#39;</span><span class="p">:</span> <span class="s1">&#39;Amon&#39;</span><span class="p">,</span>
     <span class="s1">&#39;frequency&#39;</span><span class="p">:</span> <span class="s1">&#39;mon&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">,</span>
     <span class="p">}</span>
 
 <span class="c1"># params_default = dict(keywords_default)</span>
@@ -339,7 +336,7 @@
 <span class="sd">    Intended to be called before config.Conf.writeSampleConf()</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">       &gt;&gt;&gt; conf = config.Conf(&#39;&#39;)</span>
+<span class="sd">       &gt;&gt;&gt; conf = config.Conf(None)</span>
 <span class="sd">       &gt;&gt;&gt; conf.setDefaultSection()</span>
 <span class="sd">       &gt;&gt;&gt; conf.read_dict(getDefaultConf())</span>
 <span class="sd">       &gt;&gt;&gt; conf.writeSampleConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
