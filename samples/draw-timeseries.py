@@ -60,9 +60,7 @@ def drawFig(datasets):
 
 
 def main():
-    parser = my_parser()
-    a = parser.parse_args()
-    pprint(vars(a))
+    a = my_parser().parse_args()
 
     params={}
     for p in a.params:
