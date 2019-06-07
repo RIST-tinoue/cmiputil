@@ -265,7 +265,6 @@ facets_default = {
     'project': 'CMIP6',
     'table_id': 'Amon',
     'frequency': 'mon',
-    'variant_label': 'r1i1p1f1',
     }
 
 # params_default = dict(keywords_default)
