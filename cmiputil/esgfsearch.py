@@ -60,9 +60,9 @@ class ESGFSearch():
         self.aggregate = aggregate_default
         if (self.conf.has_option('ESGFSearch', 'aggregate')):
             self.aggregate = self.conf.getboolean('ESGFSearch','aggregate')
-        self.dataset_xarray = dataset_xarray_default
-        if (self.conf.has_option('ESGFSearch', 'dataset_xarray')):
-            self.dataset_xarray = self.conf.getboolean('ESGFSearch','dataset_xarray')
+        self.datatype_xarray = datatype_xarray_default
+        if (self.conf.has_option('ESGFSearch', 'datatype_xarray')):
+            self.datatype_xarray = self.conf.getboolean('ESGFSearch','datatype_xarray')
 
 
 
@@ -155,22 +155,21 @@ class ESGFSearch():
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
+
         if aggregate is not None:
             self.aggregate = aggregate
-        if datatype_xarray is None:
+        if datatype_xarray is not None:
             self.datatype_xarray = datatype_xarray
 
         if self.debug:
-            print('aggregate:',self.aggregate)
-            print('datatype_xarray:',self.datatype_xarray)
+            print('dbg:aggregate:',self.aggregate)
+            print('dbg:datatype_xarray:',self.datatype_xarray)
 
         if self.aggregate:
             # construct base url
             data_url = cat.base_tds_url
-            for s in cat.services[:]:
-                if (s.service_type.lower == 'opendap'):
-                    data_url += s.base
-                    break
+            service_base = _getServiceBase(cat.services)
+            data_url += service_base
 
             # url of Aggregated dataset
             ds = cat.datasets[-1]   # Is this universal ?
@@ -196,7 +195,7 @@ class ESGFSearch():
             urls.sort()
 
             try:
-                if (self.dataset_xarray):
+                if (self.datatype_xarray):
                     ds = xr.open_mfdataset(urls, decode_cf=False)
                 else:
                     ds = nc.MFDataset(urls)
@@ -237,6 +236,18 @@ class ESGFSearch():
         return p / f
 
 
+def _getServiceBase(services):
+    # `services` must be a list of SimpleService or CompoundService
+    # class, attribute of TDSCatalog instance.
+
+    for s in services:
+        # search 'OpenDAP' service.
+        if (s.service_type.lower() == 'opendap'):
+            return s.base
+        # if service_type is compound, do recursive call.
+        elif (s.service_type.lower() == 'compound'):
+            return _getServiceBase(s.services)
+
 ########################################################################
 # defaults
 
@@ -248,7 +259,7 @@ search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
 service_type_default = 'search'
 
 aggregate_default = True
-dataset_xarray_default = True
+datatype_xarray_default = True
 
 #: Default keywords for RESTful API.
 keywords_default = {
@@ -287,7 +298,7 @@ def getDefaultConf():
     res['ESGFSearch'] = {'search_service': search_service_default,
                          'service_type': service_type_default,
                          'aggregate': aggregate_default,
-                         'datatype_xarray': dataset_xarray_default }
+                         'datatype_xarray': datatype_xarray_default }
     res['ESGFSearch.keywords'] =  keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
