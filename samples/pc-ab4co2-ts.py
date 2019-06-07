@@ -1,14 +1,46 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+"""
+Compare piControl and abrupt-4xCO2 timeseries of tas.
+"""
 from cmiputil import esgfsearch
 from cmiputil.timer import timer
 from pprint import pprint
 from os.path import basename
 from pathlib import Path
+import argparse
 import json
 from cftime import num2date
 import matplotlib.pyplot as plt
+
+__author__ = 'T.Inoue'
+__credits__ = 'Copyright (c) 2019 RIST'
+__version__ = 'v20190607'
+__date__ = '2019/06/07'
+
+
+desc = __doc__
+epilog = ""
+
+# TODO: Currently aggregation not working.
+aggregate = False
+
+
+def my_parser():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=desc,
+        epilog=epilog)
+    parser.add_argument(
+        '-c', '--conffile', type=str, default="",
+        help='config file')
+    parser.add_argument(
+        'params', type=str, nargs='*', default=None,
+        help='key=value series of keyword/facet parameters'
+    )
+
+    return parser
+
 
 def composeMeta(datasets):
     """
@@ -28,12 +60,12 @@ def composeMeta(datasets):
             continue
         # print(type(ds))
         dsname = basename(ds.further_info_url)
-        print("Compose meta info for:", dsname)
+        print(f"Compose meta info for: {dsname}")
         try:
             var = ds[ds.variable_id]
         except IndexError:
-            print("{} not found in {}".format(ds.variable_id, dsname))
-            raise IndexError
+            print(f"{ds.variable_id} not found in {dsname}")
+            raise
 
         times = ds['time']
         t_units = getattr(times, 'units', None)
@@ -59,55 +91,52 @@ def composeMeta(datasets):
 
 
 def drawPlot(datasets):
+    # to shut up the warning message...
+    # from pandas.plotting import register_matplotlib_converters
+    # register_matplotlib_converters()
+
     fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
-    ax.set_title('tas')
-    ax.set_xlabel('time')
-    ax.set_ylabel('K')
 
     for d in datasets:
-        label = d.source_id+': '+d.experiment_id+': '+d.variant_label
-        print(label)
-        times = num2date(d['time'], d['time'].units)
-        # Just a quick hack, should get area averaged.
-        values = d['tas'].sel(lon=0, lat=0, method='nearest')
-
+        label = ':'.join((d.source_id, d.experiment_id, d.variant_label))
+        print(f"plotting {label}")
         try:
-            ax.plot(times, values, label=label)
-            ax.legend()
+            # Just a quick hack, should get area averaged.
+            d['tas'].sel(lon=0, lat=0, method='nearest')\
+                    .plot(ax=ax, label=label)
         except RuntimeError as e:
             print('Skip error:', e.args)
             continue
-
+    ax.legend()
     print('Ready to plot...')
     plt.show()
     print('Done.')
 
 
-if (__name__ == '__main__'):
-    params = {
-        # 'source_id': 'MIROC6',
-        # 'source_id': 'CNRM-CM6-1',
-        # 'source_id': 'IPSL-CM6A-LR',    #<- not found error for aggregation dataset
-        # 'source_id': 'GISS-E2-1-G',
-        # 'source_id': 'CanESM5',
-        # 'source_id': 'CESM2',
-        # 'source_id': 'BCC-CSM2-MR',  # <- times in cftime.DatetimeNoLeap, causes error in plt.plot()
-        'source_id': 'MIROC6,BCC-CSM2-MR',
+def main():
+    a = my_parser().parse_args()
+
+    params = {}
+    for p in a.params:
+        k, v = p.split('=')
+        params.update({k: v})
+
+    # force these two experiment and variable
+    params_force = {
         'experiment_id': 'piControl, abrupt-4xCO2',
-        # 'experiment_id': 'historical',
-        'variant_label': 'r1i1p1f1,r2i1p1f1',
-        'variable': 'tas',
-    }
+        'variable': 'tas'}
+    params.update(params_force)
+
+    pprint(params)
 
     es = esgfsearch.ESGFSearch()
+
     urls = es.getCatURLs(params)
 
-    aggregate = False
-    netcdf = False
     with timer('getting Datasets'):
-        datasets = [es.getDataset(url, aggregate=aggregate, netcdf=netcdf)
-                     for url in urls]
+        datasets = [es.getDataset(url, aggregate=aggregate)
+                    for url in urls]
 
     with timer('constructing meta info'):
         meta = composeMeta(datasets)
@@ -115,8 +144,10 @@ if (__name__ == '__main__'):
         Path(outfile).write_text(json.dumps(meta, indent=4))
         print(f'meta info wriiten to {outfile}')
 
-
     with timer('drawing graph'):
         # draw timeseries of each dataset
         drawPlot(datasets)
 
+
+if (__name__ == '__main__'):
+    main()
