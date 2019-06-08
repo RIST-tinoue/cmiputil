@@ -102,8 +102,10 @@
 <span class="sd">        - `cmip6_data_dir`: CMIP6 date directory</span>
 <span class="sd">        - `search_service`: the base URL of the search service at a ESGF Index Node</span>
 <span class="sd">        - `service_type`: ``search`` or ``wget``</span>
-<span class="sd">    - [ESGFSearch.keywords]</span>
-<span class="sd">    - [ESGFSearch.facets]</span>
+<span class="sd">        - `aggregate` : :meth:`getDataset` returns aggregated datasets or not</span>
+<span class="sd">        - `datatype_xarray` : :meth:`getDataset` returns xarray or netCDF4</span>
+<span class="sd">    - [ESGFSearch.keywords] : keyword parameters of RESTful API</span>
+<span class="sd">    - [ESGFSearch.facets] : facet parameters of RESTful API</span>
 
 
 <span class="sd">    Args:</span>
@@ -118,9 +120,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate_default</span>
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;aggregate&#39;</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span><span class="s1">&#39;aggregate&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_xarray</span> <span class="o">=</span> <span class="n">dataset_xarray_default</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;dataset_xarray&#39;</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataset_xarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span><span class="s1">&#39;dataset_xarray&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">datatype_xarray_default</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span><span class="s1">&#39;datatype_xarray&#39;</span><span class="p">)</span>
 
 
 
@@ -213,22 +215,21 @@
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in siphon.TDSCatalog():&#39;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
             <span class="k">raise</span>
 
+
         <span class="k">if</span> <span class="n">aggregate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate</span>
-        <span class="k">if</span> <span class="n">datatype_xarray</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">datatype_xarray</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">datatype_xarray</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;aggregate:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;datatype_xarray:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:aggregate:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:datatype_xarray:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">:</span>
             <span class="c1"># construct base url</span>
             <span class="n">data_url</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">base_tds_url</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cat</span><span class="o">.</span><span class="n">services</span><span class="p">[:]:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">service_type</span><span class="o">.</span><span class="n">lower</span> <span class="o">==</span> <span class="s1">&#39;opendap&#39;</span><span class="p">):</span>
-                    <span class="n">data_url</span> <span class="o">+=</span> <span class="n">s</span><span class="o">.</span><span class="n">base</span>
-                    <span class="k">break</span>
+            <span class="n">service_base</span> <span class="o">=</span> <span class="n">_getServiceBase</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">services</span><span class="p">)</span>
+            <span class="n">data_url</span> <span class="o">+=</span> <span class="n">service_base</span>
 
             <span class="c1"># url of Aggregated dataset</span>
             <span class="n">ds</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># Is this universal ?</span>
@@ -254,7 +255,7 @@
             <span class="n">urls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
             <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_xarray</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">):</span>
                     <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">ds</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
@@ -295,6 +296,18 @@
         <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="n">f</span></div></div>
 
 
+<span class="k">def</span> <span class="nf">_getServiceBase</span><span class="p">(</span><span class="n">services</span><span class="p">):</span>
+    <span class="c1"># `services` must be a list of SimpleService or CompoundService</span>
+    <span class="c1"># class, attribute of TDSCatalog instance.</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">services</span><span class="p">:</span>
+        <span class="c1"># search &#39;OpenDAP&#39; service.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">service_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;opendap&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">base</span>
+        <span class="c1"># if service_type is compound, do recursive call.</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">service_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;compound&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_getServiceBase</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">services</span><span class="p">)</span>
+
 <span class="c1">########################################################################</span>
 <span class="c1"># defaults</span>
 
@@ -306,7 +319,7 @@
 <span class="n">service_type_default</span> <span class="o">=</span> <span class="s1">&#39;search&#39;</span>
 
 <span class="n">aggregate_default</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">dataset_xarray_default</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">datatype_xarray_default</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="c1">#: Default keywords for RESTful API.</span>
 <span class="n">keywords_default</span> <span class="o">=</span> <span class="p">{</span>
@@ -345,7 +358,7 @@
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;search_service&#39;</span><span class="p">:</span> <span class="n">search_service_default</span><span class="p">,</span>
                          <span class="s1">&#39;service_type&#39;</span><span class="p">:</span> <span class="n">service_type_default</span><span class="p">,</span>
                          <span class="s1">&#39;aggregate&#39;</span><span class="p">:</span> <span class="n">aggregate_default</span><span class="p">,</span>
-                         <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">:</span> <span class="n">dataset_xarray_default</span> <span class="p">}</span>
+                         <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">:</span> <span class="n">datatype_xarray_default</span> <span class="p">}</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">keywords_default</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">facets_default</span>
     <span class="k">return</span> <span class="n">res</span></div>
