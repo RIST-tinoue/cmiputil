@@ -5,4 +5,4 @@ from . import drs
 from . import esgfsearch
 from . import timer
 
-__version__ = '0.4'
+__version__ = '0.5'
