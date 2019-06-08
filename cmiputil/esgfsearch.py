@@ -44,8 +44,10 @@ class ESGFSearch():
         - `cmip6_data_dir`: CMIP6 date directory
         - `search_service`: the base URL of the search service at a ESGF Index Node
         - `service_type`: ``search`` or ``wget``
-    - [ESGFSearch.keywords]
-    - [ESGFSearch.facets]
+        - `aggregate` : :meth:`getDataset` returns aggregated datasets or not
+        - `datatype_xarray` : :meth:`getDataset` returns xarray or netCDF4
+    - [ESGFSearch.keywords] : keyword parameters of RESTful API
+    - [ESGFSearch.facets] : facet parameters of RESTful API
 
 
     Args:
