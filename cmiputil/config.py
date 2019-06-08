@@ -99,6 +99,14 @@ class Conf(configparser.ConfigParser):
         else:
             raise FileExistsError(f'file already exists: "{fname}"')
 
+    def __str__(self):
+        res = ''
+        for sec in self.sections():
+            res += f'[{sec}]\n'
+            for op in self.options(sec):
+                res += f'{op} = {self[sec][op]}\n'
+
+        return res
 
 if __name__ == '__main__':
 
