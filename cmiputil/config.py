@@ -72,7 +72,8 @@ class Conf(configparser.ConfigParser):
             self.files = ""
         else:
             self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
-            self.files.append(file)
+            if file:
+                self.files.append(file)
         res = self.read(self.files)
         if (self._debug):
             print(f"dbg:read conf file(s):{res}")
