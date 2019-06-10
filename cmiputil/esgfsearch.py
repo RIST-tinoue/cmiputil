@@ -222,7 +222,7 @@ class ESGFSearch():
         Opened datasets are stored as :attr:`dataset` of `self`.
         """
         res = [self._openDataset(url) for url in self.data_urls]
-        self.dataset = [d for d in res if d]
+        self.datasets = [d for d in res if d]
 
 
     def _openDataset(self, url):

@@ -88,12 +88,12 @@ def main():
     # from URLs, open and return datasets
     es.getDatasets()
 
-    print('Num of datasets:', len(es.dataset))
-    if (len(es.dataset) < 1):
+    print('Num of datasets:', len(es.datasets))
+    if (len(es.datasets) < 1):
         exit(1)
 
     # Analyse data, draw figure, or do what you want.
-    drawFig(es.dataset)
+    drawFig(es.datasets)
 
 
 if (__name__ == '__main__'):

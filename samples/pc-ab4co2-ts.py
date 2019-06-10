@@ -146,17 +146,17 @@ def main():
     with timer('getting Dataset'):
         es.getDatasets()
 
-    print(f'Num of datasets found: {len(es.dataset)}')
+    print(f'Num of datasets found: {len(es.datasets)}')
 
     with timer('constructing meta info'):
-        meta = composeMeta(es.dataset)
+        meta = composeMeta(es.datasets)
         outfile = 'meta_info.json'
         Path(outfile).write_text(json.dumps(meta, indent=4))
         print(f'meta info wriiten to {outfile}')
 
     with timer('drawing graph'):
         # draw timeseries of each dataset
-        drawPlot(es.dataset)
+        drawPlot(es.datasets)
 
 
 if (__name__ == '__main__'):
