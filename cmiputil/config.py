@@ -27,12 +27,11 @@ __version__ = 'v20190606'
 __date__ = '2019/06/06'
 
 import configparser
-import os.path
 from pathlib import Path
-from pprint import pprint
+# from pprint import pprint
 
 #: directory list of the conffile, order is important.
-conf_dir = [ '~/','./',]
+conf_dir = ['~/', './', ]
 
 #: name of the conffile
 conf_name = 'cmiputil.conf'
@@ -71,7 +70,8 @@ class Conf(configparser.ConfigParser):
         if file is None:
             self.files = ""
         else:
-            self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
+            self.files = [Path(d).expanduser()/Path(conf_name)
+                          for d in conf_dir]
             if file:
                 self.files.append(file)
         res = self.read(self.files)
@@ -88,7 +88,7 @@ class Conf(configparser.ConfigParser):
         """
         Write current attributes to the `fname`.
 
-        You have to set configurations for each module via, for example, 
+        You have to set configurations for each module via, for example,
         :meth:`self.read_dict`.
 
         Args:
@@ -118,6 +118,7 @@ class Conf(configparser.ConfigParser):
                 res += f'{op} = {self[sec][op]}\n'
             res += '\n'
         return res
+
 
 if __name__ == '__main__':
 
