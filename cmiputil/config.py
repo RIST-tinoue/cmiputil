@@ -26,15 +26,12 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190606'
 __date__ = '2019/06/06'
 
-_debug = False
-
 import configparser
-import os.path
 from pathlib import Path
-from pprint import pprint
+# from pprint import pprint
 
 #: directory list of the conffile, order is important.
-conf_dir = [ '~/','./',]
+conf_dir = ['~/', './', ]
 
 #: name of the conffile
 conf_name = 'cmiputil.conf'
@@ -54,18 +51,32 @@ class Conf(configparser.ConfigParser):
     If `file` is ``None``, no conf file is read and *blank* instance
     is created.  If you want only default conf files, set ``file=""``.
     """
+    _debug = False
+
+    @classmethod
+    def _enable_debug(cls):
+        cls._debug = True
+
+    @classmethod
+    def _disable_debug(cls):
+        cls._debug = True
+
+    # @property
+    # def debug(cls):
+    #     return cls._debug
+
     def __init__(self, file=""):
-        global _debug
         super().__init__()
         if file is None:
             self.files = ""
         else:
-            self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
-            self.files.append(file)
+            self.files = [Path(d).expanduser()/Path(conf_name)
+                          for d in conf_dir]
+            if file:
+                self.files.append(file)
         res = self.read(self.files)
-        if (_debug):
+        if (self._debug):
             print(f"dbg:read conf file(s):{res}")
-
 
     def setDefaultSection(self):
         """
@@ -77,7 +88,7 @@ class Conf(configparser.ConfigParser):
         """
         Write current attributes to the `fname`.
 
-        You have to set configurations for each module via, for example, 
+        You have to set configurations for each module via, for example,
         :meth:`self.read_dict`.
 
         Args:
@@ -105,8 +116,9 @@ class Conf(configparser.ConfigParser):
             res += f'[{sec}]\n'
             for op in self.options(sec):
                 res += f'{op} = {self[sec][op]}\n'
-
+            res += '\n'
         return res
+
 
 if __name__ == '__main__':
 
