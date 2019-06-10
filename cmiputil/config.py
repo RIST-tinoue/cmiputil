@@ -61,9 +61,9 @@ class Conf(configparser.ConfigParser):
     def _disable_debug(cls):
         cls._debug = True
 
-    @property
-    def debug(cls):
-        return cls._debug
+    # @property
+    # def debug(cls):
+    #     return cls._debug
 
     def __init__(self, file=""):
         super().__init__()
