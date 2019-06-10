@@ -26,8 +26,6 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190606'
 __date__ = '2019/06/06'
 
-_debug = False
-
 import configparser
 import os.path
 from pathlib import Path
@@ -54,8 +52,21 @@ class Conf(configparser.ConfigParser):
     If `file` is ``None``, no conf file is read and *blank* instance
     is created.  If you want only default conf files, set ``file=""``.
     """
+    _debug = False
+
+    @classmethod
+    def _enable_debug(cls):
+        cls._debug = True
+
+    @classmethod
+    def _disable_debug(cls):
+        cls._debug = True
+
+    @property
+    def debug(cls):
+        return cls._debug
+
     def __init__(self, file=""):
-        global _debug
         super().__init__()
         if file is None:
             self.files = ""
@@ -63,9 +74,8 @@ class Conf(configparser.ConfigParser):
             self.files = [Path(d).expanduser()/Path(conf_name) for d in conf_dir]
             self.files.append(file)
         res = self.read(self.files)
-        if (_debug):
+        if (self._debug):
             print(f"dbg:read conf file(s):{res}")
-
 
     def setDefaultSection(self):
         """
