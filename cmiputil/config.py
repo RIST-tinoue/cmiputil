@@ -115,7 +115,7 @@ class Conf(configparser.ConfigParser):
             res += f'[{sec}]\n'
             for op in self.options(sec):
                 res += f'{op} = {self[sec][op]}\n'
-
+            res += '\n'
         return res
 
 if __name__ == '__main__':
