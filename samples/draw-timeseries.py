@@ -46,12 +46,18 @@ def drawFig(datasets):
     """
     Draw timeseries of each dataset
 
-    This is just a quick hack, should get temporal/spatial averaged.
+    This is just a quick hack.
+
+    Note:
+       ``xarray.DataArray.mean()`` is **NOT** an weighted-average.
     """
     fig = plt.figure(figsize=(16, 8))
     ax = fig.add_subplot(111)
     for d in datasets:
-        d['tas'].sel(lon=0, lat=0, method='nearest').plot(ax=ax)
+        label = ':'.join((d.source_id, d.experiment_id, d.variant_label))
+        print(f"plotting {label}")
+        # d[d.variable_id].sel(lon=0, lat=0, method='nearest').plot(ax=ax)
+        d[d.variable_id].mean(('lon', 'lat')).plot(ax=ax, label=label)
     ax.legend()
     print('Ready to show plot...')
     plt.tight_layout()
@@ -70,19 +76,24 @@ def main():
     es = esgfsearch.ESGFSearch(conffile=a.conffile)
 
     # Do search, return a list of catalog URLs
-    urls = es.getCatURLs(params)
+    es.getCatURLs(params)
     print('Catalog URLs:')
-    pprint(urls)
+    pprint(es.cat_urls)
 
-    # Get catalog, then get aggregated datasets.
-    datasets = [es.getDataset(url)
-                for url in urls]
-    print('Num of datasets:', len(datasets))
-    if (len(datasets) < 1):
+    # Get catalog, then get URLs of dataset
+    es.getDataURLs()
+    print('Dataset URLs:')
+    pprint(es.data_urls)
+
+    # from URLs, open and return datasets
+    es.getDataset()
+
+    print('Num of datasets:', len(es.dataset))
+    if (len(es.dataset) < 1):
         exit(1)
 
     # Analyse data, draw figure, or do what you want.
-    drawFig(datasets)
+    drawFig(es.dataset)
 
 
 if (__name__ == '__main__'):

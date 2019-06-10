@@ -67,10 +67,15 @@ def composeMeta(datasets):
             print(f"{ds.variable_id} not found in {dsname}")
             raise
 
-        times = ds['time']
-        t_units = getattr(times, 'units', None)
-        t_size = getattr(times, 'size', None)
         var_id = getattr(var, 'name')
+
+        t_size = getattr(ds.time, 'size', None)
+        # Sometimes time.unit is missing, num2date raise AttirbuteError.
+        t_units = getattr(ds.time, 'units', None)
+        try:
+            t_range = str(num2date(ds.time[[0, -1]], t_units))
+        except AttributeError:
+            t_range = str(ds.time.data[[0,-1]])
 
         meta.setdefault(ds.experiment_id, []).append({
             # No filepath() or path related attributes in xarray.dataset.
@@ -84,7 +89,7 @@ def composeMeta(datasets):
             'branch_time': ds.branch_time_in_parent,
             't_units': t_units,
             't_size': t_size,
-            't_range': str(num2date(times[[0, -1]], times.units))
+            't_range': t_range
         })
 
     return meta
@@ -103,8 +108,9 @@ def drawPlot(datasets):
         print(f"plotting {label}")
         try:
             # Just a quick hack, should get area averaged.
-            d['tas'].sel(lon=0, lat=0, method='nearest')\
-                    .plot(ax=ax, label=label)
+            # d['tas'].sel(lon=0, lat=0, method='nearest')\
+            #         .plot(ax=ax, label=label)
+            d[d.variable_id].mean(('lon', 'lat')).plot(ax=ax, label=label)
         except RuntimeError as e:
             print('Skip error:', e.args)
             continue
@@ -130,23 +136,27 @@ def main():
 
     pprint(params)
 
-    es = esgfsearch.ESGFSearch()
+    es = esgfsearch.ESGFSearch(conffile=a.conffile)
 
-    urls = es.getCatURLs(params)
+    es.getCatURLs(params)
 
-    with timer('getting Datasets'):
-        datasets = [es.getDataset(url, aggregate=aggregate)
-                    for url in urls]
+    with timer('getting Dataset URLs'):
+        es.getDataURLs()
+
+    with timer('getting Dataset'):
+        es.getDataset()
+
+    print(f'Num of datasets found: {len(es.dataset)}')
 
     with timer('constructing meta info'):
-        meta = composeMeta(datasets)
+        meta = composeMeta(es.dataset)
         outfile = 'meta_info.json'
         Path(outfile).write_text(json.dumps(meta, indent=4))
         print(f'meta info wriiten to {outfile}')
 
     with timer('drawing graph'):
         # draw timeseries of each dataset
-        drawPlot(datasets)
+        drawPlot(es.dataset)
 
 
 if (__name__ == '__main__'):
