@@ -19,7 +19,7 @@ follows;
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
 2. get catalog URLs via :meth:`ESGFSearch.getCatURLs` method,
 3. get dataset URLs via :meth:`ESGFSearch.getDataURLs` method,
-4. get dataset via :meth:`ESGFSearch.getDataset` method,
+4. get dataset via :meth:`ESGFSearch.getDatasets` method,
 
 Catalog URLs, dataset URLs, and dataset objects are all stored as
 instance attributes.
@@ -33,8 +33,8 @@ This module read in conf file, sections below;
 - [ESGFSearch]
     - `search_service`: the base URL of the search service at a ESGF Index Node
     - `service_type`: ``search`` or ``wget``
-    - `aggregate` : :meth:`getDataset` returns aggregated datasets or not
-    - `datatype_xarray` : :meth:`getDataset` returns xarray or netCDF4
+    - `aggregate` : :meth:`getDatasets` returns aggregated datasets or not
+    - `datatype_xarray` : :meth:`getDatasets` returns xarray or netCDF4
 - [ESGFSearch.keywords] : keyword parameters of RESTful API
 - [ESGFSearch.facets] : facet parameters of RESTful API
 """
@@ -205,7 +205,7 @@ class ESGFSearch():
         return data_url
 
 
-    def openDataset(self):
+    def openDatasets(self):
         """
         Open and return dataset object from dataset URLs.
 
@@ -220,10 +220,6 @@ class ESGFSearch():
         via `xarray.open_mfdataset()` or `netCDF4.MFDataset()`.
 
         Opened datasets are stored as :attr:`dataset` of `self`.
-
-        Todo:
-            Should be renamed as **openDatasets()**.
-
         """
         res = [self._openDataset(url) for url in self.data_urls]
         self.dataset = [d for d in res if d]
@@ -254,7 +250,7 @@ class ESGFSearch():
                 return ds
 
 
-    def getDataset(self):
+    def getDatasets(self):
         """
         From URLs of TDS catalog, open xarray or netCDF4 dataset.
 
@@ -267,11 +263,9 @@ class ESGFSearch():
 
         Obtained datasets are set as :attr:`.dataset` of `self`.
 
-        Todo:
-            Should be renamed as **getDatasets()**.
         """
         self.getDataURLs()
-        self.openDataset()
+        self.openDatasets()
 
 
     def getLocalPath(self, params, base_dir=None):

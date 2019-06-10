@@ -45,7 +45,7 @@ def my_parser():
 def composeMeta(datasets):
     """
     Compose meta info dictionaries from a list of xarray.Dataset
-    obtained by getDataset().
+    obtained by getDatasets().
 
     Returns `meta` dictionary.
 
@@ -144,7 +144,7 @@ def main():
         es.getDataURLs()
 
     with timer('getting Dataset'):
-        es.getDataset()
+        es.getDatasets()
 
     print(f'Num of datasets found: {len(es.dataset)}')
 
