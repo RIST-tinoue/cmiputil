@@ -81,6 +81,20 @@ class ESGFSearch():
         data_urls (list(str) or list of list(str)): obtained dataset URLs
         datasets: list of obtained datasets
     """
+    _debug = False
+
+    @classmethod
+    def _enable_debug(cls):
+        cls._debug = True
+
+    @classmethod
+    def _disable_debug(cls):
+        cls._debug = True
+
+    # @property
+    # def debug(cls):
+    #     return cls._debug
+
     def __init__(self, conffile=""):
         self.conf = config.Conf(conffile)
         try:
@@ -109,8 +123,6 @@ class ESGFSearch():
             self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
         except KeyError:
             pass
-
-        self.debug = False
 
     def getCatURLs(self, params=None, base_url=None):
         """
@@ -143,7 +155,9 @@ class ESGFSearch():
         if not base_url:
             base_url = self.search_service + self.service_type
 
-        if (self.debug):
+        if (self._debug):
+            print(f'dbg:ESGFSearch.getCatURLs:base_url:{base_url}')
+            print('dbg:ESGFSeaerch.getCatURLs:params:')
             pprint(self.params)
 
         http = urllib3.PoolManager()
@@ -196,8 +210,8 @@ class ESGFSearch():
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
-        if self.debug:
-            print('dbg:aggregate:', self.aggregate)
+        if self._debug:
+            print('dbg:ESGFSearch.aggregate:', self.aggregate)
 
         if self.aggregate:
             # construct base url
