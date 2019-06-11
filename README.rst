@@ -22,6 +22,21 @@ Currently there are a few modules listed below:
 -  `drs`: Handle DRS-complient directory name and file name.
 -  `convoc`: Handle CMIP6 CVs.
 -  `timer`: Measure execution time.
+-  `braceexpand`: Bash-style brace expansion for Python
+
+
+
+braceexpand.py
+~~~~~~~~~~~~~~
+
+
+This package includes and uses `braceexpand.py
+<https://github.com/trendels/braceexpand/blob/master/braceexpand.py>`__
+obtained from https://github.com/trendels/braceexpand, 
+under MIT license.
+
+See ``README.braceexpand`` for details, ``LICENSE.braceexpand`` for it's license.
+
 
 You may want
 ------------
@@ -45,6 +60,7 @@ For creating documents:
 
 - sphinx 2.0.1
 - sphinx-rtd-theme 0.4.3
+
 
 
 Install
