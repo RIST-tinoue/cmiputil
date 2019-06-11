@@ -616,7 +616,6 @@ class DRS:
             if type(v) is list:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
-        print(attr)
 
         d = Path(
            attr["mip_era"],
