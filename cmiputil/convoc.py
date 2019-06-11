@@ -26,8 +26,8 @@ meaningful.
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190530'
-__date__ = '2019/05/30'
+__version__ = 'v20190611'
+__date__ = '2019/06/11'
 
 from cmiputil import config
 from pathlib import Path
@@ -152,12 +152,29 @@ class ConVoc:
     attribute, not an instance attribute.
     """
 
+    _debug = False
+
+    @classmethod
+    def _enable_debug(cls):
+        cls._debug = True
+
+    @classmethod
+    def _disable_debug(cls):
+        cls._debug = True
+
+    # @property
+    # def debug(cls):
+    #     return cls._debug
+
     def __init__(self, conffile='', paths=''):
         """
         """
         conf = config.Conf(conffile)
         self.conf = conf['ConVoc']
         self.setSearchPath(paths)
+
+        if self._debug:
+            print(f'dbg:ConVoc:cvpath:{self.cvpath}')
 
     def setSearchPath(self, paths=''):
         """
@@ -293,6 +310,5 @@ class ConVoc:
 
 
 if (__name__ == '__main__'):
-    from cmiputil import drs
     import doctest
     doctest.testmod()
