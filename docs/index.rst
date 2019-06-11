@@ -25,7 +25,7 @@ Modules
    esgfsearch
    timer
    config
-
+   braceexpand
 
 
 Commands
