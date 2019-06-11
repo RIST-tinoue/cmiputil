@@ -26,8 +26,8 @@ meaningful.
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190530'
-__date__ = '2019/05/30'
+__version__ = 'v20190611'
+__date__ = '2019/06/11'
 
 from cmiputil import config
 from pathlib import Path
