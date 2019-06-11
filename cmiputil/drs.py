@@ -225,6 +225,20 @@ class DRS:
     #: ConVoc instance
     _cvs = None
 
+    _debug = False
+
+    @classmethod
+    def _enable_debug(cls):
+        cls._debug = True
+
+    @classmethod
+    def _disable_debug(cls):
+        cls._debug = True
+
+    # @property
+    # def debug(cls):
+    #     return cls._debug
+
     def __init__(self, file=None, filename=None, dirname=None,
                  do_sanitize=True, **kw):
         """
