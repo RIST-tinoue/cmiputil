@@ -111,10 +111,11 @@ Example with a <sub_experiment_id>::
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190523'
-__date__ = '2019/05/23'
+__version__ = 'v20190611'
+__date__ = '2019/06/11'
 
 from cmiputil.convoc import ConVoc
+from cmiputil.braceexpand import braceexpand
 import netCDF4 as nc
 from pathlib import Path
 import re
@@ -540,7 +541,7 @@ class DRS:
 
         """
         fname = self.fileName(prefix=prefix)
-        flist = [glob.glob(p) for p in self._expandbrace(str(fname))]
+        flist = [glob.glob(p) for p in braceexpand(str(fname))]
         return [f for ff in flist for f in ff]
 
     def dirName(self, prefix=None, allow_asterisk=True):
@@ -615,6 +616,7 @@ class DRS:
             if type(v) is list:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
+        print(attr)
 
         d = Path(
            attr["mip_era"],
@@ -666,7 +668,7 @@ class DRS:
 
         """
         dname = self.dirName(prefix=prefix)  # may contain '*' and braces
-        plist = [glob.glob(p) for p in self._expandbrace(str(dname))]
+        plist = [glob.glob(p) for p in braceexpand(str(dname))]
         return [p for pp in plist for p in pp]
 
     def splitFileName(self, fname, validate=False):
@@ -1060,9 +1062,6 @@ class DRS:
                         delattr(self, a)
         return all(res.values())
 
-    def _expandbrace(self, path):
-        return _getitem(path)[0]
-
     def _check_time_range(self, value):
         # TODO: precision and `-clim` depends on the attribute `frequency`.
         #       but I don't need quality assurance.
@@ -1096,46 +1095,6 @@ class DRS:
         return pat.fullmatch(value) is not None
 
 
-# Below two methods are borrowed from
-# https://rosettacode.org/wiki/Brace_expansion#Python.
-# Stated that "Content is available under GNU Free Documentation
-# License 1.2 unless otherwise noted".
-def _getitem(s, depth=0):
-    out = [""]
-    while s:
-        c = s[0]
-        if depth and (c == ',' or c == '}'):
-            return out, s
-        if c == '{':
-            x = _getgroup(s[1:], depth+1)
-            if x:
-                out, s = [a+b for a in out for b in x[0]], x[1]
-                continue
-        if c == '\\' and len(s) > 1:
-            s, c = s[1:], c + s[1]
-
-        out, s = [a+c for a in out], s[1:]
-
-    return out, s
-
-
-def _getgroup(s, depth):
-    out, comma = [], False
-    while s:
-        g, s = _getitem(s, depth)
-        if not s:
-            break
-        out += g
-
-        if s[0] == '}':
-            if comma:
-                return out, s[1:]
-            return ['{' + a + '}' for a in out], s[1:]
-
-        if s[0] == ',':
-            comma, s = True, s[1:]
-
-    return None
 
 
 sample_attrs = {
