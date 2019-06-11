@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Search by ESGF RESTful API, get and open multiple datafiles,
-create meta info.
+Search by ESGF RESTful API, get to the datafile via OPenDAP.
 
 See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
 for the detail ESGF RESTful API.
@@ -19,11 +18,12 @@ follows;
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
 2. get catalog URLs via :meth:`ESGFSearch.getCatURLs` method,
 3. get dataset URLs via :meth:`ESGFSearch.getDataURLs` method,
-4. get dataset via :meth:`ESGFSearch.getDatasets` method,
+4. get dataset via :meth:`ESGFSearch.openDatasets` method,
 
 Catalog URLs, dataset URLs, and dataset objects are all stored as
 instance attributes.
 
+:meth:`getDataset` does 3. and 4. above at once.
 
 Config File
 -----------

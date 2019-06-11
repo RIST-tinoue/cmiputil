@@ -86,7 +86,7 @@ def main():
     pprint(es.data_urls)
 
     # from URLs, open and return datasets
-    es.getDatasets()
+    es.openDatasets()
 
     print('Num of datasets:', len(es.datasets))
     if (len(es.datasets) < 1):
