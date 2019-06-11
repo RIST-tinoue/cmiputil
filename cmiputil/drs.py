@@ -111,10 +111,11 @@ Example with a <sub_experiment_id>::
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190523'
-__date__ = '2019/05/23'
+__version__ = 'v20190611'
+__date__ = '2019/06/11'
 
 from cmiputil.convoc import ConVoc
+from cmiputil.braceexpand import braceexpand
 import netCDF4 as nc
 from pathlib import Path
 import re
@@ -526,7 +527,7 @@ class DRS:
 
         """
         fname = self.fileName(prefix=prefix)
-        flist = [glob.glob(p) for p in self._expandbrace(str(fname))]
+        flist = [glob.glob(p) for p in braceexpand(str(fname))]
         return [f for ff in flist for f in ff]
 
     def dirName(self, prefix=None, allow_asterisk=True):
@@ -601,6 +602,7 @@ class DRS:
             if type(v) is list:
                 v = '{'+','.join(v)+'}'
             attr[a] = v
+        print(attr)
 
         d = Path(
            attr["mip_era"],
@@ -652,7 +654,7 @@ class DRS:
 
         """
         dname = self.dirName(prefix=prefix)  # may contain '*' and braces
-        plist = [glob.glob(p) for p in self._expandbrace(str(dname))]
+        plist = [glob.glob(p) for p in braceexpand(str(dname))]
         return [p for pp in plist for p in pp]
 
     def splitFileName(self, fname, validate=False):
@@ -1045,13 +1047,6 @@ class DRS:
                     if (delete_invalid):
                         delattr(self, a)
         return all(res.values())
-
-    def _expandbrace(self, path):
-        """
-        TODO:
-            Implement This ASAP, with suitable license!!
-        """
-        raise NotImplementedError
 
     def _check_time_range(self, value):
         # TODO: precision and `-clim` depends on the attribute `frequency`.
