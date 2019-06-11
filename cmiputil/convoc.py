@@ -4,12 +4,17 @@
 """
 Access CMIP6 Controlled Vocabularies(CVs).
 
+Controlled Vocabularies
+~~~~~~~~~~~~~~~~~~~~~~~
 A CV, in simplest form, is a list of the permitted values that can be
 assigned to a given global attribute, such as <activity_id>,
 <experiment_id>, etc.
 
 For some attributes, such as <source_id>, its value is a key-value
 pair, whose value is again dict of key-value.
+
+CVs search path
+~~~~~~~~~~~~~~~
 
 CVs are maintained as json files. You should clone them from github.
 
@@ -63,7 +68,7 @@ def getDefaultConf():
     """
     Return default values for config file.
 
-    Intended to be called before config.Conf.writeSampleConf()
+    Intended to be called before :meth:`config.writeConf`
 
     Example:
        >>> conf = config.Conf(None)
@@ -84,6 +89,10 @@ class ConVoc:
     keep as a member.
 
     See :meth:`setSearchPath()` for the argument `path`.
+
+    Attributes:
+        conf : '[ConVoc]' section of conffile
+        cvpath  : list of CV files search path.
 
     Args:
         conf (path-like): config file
