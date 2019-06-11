@@ -44,7 +44,6 @@ __version__ = 'v20190602'
 __date__ = '2019/06/02'
 
 from cmiputil import drs, config
-from pathlib import Path
 import urllib3
 import json
 import xarray as xr
@@ -71,8 +70,10 @@ class ESGFSearch():
 
     Attributes:
         conf: :class:`config.Conf` instance
-        search_service: search service for RESTful API, eg., ``http://esgf-node.llnl.gov/esg-search/``
-        service_type: service type for RESTful API. currently ``search`` only allowed.
+        search_service: search service for RESTful API, eg.,
+                        ``http://esgf-node.llnl.gov/esg-search/``
+        service_type: service type for RESTful API.
+                      currently ``search`` only allowed.
         aggregate: access aggregated via OPeNDAP.
         datatype_xarray: open dataset as xarray or netCDF4
         params: keyword parameters and facet parameters for RESTful API
@@ -81,20 +82,33 @@ class ESGFSearch():
         datasets: list of obtained datasets
     """
     def __init__(self, conffile=""):
-
         self.conf = config.Conf(conffile)
+        try:
+            self.search_service = self.conf['ESGFSearch']['search_service']
+            self.service_type = self.conf['ESGFSearch']['service_type']
+        except KeyError:
+            self.search_service = search_service_default
+            self.service_type = service_type_default
 
-        self.search_service = self.conf['ESGFSearch']['search_service']
-        self.service_type = self.conf['ESGFSearch']['service_type']
-        self.aggregate = aggregate_default
-        if (self.conf.has_option('ESGFSearch', 'aggregate')):
-            self.aggregate = self.conf.getboolean('ESGFSearch','aggregate')
-        self.datatype_xarray = datatype_xarray_default
-        if (self.conf.has_option('ESGFSearch', 'datatype_xarray')):
-            self.datatype_xarray = self.conf.getboolean('ESGFSearch','datatype_xarray')
+        try:
+            self.aggregate = self.conf['ESGFSearch']['aggregate']
+        except KeyError:
+            self.aggregate = aggregate_default
 
-        self.params = dict(self.conf['ESGFSearch.keywords'].items())
-        self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
+        try:
+            self.datatype_xarray = self.conf['ESGFSearch']['datatype_xarray']
+        except KeyError:
+            self.datatype_xarray = datatype_xarray_default
+
+        try:
+            self.params = dict(self.conf['ESGFSearch.keywords'].items())
+        except KeyError:
+            self.params = {}
+
+        try:
+            self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
+        except KeyError:
+            pass
 
         self.debug = False
 
@@ -174,7 +188,6 @@ class ESGFSearch():
         """
         self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
 
-
     def _getDataURL(self, url):
 
         try:
@@ -184,7 +197,7 @@ class ESGFSearch():
             raise
 
         if self.debug:
-            print('dbg:aggregate:',self.aggregate)
+            print('dbg:aggregate:', self.aggregate)
 
         if self.aggregate:
             # construct base url
@@ -198,12 +211,11 @@ class ESGFSearch():
             data_url += ds.url_path
         else:
             data_url = [x.access_urls['OpenDAPServer']
-                    for x in cat.datasets.values()
-                    if 'OpenDAPServer' in x.access_urls]
+                        for x in cat.datasets.values()
+                        if 'OpenDAPServer' in x.access_urls]
             data_url.sort()
 
         return data_url
-
 
     def openDatasets(self):
         """
@@ -224,7 +236,6 @@ class ESGFSearch():
         res = [self._openDataset(url) for url in self.data_urls]
         self.datasets = [d for d in res if d]
 
-
     def _openDataset(self, url):
         if self.datatype_xarray:
             try:
@@ -235,7 +246,8 @@ class ESGFSearch():
                     #                      decode_times=False, decode_cf=False)
                     ds = xr.open_dataset(url, decode_cf=False)
             except (KeyError, OSError) as e:
-                print(f"Error in opening xarray dataset:{basename(url)}:{e.args}\n Skip.")
+                print(f"Error in opening xarray dataset:"
+                      f"{basename(url)}:{e.args}\n Skip.")
             else:
                 return ds
         else:
@@ -245,10 +257,10 @@ class ESGFSearch():
                 else:
                     ds = nc.Dataset(url, 'r')
             except (KeyError, OSError) as e:
-                print(f"Error in opening netCDF dataset:{basename(url)}:{e.args}\n Skip.")
+                print(f"Error in opening netCDF dataset:"
+                      f"{basename(url)}:{e.args}\n Skip.")
             else:
                 return ds
-
 
     def getDatasets(self):
         """
@@ -266,7 +278,6 @@ class ESGFSearch():
         """
         self.getDataURLs()
         self.openDatasets()
-
 
     def getLocalPath(self, params, base_dir=None):
         """
@@ -311,6 +322,7 @@ def _getServiceBase(services):
 
 ########################################################################
 # defaults
+
 
 #: Default search service URL
 search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
@@ -360,11 +372,10 @@ def getDefaultConf():
     res['ESGFSearch'] = {'search_service': search_service_default,
                          'service_type': service_type_default,
                          'aggregate': aggregate_default,
-                         'datatype_xarray': datatype_xarray_default }
-    res['ESGFSearch.keywords'] =  keywords_default
+                         'datatype_xarray': datatype_xarray_default}
+    res['ESGFSearch.keywords'] = keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
-
 
 
 if (__name__ == '__main__'):
