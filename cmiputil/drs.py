@@ -954,10 +954,10 @@ class DRS:
             # Currently, value of <sub_experiment_id> used in
             # published datasets is only 's1920', which is not in CVs.
             # So avoid check tentatively
-            return (ConVoc().isValidValueForAttr(value, attr)
+            return (self._cvs.isValidValueForAttr(value, attr)
                     or value == 's1920')
-        elif attr in ConVoc().managedAttribs:
-            return ConVoc().isValidValueForAttr(value, attr)
+        elif attr in self._cvs.managedAttribs:
+            return self._cvs.isValidValueForAttr(value, attr)
         elif attr == 'time_range':
             return self._check_time_range(value)
         elif attr == 'version':
