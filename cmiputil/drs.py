@@ -1047,7 +1047,11 @@ class DRS:
         return all(res.values())
 
     def _expandbrace(self, path):
-        return _getitem(path)[0]
+        """
+        TODO:
+            Implement This ASAP, with suitable license!!
+        """
+        raise NotImplementedError
 
     def _check_time_range(self, value):
         # TODO: precision and `-clim` depends on the attribute `frequency`.
@@ -1082,46 +1086,6 @@ class DRS:
         return pat.fullmatch(value) is not None
 
 
-# Below two methods are borrowed from
-# https://rosettacode.org/wiki/Brace_expansion#Python.
-# Stated that "Content is available under GNU Free Documentation
-# License 1.2 unless otherwise noted".
-def _getitem(s, depth=0):
-    out = [""]
-    while s:
-        c = s[0]
-        if depth and (c == ',' or c == '}'):
-            return out, s
-        if c == '{':
-            x = _getgroup(s[1:], depth+1)
-            if x:
-                out, s = [a+b for a in out for b in x[0]], x[1]
-                continue
-        if c == '\\' and len(s) > 1:
-            s, c = s[1:], c + s[1]
-
-        out, s = [a+c for a in out], s[1:]
-
-    return out, s
-
-
-def _getgroup(s, depth):
-    out, comma = [], False
-    while s:
-        g, s = _getitem(s, depth)
-        if not s:
-            break
-        out += g
-
-        if s[0] == '}':
-            if comma:
-                return out, s[1:]
-            return ['{' + a + '}' for a in out], s[1:]
-
-        if s[0] == ',':
-            comma, s = True, s[1:]
-
-    return None
 
 
 sample_attrs = {
