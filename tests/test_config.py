@@ -63,12 +63,12 @@ class test_Config(unittest.TestCase):
         res = Path(self.conffile).read_text().strip()
         self.assertEqual(ref, res)
 
-    def test_setDefaultSection00(self):
-        ref = config.conf_default
+    def test_setCommonSection00(self):
+        ref = config.common_config
 
         conf = config.Conf(None)
-        conf.setDefaultSection()
-        res = dict(conf[config.conf_section].items())
+        conf.setCommonSection()
+        res = dict(conf['cmiputil'])
         self.assertEqual(ref, res)
 
 

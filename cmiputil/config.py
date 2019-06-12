@@ -3,53 +3,78 @@
 """
 Maintain config file for cmiputil package.
 
-Config file for this package is so called 'INI file', handled by
-python standard `configparser` module.
+Config file format for this package is so called 'INI file', handled
+by python standard `configparser module`_, so you can use
+`interpolation of values`_.
 
-Default name of config file is ``cmiputil.conf``, and searched in
-$HOME then current directory. If `file` is specified to the
-constructor, that is read and override the precedence.
+Default name of config file is ``cmiputil.conf`` (set as
+:attr:`conf_name`), and searched in $HOME then current directory (set
+as :attr:`conf_dir`). If `file` is specified to the constructor, that
+is read and **override** the precedence.
 
-"Default" section name is :attr:`conf_section` and the key=value pair
-is :attr:`conf_default`.
+"Common" section, which any module in this package may access, name is
+:attr:`common_sect_name` and the key=value pair is
+:attr:`common_config`.
 
 
-You can create sample(default) conf file by :mod:`createSampleConf`,
-collect default configuration of each module by ``getDefaultConf()``
-in each module and :meth:`read_dict`, then :meth:`writeConf` to write
-the file.
+You can create sample(default) config file by :mod:`createSampleConf`
+program, that collects default configuration of each module by
+``getDefaultConf()`` in each module and `Conf.read_dict()`_,
+then :meth:`Conf.writeConf` to write the file.
 
+.. _configparser module:
+   https://docs.python.org/3/library/configparser.html
+
+.. _interpolation of values:
+   https://docs.python.org/3/library/configparser.html#interpolation-of-values
+
+.. _configparser.ConfigParser:
+   https://docs.python.org/3/library/configparser.html#configparser-objects
+
+.. _Conf.read_dict():
+   https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read_dict
 
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190606'
-__date__ = '2019/06/06'
+__version__ = 'v20190612'
+__date__ = '2019/06/12'
 
 import configparser
 from pathlib import Path
 # from pprint import pprint
 
-#: directory list of the conffile, order is important.
+#: directory list of the config file, order is important since the latter
+#: override the former.
 conf_dir = ['~/', './', ]
 
-#: name of the conffile
+#: name of the config file
 conf_name = 'cmiputil.conf'
 
-#: name of the 'default' section
-conf_section = 'cmiputil'
+#: name of the 'common' section
+common_sect_name = 'cmiputil'
 
-#: configuration of default section.
-conf_default = {'cmip6_data_dir': '/data'}
+#: configuration of 'common' section.
+common_config = {'cmip6_data_dir': '/data'}
 
 
 class Conf(configparser.ConfigParser):
     """
-    Args:
-        file (str or path-like) or None: config file
+    Config parser for this package.
 
-    If `file` is ``None``, no conf file is read and *blank* instance
-    is created.  If you want only default conf files, set ``file=""``.
+    See `configparser.ConfigParser`_ for other methods and details.
+
+    Args:
+        file (str or path-like): config file
+
+    Note:
+        If `file` is ``None``, no config file is read and *blank*
+        instance is created.  If you want only default config files,
+        set ``file=""``.
+
+    Attributes:
+        files (list of Path): config files read in.
+        commonSection (SectionProxy): "Common" section for this package.
     """
     _debug = False
 
@@ -76,20 +101,21 @@ class Conf(configparser.ConfigParser):
                 self.files.append(file)
         res = self.read(self.files)
         if (self._debug):
-            print(f"dbg:read conf file(s):{res}")
+            print(f"dbg:read config file(s):{res}")
 
-    def setDefaultSection(self):
+    def setCommonSection(self):
         """
-        Set "default" section.
+        Set "Common" section.
         """
-        self[conf_section] = conf_default
+        self[common_sect_name] = common_config
+        self.commonSection = self[common_sect_name]
 
     def writeConf(self, fname, overwrite=False):
         """
         Write current attributes to the `fname`.
 
         You have to set configurations for each module via, for example,
-        :meth:`self.read_dict`.
+        `Conf.read_dict()`_.
 
         Args:
             fname (str or path-like): file to be written
@@ -98,11 +124,12 @@ class Conf(configparser.ConfigParser):
         Examples:
 
             >>> from cmiputil import esgfsearch
-            >>> conf = Conf('')
-            >>> conf.setDefaultSection()
+            >>> conf = Conf(None)
+            >>> conf.setCommonSection()
             >>> d = esgfsearch.getDefaultConf()
             >>> conf.read_dict(d)
             >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
+
         """
         if ((not Path(fname).is_file()) or overwrite):
             with open(fname, 'w') as f:
