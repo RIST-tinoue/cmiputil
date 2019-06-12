@@ -127,20 +127,22 @@ class ESGFSearch():
 
     def __init__(self, conffile=""):
         self.conf = config.Conf(conffile)
+
+        sec = self.conf['ESGFSearch']
         try:
-            self.search_service = self.conf['ESGFSearch']['search_service']
-            self.service_type = self.conf['ESGFSearch']['service_type']
+            self.search_service = sec['search_service']
+            self.service_type = sec['service_type']
         except KeyError:
             self.search_service = search_service_default
             self.service_type = service_type_default
 
         try:
-            self.aggregate = self.conf['ESGFSearch']['aggregate']
+            self.aggregate = sec.getboolean('aggregate')
         except KeyError:
             self.aggregate = aggregate_default
 
         try:
-            self.datatype_xarray = self.conf['ESGFSearch']['datatype_xarray']
+            self.datatype_xarray = sec.getboolean('datatype_xarray')
         except KeyError:
             self.datatype_xarray = datatype_xarray_default
 
