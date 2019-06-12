@@ -395,10 +395,10 @@ class ESGFSearch():
         Opened datasets are stored as :attr:`detaset` of `self`.
         """
         if not self.local_dirs:
-            return None
-
-        res = [self._openLocalDataset(p) for p in self.local_dirs]
-        self.datasets = [d for d in res if d]
+            self.datasets = None
+        else:
+            res = [self._openLocalDataset(p) for p in self.local_dirs]
+            self.datasets = [d for d in res if d]
 
     def _openLocalDataset(self, p):
         return xr.open_mfdataset(list(Path(p).iterdir()),
