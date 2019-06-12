@@ -52,12 +52,13 @@ Local data store
 ================
 
 This module assumes that local data files are stored in the DRS
-complient directory structure. See :mod:`drs` for the details of DRS.
-If you use `synda install` for download and replication of CMIP6 data
-files from ESGF, files are stored in such way.  So you can use
-:meth:`getLocalPath` with :attr:`base_dir` being set as the root of
-this directory structure to find and open your local files with the
-same interface with :meth:`getCatURLs`.
+complient directory structure. See :mod:`drs` module for the details
+of DRS.  If you use `synda install` for download and replication of
+CMIP6 data files from ESGF, files are stored in such way.  So you can
+use :meth:`ESGFSearch.getLocalPath` with :attr:`ESGFSearch.base_dir`
+being set as the root of this directory structure to find and open
+your local files with the same interface with
+:meth:`ESGFSearch.getCatURLs`.
 
 
 .. _ESGF RESTful API: 
@@ -79,6 +80,7 @@ import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 from pprint import pprint
 from os.path import basename
+from pathlib import Path
 
 
 #: OPeNDAP Catalog URL not found
@@ -110,6 +112,12 @@ class ESGFSearch():
         data_urls (list(str) or list of list(str)): obtained dataset URLs
         datasets: list of obtained datasets
         base_dir: base(root) path for local data directory structure
+
+    TODO:
+        - Drop netCDF4 dataset support, only xarray is enough.
+        - Is it necessary to open dataset in this module? Is it enough
+        to obtain URLs or local paths?
+
     """
     _debug = False
 
@@ -332,10 +340,14 @@ class ESGFSearch():
 
     def getLocalPath(self, params=None, base_dir=None):
         """
-        Search local data directory for CMIP6 data.
+        Get local path(s) to match given search condition.
 
         Using same interface with :meth:`getCatURLs()`, obtained path
-        are set as :attr:`localpath` attribute.
+        are set as :attr:`local_dirs` attribute.
+
+        Resulting paths (set as :attr:`localpath`) are DRS compliant
+        (see `Local data store`_) **real existing** ones, braces are
+        expanded and asterisk are globed.
 
         Args:
             params (dict): keyword parameters and facet parameters.
@@ -357,8 +369,11 @@ class ESGFSearch():
             ...           'variable': 'tas', }
             >>> es = esgfsearch.ESGFSearch()
             >>> es.getLocalPath(params, base_dir='/data')
-            >>> str(es.localpath)
-            '/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
+
+            In above, ``es.local_dirs`` is set as below if they are exists::
+
+                ['/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212',
+                 '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
         """
         if params:
             self.params.update(params)
@@ -367,7 +382,27 @@ class ESGFSearch():
             self.base_dir = base_dir
 
         d = drs.DRS(**self.params)
-        self.localpath = d.dirName(prefix=base_dir) / d.fileName()
+        self.local_dirs = d.dirNameList(prefix=self.base_dir)
+
+
+    def openLocalDatasets(self):
+        """
+        Open and return dataset object from local dataset paths.
+
+        Dataset paths are set as :attr:`local_dirs` of `self`, obtained
+        by, for example, :meth:`getLocalPath()`.
+
+        Opened datasets are stored as :attr:`detaset` of `self`.
+        """
+        if not self.local_dirs:
+            return None
+
+        res = [self._openLocalDataset(p) for p in self.local_dirs]
+        self.datasets = [d for d in res if d]
+
+    def _openLocalDataset(self, p):
+        return xr.open_mfdataset(list(Path(p).iterdir()),
+                                 decode_times=False)
 
 
 
