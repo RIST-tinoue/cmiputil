@@ -71,10 +71,22 @@ def getDefaultConf():
     Intended to be called before :meth:`config.writeConf`
 
     Example:
-       >>> conf = config.Conf(None)
-       >>> conf.setDefaultSection()
-       >>> conf.read_dict(getDefaultConf())
-       >>> conf.writeSampleConf('/tmp/cmiputil.conf', overwrite=True)
+        >>> from cmiputil import convoc, config
+        >>> conf = config.Conf(None)   #  to create brank config
+        >>> conf.setCommonSection()
+        >>> d = convoc.getDefaultConf()
+        >>> conf.read_dict(d)
+        >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
+
+        After above example, ``/tmp/cmiputil.conf`` is as below::
+
+            [cmiputil]
+            cmip6_data_dir = /data
+
+            [ConVoc]
+            cmip6_cvs_dir = ./:./CMIP6_CVs:~/CMIP6_CVs:/data/CMIP6_CVs
+
+
     """
     res = {}
     res['ConVoc'] = {'cmip6_cvs_dir': DEFAULT_CVPATH}
