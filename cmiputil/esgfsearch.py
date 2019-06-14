@@ -112,12 +112,6 @@ class ESGFSearch():
         data_urls (list(str) or list of list(str)): obtained dataset URLs
         datasets: list of obtained datasets
         base_dir: base(root) path for local data directory structure
-
-    TODO:
-        - Drop netCDF4 dataset support, only xarray is enough.
-        - Is it necessary to open dataset in this module? Is it enough
-        to obtain URLs or local paths?
-
     """
     _debug = False
 
@@ -460,7 +454,7 @@ def getDefaultConf():
 
     Example:
         >>> from cmiputil import esgfsearch, config
-        >>> conf = config.Conf('')
+        >>> conf = config.Conf(None)   #  to create brank config
         >>> conf.setCommonSection()
         >>> d = esgfsearch.getDefaultConf()
         >>> conf.read_dict(d)
