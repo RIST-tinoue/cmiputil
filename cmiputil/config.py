@@ -103,6 +103,9 @@ class Conf(configparser.ConfigParser):
         if (self._debug):
             print(f"dbg:read config file(s):{res}")
 
+        if self.has_section(common_sect_name):
+            self.commonSection = self[common_sect_name]
+
     def setCommonSection(self):
         """
         Set default "common" section.
@@ -110,7 +113,7 @@ class Conf(configparser.ConfigParser):
         Do not call this after reading in real config files.
         """
         self[common_sect_name] = common_config
-        self.commonSection = self[common_sect_name]
+
 
     def writeConf(self, fname, overwrite=False):
         """
