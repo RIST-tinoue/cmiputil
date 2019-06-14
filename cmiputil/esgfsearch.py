@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """
-Search by ESGF RESTful API, get to the datafile via OPenDAP.
-
-See https://earthsystemcog.org/projects/cog/esgf_search_restful_api
-for the detail ESGF RESTful API.
+Search by `ESGF RESTful API`_, get via `OPeNDAP`_.
 
 This version uses
 `siphon <https://www.unidata.ucar.edu/software/siphon/>`_ and
 `xarray <http://xarray.pydata.org/>`_.
 
 Basic Usage
------------
+===========
+
 
 Typical flow of searching and downloading CMIP6 data from ESGF is as
 follows;
@@ -25,10 +23,22 @@ instance attributes.
 
 :meth:`getDataset` does 3. and 4. above at once.
 
-Config File
------------
+Example:
+    >>> params = {'source_id': 'MIROC6',
+    ...           'experiment_id': 'historical',
+    ...           'variable': 'tas',
+    ...           'variant_label': 'r1i1p1f1'}
+    >>> es = ESGFSearch()
+    >>> es.getCatURLs(params)
+    >>> es.getDataURLs()
+    >>> es.openDatasets()
 
-This module read in conf file, sections below;
+
+
+Config File
+===========
+
+This module read in config file, sections below;
 
 - [ESGFSearch]
     - `search_service`: the base URL of the search service at a ESGF Index Node
@@ -37,11 +47,30 @@ This module read in conf file, sections below;
     - `datatype_xarray` : :meth:`getDatasets` returns xarray or netCDF4
 - [ESGFSearch.keywords] : keyword parameters of RESTful API
 - [ESGFSearch.facets] : facet parameters of RESTful API
+
+Local data store
+================
+
+This module assumes that local data files are stored in the DRS
+complient directory structure. See :mod:`drs` module for the details
+of DRS.  If you use `synda install` for download and replication of
+CMIP6 data files from ESGF, files are stored in such way.  So you can
+use :meth:`ESGFSearch.getLocalPath` with :attr:`ESGFSearch.base_dir`
+being set as the root of this directory structure to find and open
+your local files with the same interface with
+:meth:`ESGFSearch.getCatURLs`.
+
+
+.. _ESGF RESTful API: 
+   https://earthsystemcog.org/projects/cog/esgf_search_restful_api
+
+.. _OPeNDAP:
+   https://www.earthsystemcog.org/projects/cog/doc/opendap
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190602'
-__date__ = '2019/06/02'
+__version__ = 'v20190612'
+__date__ = '2019/06/12'
 
 from cmiputil import drs, config
 import urllib3
@@ -51,18 +80,20 @@ import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 from pprint import pprint
 from os.path import basename
+from pathlib import Path
 
 
+#: OPeNDAP Catalog URL not found
 class NotFoundError(Exception):
     pass
 
 
 class ESGFSearch():
     """
-    Search by ESGF RESTful API, get to the datafile via OPenDAP.
+    Search by ESGF RESTful API, get via OPeNDAP.
 
-    If `conffile` is ``None``, no conf file is read and *blank* instance
-    is created.  If you want only default conf files, set ``conffile=""``.
+    If `conffile` is ``None``, no config file is read and *blank* instance
+    is created.  If you want only default config files, set ``conffile=""``.
     See :mod:`config` module for details.
 
     Args:
@@ -80,6 +111,7 @@ class ESGFSearch():
         cat_urls (list(str)): obtained catalog URLs
         data_urls (list(str) or list of list(str)): obtained dataset URLs
         datasets: list of obtained datasets
+        base_dir: base(root) path for local data directory structure
     """
     _debug = False
 
@@ -97,20 +129,22 @@ class ESGFSearch():
 
     def __init__(self, conffile=""):
         self.conf = config.Conf(conffile)
+
+        sec = self.conf['ESGFSearch']
         try:
-            self.search_service = self.conf['ESGFSearch']['search_service']
-            self.service_type = self.conf['ESGFSearch']['service_type']
+            self.search_service = sec['search_service']
+            self.service_type = sec['service_type']
         except KeyError:
             self.search_service = search_service_default
             self.service_type = service_type_default
 
         try:
-            self.aggregate = self.conf['ESGFSearch']['aggregate']
+            self.aggregate = sec.getboolean('aggregate')
         except KeyError:
             self.aggregate = aggregate_default
 
         try:
-            self.datatype_xarray = self.conf['ESGFSearch']['datatype_xarray']
+            self.datatype_xarray = sec.getboolean('datatype_xarray')
         except KeyError:
             self.datatype_xarray = datatype_xarray_default
 
@@ -123,6 +157,11 @@ class ESGFSearch():
             self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
         except KeyError:
             pass
+
+        try:
+            self.base_dir = self.conf.commonSection['cmip6_data_dir']
+        except KeyError:
+            self.base_dir = None
 
     def getCatURLs(self, params=None, base_url=None):
         """
@@ -293,33 +332,72 @@ class ESGFSearch():
         self.getDataURLs()
         self.openDatasets()
 
-    def getLocalPath(self, params, base_dir=None):
+    def getLocalPath(self, params=None, base_dir=None):
         """
-        Search local data directory for CMIP6 data.
+        Get local path(s) to match given search condition.
 
-        Using same interface with getCatURLs()
+        Using same interface with :meth:`getCatURLs()`, obtained path
+        are set as :attr:`local_dirs` attribute.
+
+        Resulting paths (set as :attr:`localpath`) are DRS compliant
+        (see `Local data store`_) **real existing** ones, braces are
+        expanded and asterisk are globed.
 
         Args:
-            params(dict): keyword parameters and facet parameters.
-            base_url : base path for local data directory.
+            params (dict): keyword parameters and facet parameters.
+            base_dir (str or path-like): base path for local data directory.
         Raises:
             NotFoundError: raised if no paths found.
-        Return:
-            list of path-like:  paths found to match given facets.
 
-        `field` is initialized by :data:`.keyword_defautls` and
-        :data:`.facet_defaults`.
+
+        If `base_dir` is not ``None``, override :attr:`base_dir`.
+
+        `params` is to *update* (use `update()` method of python dict)
+        to :attr:`params` of `self`.
 
         Example:
-            >>> params = {'source_id': 'MIROC6', 'experiment_id': 'historical',
-            ...    'variant_label': 'r1i1p1f1', 'variable': 'tas', }
-            >>> str(getLocalPath(params, base_dir='/data/'))
-            '/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc'
+            >>> from cmiputil import esgfsearch
+            >>> params = {'source_id': 'MIROC6',
+            ...           'experiment_id': 'historical',
+            ...           'variant_label': 'r1i1p1f1',
+            ...           'variable': 'tas', }
+            >>> es = esgfsearch.ESGFSearch()
+            >>> es.getLocalPath(params, base_dir='/data')
+
+            In above, ``es.local_dirs`` is set as below if they are exists::
+
+                ['/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212',
+                 '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
         """
-        d = drs.DRS(**params)
-        p = d.dirName(prefix=base_dir)
-        f = d.fileName()
-        return p / f
+        if params:
+            self.params.update(params)
+
+        if base_dir is not None:
+            self.base_dir = base_dir
+
+        d = drs.DRS(**self.params)
+        self.local_dirs = d.dirNameList(prefix=self.base_dir)
+
+
+    def openLocalDatasets(self):
+        """
+        Open and return dataset object from local dataset paths.
+
+        Dataset paths are set as :attr:`local_dirs` of `self`, obtained
+        by, for example, :meth:`getLocalPath()`.
+
+        Opened datasets are stored as :attr:`detaset` of `self`.
+        """
+        if not self.local_dirs:
+            self.datasets = None
+        else:
+            res = [self._openLocalDataset(p) for p in self.local_dirs]
+            self.datasets = [d for d in res if d]
+
+    def _openLocalDataset(self, p):
+        return xr.open_mfdataset(list(Path(p).iterdir()),
+                                 decode_times=False)
+
 
 
 def _getServiceBase(services):
@@ -371,12 +449,13 @@ def getDefaultConf():
     """
     Return default values for config file.
 
-    Intended to be called before :meth:`config.writeConf`
+    Intended to be called before :meth:`config.writeConf` in
+    :mod:`config`.
 
     Example:
         >>> from cmiputil import esgfsearch, config
-        >>> conf = Conf('')
-        >>> conf.setDefaultSection()
+        >>> conf = config.Conf(None)   #  to create brank config
+        >>> conf.setCommonSection()
         >>> d = esgfsearch.getDefaultConf()
         >>> conf.read_dict(d)
         >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
