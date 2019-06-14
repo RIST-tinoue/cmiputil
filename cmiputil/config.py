@@ -12,15 +12,14 @@ Default name of config file is ``cmiputil.conf`` (set as
 as :attr:`conf_dir`). If `file` is specified to the constructor, that
 is read and **override** the precedence.
 
-"Common" section, which any module in this package may access, name is
-:attr:`common_sect_name` and the key=value pair is
+The name of "Common" section, which any module in this package may
+access, is :attr:`common_sect_name` and the key=value pair is
 :attr:`common_config`.
-
 
 You can create sample(default) config file by :mod:`createSampleConf`
 program, that collects default configuration of each module by
-``getDefaultConf()`` in each module and `Conf.read_dict()`_,
-then :meth:`Conf.writeConf` to write the file.
+``getDefaultConf()`` in each module and write them to the file by
+`Conf.read_dict()` and :meth:`Conf.writeConf`.
 
 .. _configparser module:
    https://docs.python.org/3/library/configparser.html
@@ -37,8 +36,8 @@ then :meth:`Conf.writeConf` to write the file.
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190612'
-__date__ = '2019/06/12'
+__version__ = 'v20190614'
+__date__ = '2019/06/14'
 
 import configparser
 from pathlib import Path
@@ -63,6 +62,7 @@ class Conf(configparser.ConfigParser):
     Config parser for this package.
 
     See `configparser.ConfigParser`_ for other methods and details.
+    This module uses only 'Mapping Protocol Access' only.
 
     Args:
         file (str or path-like): config file
@@ -108,7 +108,9 @@ class Conf(configparser.ConfigParser):
 
     def setCommonSection(self):
         """
-        Set "Common" section.
+        Set default "common" section.
+
+        Do not call this after reading in real config files.
         """
         self[common_sect_name] = common_config
         self.commonSection = self[common_sect_name]
@@ -120,19 +122,43 @@ class Conf(configparser.ConfigParser):
         You have to set configurations for each module via, for example,
         `Conf.read_dict()`_.
 
+        Do not forget to call :meth:`.setCommonSection()` to include
+        common section to write.
+
         Args:
             fname (str or path-like): file to be written
             overwrite (bool): force overwrite
 
         Examples:
 
-            >>> from cmiputil import esgfsearch
-            >>> conf = Conf(None)
+            >>> from cmiputil import config, esgfsearch
+            >>> conf = config.Conf(None)
             >>> conf.setCommonSection()
             >>> d = esgfsearch.getDefaultConf()
             >>> conf.read_dict(d)
             >>> conf.writeConf('/tmp/cmiputil.conf', overwrite=True)
 
+            After above example, ``/tmp/cmiputil.conf`` is as below::
+
+                [cmiputil]
+                cmip6_data_dir = /data
+
+                [ESGFSearch]
+                search_service = http://esgf-node.llnl.gov/esg-search/
+                service_type = search
+                aggregate = True
+                datatype_xarray = True
+
+                [ESGFSearch.keywords]
+                format = application/solr+json
+                replica = false
+                latest = true
+                limit = 10000
+                type = Dataset
+                fields = url
+
+                [ESGFSearch.facets]
+                table_id = Amon
         """
         if ((not Path(fname).is_file()) or overwrite):
             with open(fname, 'w') as f:
