@@ -103,9 +103,6 @@ class Conf(configparser.ConfigParser):
         if (self._debug):
             print(f"dbg:read config file(s):{res}")
 
-        self.setCommonSection()
-
-
     def setCommonSection(self):
         """
         Set default "common" section.
