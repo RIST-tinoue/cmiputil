@@ -1004,8 +1004,8 @@ class DRS:
             else:
                 res = self.variant_label
             return res
-        # else:
-        #     return None
+        else:
+            return '*'
 
     def doSanitize(self, silent=True):
         """
