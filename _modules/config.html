@@ -161,14 +161,17 @@
         <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;dbg:read config file(s):</span><span class="si">{res}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_section</span><span class="p">(</span><span class="n">common_sect_name</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">commonSection</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span>
+
 <div class="viewcode-block" id="Conf.setCommonSection"><a class="viewcode-back" href="../config.html#config.Conf.setCommonSection">[docs]</a>    <span class="k">def</span> <span class="nf">setCommonSection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set default &quot;common&quot; section.</span>
 
 <span class="sd">        Do not call this after reading in real config files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">common_config</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">commonSection</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">common_config</span></div>
+
 
 <div class="viewcode-block" id="Conf.writeConf"><a class="viewcode-back" href="../config.html#config.Conf.writeConf">[docs]</a>    <span class="k">def</span> <span class="nf">writeConf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

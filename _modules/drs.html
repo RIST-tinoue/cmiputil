@@ -711,8 +711,11 @@
 <span class="sd">            &gt;&gt;&gt; del attrs[&#39;version&#39;]</span>
 <span class="sd">            &gt;&gt;&gt; str(drs.DRS(**attrs).dirName())</span>
 <span class="sd">            &#39;CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*&#39;</span>
-<span class="sd">            &gt;&gt;&gt; drs.DRS(**attrs).dirNameList(prefix=&#39;/data&#39;)</span>
-<span class="sd">            [&#39;/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214&#39;, &#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; res = drs.DRS(**attrs).dirNameList(prefix=&#39;/data&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; ref = [Path(&#39;/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214&#39;),</span>
+<span class="sd">            ...        Path(&#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;)]</span>
+<span class="sd">            &gt;&gt;&gt; print(ref == res)</span>
+<span class="sd">            True</span>
 
 <span class="sd">            The last example will return ``[]`` if expanded directories do</span>
 <span class="sd">            not exist.</span>
@@ -725,8 +728,8 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>  <span class="c1"># may contain &#39;*&#39; and braces</span>
-        <span class="n">plist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">braceexpand</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dname</span><span class="p">))]</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">plist</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">]</span></div>
+        <span class="n">plist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">iglob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">braceexpand</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dname</span><span class="p">))]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">plist</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="DRS.splitFileName"><a class="viewcode-back" href="../drs.html#drs.DRS.splitFileName">[docs]</a>    <span class="k">def</span> <span class="nf">splitFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Split filename to attributes for DRS.</span>
@@ -1062,8 +1065,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant_label</span>
             <span class="k">return</span> <span class="n">res</span>
-        <span class="c1"># else:</span>
-        <span class="c1">#     return None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;*&#39;</span>
 
 <div class="viewcode-block" id="DRS.doSanitize"><a class="viewcode-back" href="../drs.html#drs.DRS.doSanitize">[docs]</a>    <span class="k">def</span> <span class="nf">doSanitize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

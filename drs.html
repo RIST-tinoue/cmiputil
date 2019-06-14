@@ -348,8 +348,11 @@ braces</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">dirName</span><span class="p">())</span>
 <span class="go">&#39;CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">dirNameList</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;/data&#39;</span><span class="p">)</span>
-<span class="go">[&#39;/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214&#39;, &#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">attrs</span><span class="p">)</span><span class="o">.</span><span class="n">dirNameList</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;/data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ref</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214&#39;</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ref</span> <span class="o">==</span> <span class="n">res</span><span class="p">)</span>
+<span class="go">True</span>
 </pre></div>
 </div>
 <p>The last example will return <code class="docutils literal notranslate"><span class="pre">[]</span></code> if expanded directories do
