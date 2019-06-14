@@ -34,7 +34,7 @@ def main():
     a = my_parser().parse_args()
 
     conf = cmiputil.config.Conf(None)
-    conf.setDefaultSection()
+    conf.setCommonSection()
 
     try:
         d = cmiputil.esgfsearch.getDefaultConf()
