@@ -653,8 +653,11 @@ class DRS:
             >>> del attrs['version']
             >>> str(drs.DRS(**attrs).dirName())
             'CMIP6/CMIP/MIROC/MIROC6/{amip,piControl}/r1i1p1f1/Amon/tas/gn/*'
-            >>> drs.DRS(**attrs).dirNameList(prefix='/data')
-            ['/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214', '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
+            >>> res = drs.DRS(**attrs).dirNameList(prefix='/data')
+            >>> ref = [Path('/data/CMIP6/CMIP/MIROC/MIROC6/amip/r1i1p1f1/Amon/tas/gn/v20181214'),
+            ...        Path('/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212')]
+            >>> print(ref == res)
+            True
 
             The last example will return ``[]`` if expanded directories do
             not exist.
