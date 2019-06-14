@@ -163,6 +163,8 @@ class ESGFSearch():
 
         if self._debug:
             config.Conf._enable_debug()
+            drs.DRS._enable_debug()
+            
         self.conf = config.Conf(conffile)
 
         sec = self.conf['ESGFSearch']
