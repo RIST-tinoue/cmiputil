@@ -160,6 +160,9 @@ class ESGFSearch():
     #     return cls._debug
 
     def __init__(self, conffile=""):
+
+        if self._debug:
+            config.Conf._enable_debug()
         self.conf = config.Conf(conffile)
 
         sec = self.conf['ESGFSearch']
@@ -326,6 +329,11 @@ class ESGFSearch():
 
         if base_dir is not None:
             self.base_dir = base_dir
+
+        if (self._debug):
+            print(f'dbg:ESGFSearch.getLocalDirs:base_dir:{self.base_dir}')
+            print('dbg:ESGFSeaerch.getLocalDirs:params:')
+            pprint(self.params)
 
         d = drs.DRS(**self.params)
         self.local_dirs = d.dirNameList(prefix=self.base_dir)
