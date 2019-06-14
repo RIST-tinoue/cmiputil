@@ -6,4 +6,4 @@ from . import esgfsearch
 from . import timer
 from . import braceexpand
 
-__version__ = '0.7'
+__version__ = '0.8'
