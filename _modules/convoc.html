@@ -62,12 +62,17 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Access CMIP6 Controlled Vocabularies(CVs).</span>
 
+<span class="sd">Controlled Vocabularies</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
 <span class="sd">A CV, in simplest form, is a list of the permitted values that can be</span>
 <span class="sd">assigned to a given global attribute, such as &lt;activity_id&gt;,</span>
 <span class="sd">&lt;experiment_id&gt;, etc.</span>
 
 <span class="sd">For some attributes, such as &lt;source_id&gt;, its value is a key-value</span>
 <span class="sd">pair, whose value is again dict of key-value.</span>
+
+<span class="sd">CVs search path</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
 
 <span class="sd">CVs are maintained as json files. You should clone them from github.</span>
 
@@ -84,8 +89,8 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
 <span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190530&#39;</span>
-<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/05/30&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190611&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/11&#39;</span>
 
 <span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
@@ -121,13 +126,25 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return default values for config file.</span>
 
-<span class="sd">    Intended to be called before config.Conf.writeSampleConf()</span>
+<span class="sd">    Intended to be called before :meth:`config.writeConf`</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">       &gt;&gt;&gt; conf = config.Conf(None)</span>
-<span class="sd">       &gt;&gt;&gt; conf.setDefaultSection()</span>
-<span class="sd">       &gt;&gt;&gt; conf.read_dict(getDefaultConf())</span>
-<span class="sd">       &gt;&gt;&gt; conf.writeSampleConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
+<span class="sd">        &gt;&gt;&gt; from cmiputil import convoc, config</span>
+<span class="sd">        &gt;&gt;&gt; conf = config.Conf(None)   #  to create brank config</span>
+<span class="sd">        &gt;&gt;&gt; conf.setCommonSection()</span>
+<span class="sd">        &gt;&gt;&gt; d = convoc.getDefaultConf()</span>
+<span class="sd">        &gt;&gt;&gt; conf.read_dict(d)</span>
+<span class="sd">        &gt;&gt;&gt; conf.writeConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
+
+<span class="sd">        After above example, ``/tmp/cmiputil.conf`` is as below::</span>
+
+<span class="sd">            [cmiputil]</span>
+<span class="sd">            cmip6_data_dir = /data</span>
+
+<span class="sd">            [ConVoc]</span>
+<span class="sd">            cmip6_cvs_dir = ./:./CMIP6_CVs:~/CMIP6_CVs:/data/CMIP6_CVs</span>
+
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ConVoc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmip6_cvs_dir&#39;</span><span class="p">:</span> <span class="n">DEFAULT_CVPATH</span><span class="p">}</span>
@@ -142,6 +159,10 @@
 <span class="sd">    keep as a member.</span>
 
 <span class="sd">    See :meth:`setSearchPath()` for the argument `path`.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        conf : &#39;[ConVoc]&#39; section of conffile</span>
+<span class="sd">        cvpath  : list of CV files search path.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        conf (path-like): config file</span>
@@ -210,12 +231,29 @@
 <span class="sd">    attribute, not an instance attribute.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def debug(cls):</span>
+    <span class="c1">#     return cls._debug</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conffile</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ConVoc&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setSearchPath</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;dbg:ConVoc:cvpath:</span><span class="si">{self.cvpath}</span><span class="s1">&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ConVoc.setSearchPath"><a class="viewcode-back" href="../convoc.html#convoc.ConVoc.setSearchPath">[docs]</a>    <span class="k">def</span> <span class="nf">setSearchPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -351,7 +389,6 @@
 
 
 <span class="k">if</span> <span class="p">(</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">drs</span>
     <span class="kn">import</span> <span class="nn">doctest</span>
     <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
 </pre></div>

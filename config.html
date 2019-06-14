@@ -17,7 +17,7 @@
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="createSampleConf program" href="createSampleConf.html" />
+    <link rel="next" title="cmiputil.braceexpand module" href="braceexpand.html" />
     <link rel="prev" title="cmiputil.timer module" href="timer.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
@@ -34,7 +34,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="createSampleConf.html" title="createSampleConf program"
+          <a href="braceexpand.html" title="cmiputil.braceexpand module"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="timer.html" title="cmiputil.timer module"
@@ -48,8 +48,8 @@
   <p class="topless"><a href="timer.html"
                         title="previous chapter">cmiputil.timer module</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="createSampleConf.html"
-                        title="next chapter">createSampleConf program</a></p>
+  <p class="topless"><a href="braceexpand.html"
+                        title="next chapter">cmiputil.braceexpand module</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -71,32 +71,65 @@
   <div class="section" id="module-config">
 <span id="cmiputil-config-module"></span><h1>cmiputil.config module<a class="headerlink" href="#module-config" title="Permalink to this headline">¶</a></h1>
 <p>Maintain config file for cmiputil package.</p>
-<p>Config file for this package is so called ‘INI file’, handled by
-python standard <cite>configparser</cite> module.</p>
-<p>Default name of config file is <code class="docutils literal notranslate"><span class="pre">cmiputil.conf</span></code>, and searched in
-$HOME then current directory. If <cite>file</cite> is specified to the
-constructor, that is read and override the precedence.</p>
-<p>“Default” section name is <a class="reference internal" href="#config.conf_section" title="config.conf_section"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conf_section</span></code></a> and the key=value pair
-is <a class="reference internal" href="#config.conf_default" title="config.conf_default"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conf_default</span></code></a>.</p>
-<p>You can create sample(default) conf file by <a class="reference internal" href="createSampleConf.html#module-createSampleConf" title="createSampleConf"><code class="xref py py-mod docutils literal notranslate"><span class="pre">createSampleConf</span></code></a>,
-collect default configuration of each module by <code class="docutils literal notranslate"><span class="pre">getDefaultConf()</span></code>
-in each module and <code class="xref py py-meth docutils literal notranslate"><span class="pre">read_dict()</span></code>, then <code class="xref py py-meth docutils literal notranslate"><span class="pre">writeConf()</span></code> to write
-the file.</p>
+<p>Config file format for this package is so called ‘INI file’, handled
+by python standard <a class="reference external" href="https://docs.python.org/3/library/configparser.html">configparser module</a>, so you can use
+<a class="reference external" href="https://docs.python.org/3/library/configparser.html#interpolation-of-values">interpolation of values</a>.</p>
+<p>Default name of config file is <code class="docutils literal notranslate"><span class="pre">cmiputil.conf</span></code> (set as
+<a class="reference internal" href="#config.conf_name" title="config.conf_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conf_name</span></code></a>), and searched in $HOME then current directory (set
+as <a class="reference internal" href="#config.conf_dir" title="config.conf_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conf_dir</span></code></a>). If <cite>file</cite> is specified to the constructor, that
+is read and <strong>override</strong> the precedence.</p>
+<p>The name of “Common” section, which any module in this package may
+access, is <a class="reference internal" href="#config.common_sect_name" title="config.common_sect_name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">common_sect_name</span></code></a> and the key=value pair is
+<a class="reference internal" href="#config.common_config" title="config.common_config"><code class="xref py py-attr docutils literal notranslate"><span class="pre">common_config</span></code></a>.</p>
+<p>You can create sample(default) config file by <a class="reference internal" href="createSampleConf.html#module-createSampleConf" title="createSampleConf"><code class="xref py py-mod docutils literal notranslate"><span class="pre">createSampleConf</span></code></a>
+program, that collects default configuration of each module by
+<code class="docutils literal notranslate"><span class="pre">getDefaultConf()</span></code> in each module and write them to the file by
+<cite>Conf.read_dict()</cite> and <a class="reference internal" href="#config.Conf.writeConf" title="config.Conf.writeConf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Conf.writeConf()</span></code></a>.</p>
 <dl class="class">
 <dt id="config.Conf">
 <em class="property">class </em><code class="descclassname">config.</code><code class="descname">Conf</code><span class="sig-paren">(</span><em>file=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></p>
+<p>Config parser for this package.</p>
+<p>See <a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser-objects">configparser.ConfigParser</a> for other methods and details.
+This module uses only ‘Mapping Protocol Access’ only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>file</strong> (<em>str</em><em> or </em><em>path-like</em>) – config file</p>
 </dd>
 </dl>
-<p>If <cite>file</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no conf file is read and <em>blank</em> instance
-is created.  If you want only default conf files, set <code class="docutils literal notranslate"><span class="pre">file=&quot;&quot;</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <cite>file</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no config file is read and <em>blank</em>
+instance is created.  If you want only default config files,
+set <code class="docutils literal notranslate"><span class="pre">file=&quot;&quot;</span></code>.</p>
+</div>
+<dl class="attribute">
+<dt id="config.Conf.files">
+<code class="descname">files</code><a class="headerlink" href="#config.Conf.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>config files read in.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="config.Conf.commonSection">
+<code class="descname">commonSection</code><a class="headerlink" href="#config.Conf.commonSection" title="Permalink to this definition">¶</a></dt>
+<dd><p>“Common” section for this package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>SectionProxy</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
-<dt id="config.Conf.setDefaultSection">
-<code class="descname">setDefaultSection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.setDefaultSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.setDefaultSection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set “default” section.</p>
+<dt id="config.Conf.setCommonSection">
+<code class="descname">setCommonSection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.setCommonSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.setCommonSection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default “common” section.</p>
+<p>Do not call this after reading in real config files.</p>
 </dd></dl>
 
 <dl class="method">
@@ -104,7 +137,9 @@ is created.  If you want only default conf files, set <code class="docutils lite
 <code class="descname">writeConf</code><span class="sig-paren">(</span><em>fname</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.writeConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.writeConf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write current attributes to the <cite>fname</cite>.</p>
 <p>You have to set configurations for each module via, for example,
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">self.read_dict()</span></code>.</p>
+<a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read_dict">Conf.read_dict()</a>.</p>
+<p>Do not forget to call <a class="reference internal" href="#config.Conf.setCommonSection" title="config.Conf.setCommonSection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setCommonSection()</span></code></a> to include
+common section to write.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -114,12 +149,34 @@ is created.  If you want only default conf files, set <code class="docutils lite
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">esgfsearch</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">Conf</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setDefaultSection</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">config</span><span class="p">,</span> <span class="n">esgfsearch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setCommonSection</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">esgfsearch</span><span class="o">.</span><span class="n">getDefaultConf</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After above example, <code class="docutils literal notranslate"><span class="pre">/tmp/cmiputil.conf</span></code> is as below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">cmiputil</span><span class="p">]</span>
+<span class="n">cmip6_data_dir</span> <span class="o">=</span> <span class="o">/</span><span class="n">data</span>
+
+<span class="p">[</span><span class="n">ESGFSearch</span><span class="p">]</span>
+<span class="n">search_service</span> <span class="o">=</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">esgf</span><span class="o">-</span><span class="n">node</span><span class="o">.</span><span class="n">llnl</span><span class="o">.</span><span class="n">gov</span><span class="o">/</span><span class="n">esg</span><span class="o">-</span><span class="n">search</span><span class="o">/</span>
+<span class="n">service_type</span> <span class="o">=</span> <span class="n">search</span>
+<span class="n">aggregate</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">datatype_xarray</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="p">[</span><span class="n">ESGFSearch</span><span class="o">.</span><span class="n">keywords</span><span class="p">]</span>
+<span class="nb">format</span> <span class="o">=</span> <span class="n">application</span><span class="o">/</span><span class="n">solr</span><span class="o">+</span><span class="n">json</span>
+<span class="n">replica</span> <span class="o">=</span> <span class="n">false</span>
+<span class="n">latest</span> <span class="o">=</span> <span class="n">true</span>
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="nb">type</span> <span class="o">=</span> <span class="n">Dataset</span>
+<span class="n">fields</span> <span class="o">=</span> <span class="n">url</span>
+
+<span class="p">[</span><span class="n">ESGFSearch</span><span class="o">.</span><span class="n">facets</span><span class="p">]</span>
+<span class="n">table_id</span> <span class="o">=</span> <span class="n">Amon</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -127,27 +184,28 @@ is created.  If you want only default conf files, set <code class="docutils lite
 </dd></dl>
 
 <dl class="data">
-<dt id="config.conf_default">
-<code class="descclassname">config.</code><code class="descname">conf_default</code><em class="property"> = {'cmip6_data_dir': '/data'}</em><a class="headerlink" href="#config.conf_default" title="Permalink to this definition">¶</a></dt>
-<dd><p>configuration of default section.</p>
+<dt id="config.common_config">
+<code class="descclassname">config.</code><code class="descname">common_config</code><em class="property"> = {'cmip6_data_dir': '/data'}</em><a class="headerlink" href="#config.common_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>configuration of ‘common’ section.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="config.common_sect_name">
+<code class="descclassname">config.</code><code class="descname">common_sect_name</code><em class="property"> = 'cmiputil'</em><a class="headerlink" href="#config.common_sect_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>name of the ‘common’ section</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="config.conf_dir">
 <code class="descclassname">config.</code><code class="descname">conf_dir</code><em class="property"> = ['~/', './']</em><a class="headerlink" href="#config.conf_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>directory list of the conffile, order is important.</p>
+<dd><p>directory list of the config file, order is important since the latter
+override the former.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="config.conf_name">
 <code class="descclassname">config.</code><code class="descname">conf_name</code><em class="property"> = 'cmiputil.conf'</em><a class="headerlink" href="#config.conf_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>name of the conffile</p>
-</dd></dl>
-
-<dl class="data">
-<dt id="config.conf_section">
-<code class="descclassname">config.</code><code class="descname">conf_section</code><em class="property"> = 'cmiputil'</em><a class="headerlink" href="#config.conf_section" title="Permalink to this definition">¶</a></dt>
-<dd><p>name of the ‘default’ section</p>
+<dd><p>name of the config file</p>
 </dd></dl>
 
 </div>
@@ -168,7 +226,7 @@ is created.  If you want only default conf files, set <code class="docutils lite
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="createSampleConf.html" title="createSampleConf program"
+          <a href="braceexpand.html" title="cmiputil.braceexpand module"
              >next</a> |</li>
         <li class="right" >
           <a href="timer.html" title="cmiputil.timer module"

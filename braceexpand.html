@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>draw-timeseries program &#8212; cmiputil  documentation</title>
+    <title>cmiputil.braceexpand module &#8212; cmiputil  documentation</title>
     <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -17,7 +17,8 @@
     <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="relocateFilesAsDRS program" href="relocateFilesAsDRS.html" />
+    <link rel="next" title="Bash-style brace expansion for Python" href="README.braceexpand.html" />
+    <link rel="prev" title="cmiputil.config module" href="config.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <!--[if lt IE 9]>
     <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
@@ -33,29 +34,22 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="relocateFilesAsDRS.html" title="relocateFilesAsDRS program"
+          <a href="README.braceexpand.html" title="Bash-style brace expansion for Python"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="cmiputil.config module"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">draw-timeseries program</a><ul>
-<li><a class="reference internal" href="#description">Description</a></li>
-<li><a class="reference internal" href="#usage">Usage</a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
   <h4>Previous topic</h4>
-  <p class="topless"><a href="relocateFilesAsDRS.html"
-                        title="previous chapter">relocateFilesAsDRS program</a></p>
+  <p class="topless"><a href="config.html"
+                        title="previous chapter">cmiputil.config module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="README.braceexpand.html"
+                        title="next chapter">Bash-style brace expansion for Python</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -74,41 +68,18 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="draw-timeseries-program">
-<h1>draw-timeseries program<a class="headerlink" href="#draw-timeseries-program" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><p>Draw time-series of CMIP6 data, searched via RESTful API and accessed
-by OPeNDAP.</p>
-<p>This is just a “Proof-of-concept” for accessing CMIP6/ESGF data via
-cmiputil.</p>
-</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">draw</span><span class="o">-</span><span class="n">timeseries</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFFILE</span><span class="p">]</span> <span class="p">[</span><span class="n">params</span> <span class="p">[</span><span class="n">params</span> <span class="o">...</span><span class="p">]]</span>
-</pre></div>
-</div>
-<div class="section" id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>params</kbd></dt>
-<dd><p>key=value series of keyword/facet parameters</p>
-</dd>
-</dl>
-</div>
-<div class="section" id="Named Arguments">
-<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>-c, --conffile</kbd></dt>
-<dd><p>config file</p>
-<p>Default: “”</p>
-</dd>
-</dl>
-</div>
-<p><p>Process after opening dataset is a sloppy and dirty hack.
-You should implemnt properly by yourself.</p>
-</p>
+  <div class="section" id="cmiputil-braceexpand-module">
+<h1>cmiputil.braceexpand module<a class="headerlink" href="#cmiputil-braceexpand-module" title="Permalink to this headline">¶</a></h1>
+<p>Here is the original README for braceexpand.py.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="README.braceexpand.html">Bash-style brace expansion for Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="README.braceexpand.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="README.braceexpand.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="README.braceexpand.html#license">License</a></li>
+</ul>
+</li>
+</ul>
 </div>
 </div>
 
@@ -128,7 +99,10 @@ You should implemnt properly by yourself.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="relocateFilesAsDRS.html" title="relocateFilesAsDRS program"
+          <a href="README.braceexpand.html" title="Bash-style brace expansion for Python"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="cmiputil.config module"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>

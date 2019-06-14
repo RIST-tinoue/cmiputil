@@ -44,6 +44,15 @@
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">cmiputil.convoc module</a><ul>
+<li><a class="reference internal" href="#controlled-vocabularies">Controlled Vocabularies</a></li>
+<li><a class="reference internal" href="#cvs-search-path">CVs search path</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
                         title="previous chapter"><cite>cmiputil</cite></a></p>
@@ -71,11 +80,16 @@
   <div class="section" id="module-convoc">
 <span id="cmiputil-convoc-module"></span><h1>cmiputil.convoc module<a class="headerlink" href="#module-convoc" title="Permalink to this headline">¶</a></h1>
 <p>Access CMIP6 Controlled Vocabularies(CVs).</p>
+<div class="section" id="controlled-vocabularies">
+<h2>Controlled Vocabularies<a class="headerlink" href="#controlled-vocabularies" title="Permalink to this headline">¶</a></h2>
 <p>A CV, in simplest form, is a list of the permitted values that can be
 assigned to a given global attribute, such as &lt;activity_id&gt;,
 &lt;experiment_id&gt;, etc.</p>
 <p>For some attributes, such as &lt;source_id&gt;, its value is a key-value
 pair, whose value is again dict of key-value.</p>
+</div>
+<div class="section" id="cvs-search-path">
+<h2>CVs search path<a class="headerlink" href="#cvs-search-path" title="Permalink to this headline">¶</a></h2>
 <p>CVs are maintained as json files. You should clone them from github.</p>
 <p>Search path for CVs is set in the order below:</p>
 <ol class="arabic simple">
@@ -122,6 +136,18 @@ meaningful.</p>
 <p>This class reads CV from corresponding json file on demand and
 keep as a member.</p>
 <p>See <a class="reference internal" href="#convoc.ConVoc.setSearchPath" title="convoc.ConVoc.setSearchPath"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setSearchPath()</span></code></a> for the argument <cite>path</cite>.</p>
+<dl class="attribute">
+<dt id="convoc.ConVoc.conf">
+<code class="descname">conf</code><a class="headerlink" href="#convoc.ConVoc.conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘[ConVoc]’ section of conffile</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="convoc.ConVoc.cvpath">
+<code class="descname">cvpath</code><a class="headerlink" href="#convoc.ConVoc.cvpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of CV files search path.</p>
+</dd></dl>
+
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -306,12 +332,22 @@ attribute, not an instance attribute.</p>
 <dt id="convoc.getDefaultConf">
 <code class="descclassname">convoc.</code><code class="descname">getDefaultConf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/convoc.html#getDefaultConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#convoc.getDefaultConf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return default values for config file.</p>
-<p>Intended to be called before config.Conf.writeSampleConf()</p>
+<p>Intended to be called before <code class="xref py py-meth docutils literal notranslate"><span class="pre">config.writeConf()</span></code></p>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setDefaultSection</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">getDefaultConf</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeSampleConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">convoc</span><span class="p">,</span> <span class="n">config</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>   <span class="c1">#  to create brank config</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">setCommonSection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">convoc</span><span class="o">.</span><span class="n">getDefaultConf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">read_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conf</span><span class="o">.</span><span class="n">writeConf</span><span class="p">(</span><span class="s1">&#39;/tmp/cmiputil.conf&#39;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After above example, <code class="docutils literal notranslate"><span class="pre">/tmp/cmiputil.conf</span></code> is as below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">cmiputil</span><span class="p">]</span>
+<span class="n">cmip6_data_dir</span> <span class="o">=</span> <span class="o">/</span><span class="n">data</span>
+
+<span class="p">[</span><span class="n">ConVoc</span><span class="p">]</span>
+<span class="n">cmip6_cvs_dir</span> <span class="o">=</span> <span class="o">./</span><span class="p">:</span><span class="o">./</span><span class="n">CMIP6_CVs</span><span class="p">:</span><span class="o">~/</span><span class="n">CMIP6_CVs</span><span class="p">:</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">CMIP6_CVs</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -322,6 +358,7 @@ attribute, not an instance attribute.</p>
 <dd><p>path to be written to the sample config file, via <a class="reference internal" href="#convoc.getDefaultConf" title="convoc.getDefaultConf"><code class="xref py py-func docutils literal notranslate"><span class="pre">getDefaultConf()</span></code></a></p>
 </dd></dl>
 
+</div>
 </div>
 
 

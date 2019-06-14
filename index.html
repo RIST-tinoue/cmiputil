@@ -44,7 +44,10 @@
   <ul>
 <li><a class="reference internal" href="#"><cite>cmiputil</cite></a><ul>
 <li><a class="reference internal" href="#readme">README</a><ul>
-<li><a class="reference internal" href="#what-is-this">What is this ?</a></li>
+<li><a class="reference internal" href="#what-is-this">What is this ?</a><ul>
+<li><a class="reference internal" href="#braceexpand-py">braceexpand.py</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#you-may-want">You may want</a></li>
 <li><a class="reference internal" href="#requirement">Requirement</a></li>
 <li><a class="reference internal" href="#install">Install</a></li>
@@ -102,7 +105,15 @@ THREDDS.</p></li>
 <li><p><cite>drs</cite>: Handle DRS-complient directory name and file name.</p></li>
 <li><p><cite>convoc</cite>: Handle CMIP6 CVs.</p></li>
 <li><p><cite>timer</cite>: Measure execution time.</p></li>
+<li><p><cite>braceexpand</cite>: Bash-style brace expansion for Python</p></li>
 </ul>
+<div class="section" id="braceexpand-py">
+<h4>braceexpand.py<a class="headerlink" href="#braceexpand-py" title="Permalink to this headline">¶</a></h4>
+<p>This package includes and uses <a class="reference external" href="https://github.com/trendels/braceexpand/blob/master/braceexpand.py">braceexpand.py</a>
+obtained from <a class="reference external" href="https://github.com/trendels/braceexpand">https://github.com/trendels/braceexpand</a>,
+under MIT license.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">README.braceexpand</span></code> for details, <code class="docutils literal notranslate"><span class="pre">LICENSE.braceexpand</span></code> for it’s license.</p>
+</div>
 </div>
 <div class="section" id="you-may-want">
 <h3>You may want<a class="headerlink" href="#you-may-want" title="Permalink to this headline">¶</a></h3>
@@ -174,15 +185,33 @@ License</a></p>
 <h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="convoc.html#controlled-vocabularies">Controlled Vocabularies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convoc.html#cvs-search-path">CVs search path</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drs.html#file-name-template">File name template:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drs.html#directory-structure-template">Directory structure template:</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#config-file">Config File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#local-data-store">Local data store</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="README.braceexpand.html">Bash-style brace expansion for Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="README.braceexpand.html#installation">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.braceexpand.html#examples">Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.braceexpand.html#license">License</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -248,6 +277,13 @@ License</a></p>
 <h2>TODO list<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
 <div class="admonition-todo admonition">
 <p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
+</ul>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="esgfsearch.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/esgfsearch.py:docstring of esgfsearch.ESGFSearch.getCatURLs, line 20.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
 <p>Completely re-implment that</p>
 <ul class="simple">
 <li><p>get list use glob (asterisk expansion) only</p></li>
@@ -267,13 +303,6 @@ path(dir/file)</p>
 <p>Should this be the member of this class ??</p>
 </div>
 <p class="todo-source">(The <a class="reference internal" href="drs.html#index-2"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.getAttrsFromGA, line 9.)</p>
-<div class="admonition-todo admonition">
-<p class="admonition-title">Todo</p>
-<ul class="simple">
-<li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
-</ul>
-</div>
-<p class="todo-source">(The <a class="reference internal" href="esgfsearch.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/esgfsearch.py:docstring of esgfsearch.ESGFSearch.getCatURLs, line 17.)</p>
 </div>
 </div>
 

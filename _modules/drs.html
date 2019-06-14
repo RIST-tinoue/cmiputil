@@ -169,10 +169,11 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
 <span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190523&#39;</span>
-<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/05/23&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190611&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/11&#39;</span>
 
 <span class="kn">from</span> <span class="nn">cmiputil.convoc</span> <span class="k">import</span> <span class="n">ConVoc</span>
+<span class="kn">from</span> <span class="nn">cmiputil.braceexpand</span> <span class="k">import</span> <span class="n">braceexpand</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span> <span class="k">as</span> <span class="nn">nc</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -282,6 +283,20 @@
 
     <span class="c1">#: ConVoc instance</span>
     <span class="n">_cvs</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def debug(cls):</span>
+    <span class="c1">#     return cls._debug</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">do_sanitize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
@@ -584,7 +599,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
-        <span class="n">flist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expandbrace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">))]</span>
+        <span class="n">flist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">braceexpand</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fname</span><span class="p">))]</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">ff</span> <span class="ow">in</span> <span class="n">flist</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="DRS.dirName"><a class="viewcode-back" href="../drs.html#drs.DRS.dirName">[docs]</a>    <span class="k">def</span> <span class="nf">dirName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_asterisk</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -710,7 +725,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>  <span class="c1"># may contain &#39;*&#39; and braces</span>
-        <span class="n">plist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expandbrace</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dname</span><span class="p">))]</span>
+        <span class="n">plist</span> <span class="o">=</span> <span class="p">[</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">braceexpand</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dname</span><span class="p">))]</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">plist</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pp</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="DRS.splitFileName"><a class="viewcode-back" href="../drs.html#drs.DRS.splitFileName">[docs]</a>    <span class="k">def</span> <span class="nf">splitFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -997,10 +1012,10 @@
             <span class="c1"># Currently, value of &lt;sub_experiment_id&gt; used in</span>
             <span class="c1"># published datasets is only &#39;s1920&#39;, which is not in CVs.</span>
             <span class="c1"># So avoid check tentatively</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
                     <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;s1920&#39;</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">managedAttribs</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ConVoc</span><span class="p">()</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">managedAttribs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cvs</span><span class="o">.</span><span class="n">isValidValueForAttr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;time_range&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_time_range</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;version&#39;</span><span class="p">:</span>
@@ -1104,9 +1119,6 @@
                         <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">_expandbrace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">_getitem</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-
     <span class="k">def</span> <span class="nf">_check_time_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="c1"># TODO: precision and `-clim` depends on the attribute `frequency`.</span>
         <span class="c1">#       but I don&#39;t need quality assurance.</span>
@@ -1140,46 +1152,6 @@
         <span class="k">return</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
 
-<span class="c1"># Below two methods are borrowed from</span>
-<span class="c1"># https://rosettacode.org/wiki/Brace_expansion#Python.</span>
-<span class="c1"># Stated that &quot;Content is available under GNU Free Documentation</span>
-<span class="c1"># License 1.2 unless otherwise noted&quot;.</span>
-<span class="k">def</span> <span class="nf">_getitem</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
-    <span class="k">while</span> <span class="n">s</span><span class="p">:</span>
-        <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">depth</span> <span class="ow">and</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span>
-        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;{&#39;</span><span class="p">:</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">_getgroup</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">x</span><span class="p">:</span>
-                <span class="n">out</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="n">b</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="k">continue</span>
-        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">c</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-
-        <span class="n">out</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">+</span><span class="n">c</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span>
-
-
-<span class="k">def</span> <span class="nf">_getgroup</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
-    <span class="n">out</span><span class="p">,</span> <span class="n">comma</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">False</span>
-    <span class="k">while</span> <span class="n">s</span><span class="p">:</span>
-        <span class="n">g</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">_getitem</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="n">out</span> <span class="o">+=</span> <span class="n">g</span>
-
-        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">comma</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">out</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-        <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span><span class="p">:</span>
-            <span class="n">comma</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-
-    <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="n">sample_attrs</span> <span class="o">=</span> <span class="p">{</span>

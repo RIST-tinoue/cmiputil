@@ -61,82 +61,124 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Maintain config file for cmiputil package.</span>
 
-<span class="sd">Config file for this package is so called &#39;INI file&#39;, handled by</span>
-<span class="sd">python standard `configparser` module.</span>
+<span class="sd">Config file format for this package is so called &#39;INI file&#39;, handled</span>
+<span class="sd">by python standard `configparser module`_, so you can use</span>
+<span class="sd">`interpolation of values`_.</span>
 
-<span class="sd">Default name of config file is ``cmiputil.conf``, and searched in</span>
-<span class="sd">$HOME then current directory. If `file` is specified to the</span>
-<span class="sd">constructor, that is read and override the precedence.</span>
+<span class="sd">Default name of config file is ``cmiputil.conf`` (set as</span>
+<span class="sd">:attr:`conf_name`), and searched in $HOME then current directory (set</span>
+<span class="sd">as :attr:`conf_dir`). If `file` is specified to the constructor, that</span>
+<span class="sd">is read and **override** the precedence.</span>
 
-<span class="sd">&quot;Default&quot; section name is :attr:`conf_section` and the key=value pair</span>
-<span class="sd">is :attr:`conf_default`.</span>
+<span class="sd">The name of &quot;Common&quot; section, which any module in this package may</span>
+<span class="sd">access, is :attr:`common_sect_name` and the key=value pair is</span>
+<span class="sd">:attr:`common_config`.</span>
 
+<span class="sd">You can create sample(default) config file by :mod:`createSampleConf`</span>
+<span class="sd">program, that collects default configuration of each module by</span>
+<span class="sd">``getDefaultConf()`` in each module and write them to the file by</span>
+<span class="sd">`Conf.read_dict()` and :meth:`Conf.writeConf`.</span>
 
-<span class="sd">You can create sample(default) conf file by :mod:`createSampleConf`,</span>
-<span class="sd">collect default configuration of each module by ``getDefaultConf()``</span>
-<span class="sd">in each module and :meth:`read_dict`, then :meth:`writeConf` to write</span>
-<span class="sd">the file.</span>
+<span class="sd">.. _configparser module:</span>
+<span class="sd">   https://docs.python.org/3/library/configparser.html</span>
 
+<span class="sd">.. _interpolation of values:</span>
+<span class="sd">   https://docs.python.org/3/library/configparser.html#interpolation-of-values</span>
+
+<span class="sd">.. _configparser.ConfigParser:</span>
+<span class="sd">   https://docs.python.org/3/library/configparser.html#configparser-objects</span>
+
+<span class="sd">.. _Conf.read_dict():</span>
+<span class="sd">   https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read_dict</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
 <span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190606&#39;</span>
-<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/06&#39;</span>
-
-<span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190614&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/14&#39;</span>
 
 <span class="kn">import</span> <span class="nn">configparser</span>
-<span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="c1"># from pprint import pprint</span>
 
-<span class="c1">#: directory list of the conffile, order is important.</span>
-<span class="n">conf_dir</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;~/&#39;</span><span class="p">,</span><span class="s1">&#39;./&#39;</span><span class="p">,]</span>
+<span class="c1">#: directory list of the config file, order is important since the latter</span>
+<span class="c1">#: override the former.</span>
+<span class="n">conf_dir</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;~/&#39;</span><span class="p">,</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="p">]</span>
 
-<span class="c1">#: name of the conffile</span>
+<span class="c1">#: name of the config file</span>
 <span class="n">conf_name</span> <span class="o">=</span> <span class="s1">&#39;cmiputil.conf&#39;</span>
 
-<span class="c1">#: name of the &#39;default&#39; section</span>
-<span class="n">conf_section</span> <span class="o">=</span> <span class="s1">&#39;cmiputil&#39;</span>
+<span class="c1">#: name of the &#39;common&#39; section</span>
+<span class="n">common_sect_name</span> <span class="o">=</span> <span class="s1">&#39;cmiputil&#39;</span>
 
-<span class="c1">#: configuration of default section.</span>
-<span class="n">conf_default</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmip6_data_dir&#39;</span><span class="p">:</span> <span class="s1">&#39;/data&#39;</span><span class="p">}</span>
+<span class="c1">#: configuration of &#39;common&#39; section.</span>
+<span class="n">common_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmip6_data_dir&#39;</span><span class="p">:</span> <span class="s1">&#39;/data&#39;</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="Conf"><a class="viewcode-back" href="../config.html#config.Conf">[docs]</a><span class="k">class</span> <span class="nc">Conf</span><span class="p">(</span><span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Args:</span>
-<span class="sd">        file (str or path-like) or None: config file</span>
+<span class="sd">    Config parser for this package.</span>
 
-<span class="sd">    If `file` is ``None``, no conf file is read and *blank* instance</span>
-<span class="sd">    is created.  If you want only default conf files, set ``file=&quot;&quot;``.</span>
+<span class="sd">    See `configparser.ConfigParser`_ for other methods and details.</span>
+<span class="sd">    This module uses only &#39;Mapping Protocol Access&#39; only.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file (str or path-like): config file</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If `file` is ``None``, no config file is read and *blank*</span>
+<span class="sd">        instance is created.  If you want only default config files,</span>
+<span class="sd">        set ``file=&quot;&quot;``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        files (list of Path): config files read in.</span>
+<span class="sd">        commonSection (SectionProxy): &quot;Common&quot; section for this package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def debug(cls):</span>
+    <span class="c1">#     return cls._debug</span>
+
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="k">global</span> <span class="n">_debug</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">/</span><span class="n">Path</span><span class="p">(</span><span class="n">conf_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">conf_dir</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">/</span><span class="n">Path</span><span class="p">(</span><span class="n">conf_name</span><span class="p">)</span>
+                          <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">conf_dir</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">file</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">files</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">_debug</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;dbg:read conf file(s):</span><span class="si">{res}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;dbg:read config file(s):</span><span class="si">{res}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="Conf.setDefaultSection"><a class="viewcode-back" href="../config.html#config.Conf.setDefaultSection">[docs]</a>    <span class="k">def</span> <span class="nf">setDefaultSection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Conf.setCommonSection"><a class="viewcode-back" href="../config.html#config.Conf.setCommonSection">[docs]</a>    <span class="k">def</span> <span class="nf">setCommonSection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Set &quot;default&quot; section.</span>
+<span class="sd">        Set default &quot;common&quot; section.</span>
+
+<span class="sd">        Do not call this after reading in real config files.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="p">[</span><span class="n">conf_section</span><span class="p">]</span> <span class="o">=</span> <span class="n">conf_default</span></div>
+        <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">common_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">commonSection</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">common_sect_name</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Conf.writeConf"><a class="viewcode-back" href="../config.html#config.Conf.writeConf">[docs]</a>    <span class="k">def</span> <span class="nf">writeConf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write current attributes to the `fname`.</span>
 
-<span class="sd">        You have to set configurations for each module via, for example, </span>
-<span class="sd">        :meth:`self.read_dict`.</span>
+<span class="sd">        You have to set configurations for each module via, for example,</span>
+<span class="sd">        `Conf.read_dict()`_.</span>
+
+<span class="sd">        Do not forget to call :meth:`.setCommonSection()` to include</span>
+<span class="sd">        common section to write.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            fname (str or path-like): file to be written</span>
@@ -144,18 +186,49 @@
 
 <span class="sd">        Examples:</span>
 
-<span class="sd">            &gt;&gt;&gt; from cmiputil import esgfsearch</span>
-<span class="sd">            &gt;&gt;&gt; conf = Conf(&#39;&#39;)</span>
-<span class="sd">            &gt;&gt;&gt; conf.setDefaultSection()</span>
+<span class="sd">            &gt;&gt;&gt; from cmiputil import config, esgfsearch</span>
+<span class="sd">            &gt;&gt;&gt; conf = config.Conf(None)</span>
+<span class="sd">            &gt;&gt;&gt; conf.setCommonSection()</span>
 <span class="sd">            &gt;&gt;&gt; d = esgfsearch.getDefaultConf()</span>
 <span class="sd">            &gt;&gt;&gt; conf.read_dict(d)</span>
 <span class="sd">            &gt;&gt;&gt; conf.writeConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
+
+<span class="sd">            After above example, ``/tmp/cmiputil.conf`` is as below::</span>
+
+<span class="sd">                [cmiputil]</span>
+<span class="sd">                cmip6_data_dir = /data</span>
+
+<span class="sd">                [ESGFSearch]</span>
+<span class="sd">                search_service = http://esgf-node.llnl.gov/esg-search/</span>
+<span class="sd">                service_type = search</span>
+<span class="sd">                aggregate = True</span>
+<span class="sd">                datatype_xarray = True</span>
+
+<span class="sd">                [ESGFSearch.keywords]</span>
+<span class="sd">                format = application/solr+json</span>
+<span class="sd">                replica = false</span>
+<span class="sd">                latest = true</span>
+<span class="sd">                limit = 10000</span>
+<span class="sd">                type = Dataset</span>
+<span class="sd">                fields = url</span>
+
+<span class="sd">                [ESGFSearch.facets]</span>
+<span class="sd">                table_id = Amon</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">((</span><span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">())</span> <span class="ow">or</span> <span class="n">overwrite</span><span class="p">):</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;file already exists: &quot;</span><span class="si">{fname}</span><span class="s1">&quot;&#39;</span><span class="p">)</span></div></div>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;file already exists: &quot;</span><span class="si">{fname}</span><span class="s1">&quot;&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">sec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39;[</span><span class="si">{sec}</span><span class="s1">]</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">sec</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{op}</span><span class="s1"> = </span><span class="si">{self[sec][op]}</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">res</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

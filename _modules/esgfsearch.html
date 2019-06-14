@@ -58,82 +58,175 @@
   <h1>Source code for esgfsearch</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Search by ESGF RESTful API, get and open multiple datafiles,</span>
-<span class="sd">create meta info.</span>
-
-<span class="sd">See https://earthsystemcog.org/projects/cog/esgf_search_restful_api</span>
-<span class="sd">for the detail ESGF RESTful API.</span>
+<span class="sd">Search by `ESGF RESTful API`_, get via `OPeNDAP`_.</span>
 
 <span class="sd">This version uses</span>
 <span class="sd">`siphon &lt;https://www.unidata.ucar.edu/software/siphon/&gt;`_ and</span>
 <span class="sd">`xarray &lt;http://xarray.pydata.org/&gt;`_.</span>
 
+<span class="sd">Basic Usage</span>
+<span class="sd">===========</span>
+
+
+<span class="sd">Typical flow of searching and downloading CMIP6 data from ESGF is as</span>
+<span class="sd">follows;</span>
+
+<span class="sd">1. instantiate :class:`esgfsearch.ESGFSearch` instance,</span>
+<span class="sd">2. get catalog URLs via :meth:`ESGFSearch.getCatURLs` method,</span>
+<span class="sd">3. get dataset URLs via :meth:`ESGFSearch.getDataURLs` method,</span>
+<span class="sd">4. get dataset via :meth:`ESGFSearch.openDatasets` method,</span>
+
+<span class="sd">Catalog URLs, dataset URLs, and dataset objects are all stored as</span>
+<span class="sd">instance attributes.</span>
+
+<span class="sd">:meth:`getDataset` does 3. and 4. above at once.</span>
+
+<span class="sd">Example:</span>
+<span class="sd">    &gt;&gt;&gt; params = {&#39;source_id&#39;: &#39;MIROC6&#39;,</span>
+<span class="sd">    ...           &#39;experiment_id&#39;: &#39;historical&#39;,</span>
+<span class="sd">    ...           &#39;variable&#39;: &#39;tas&#39;,</span>
+<span class="sd">    ...           &#39;variant_label&#39;: &#39;r1i1p1f1&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; es = ESGFSearch()</span>
+<span class="sd">    &gt;&gt;&gt; es.getCatURLs(params)</span>
+<span class="sd">    &gt;&gt;&gt; es.getDataURLs()</span>
+<span class="sd">    &gt;&gt;&gt; es.openDatasets()</span>
+
+
+
+<span class="sd">Config File</span>
+<span class="sd">===========</span>
+
+<span class="sd">This module read in config file, sections below;</span>
+
+<span class="sd">- [ESGFSearch]</span>
+<span class="sd">    - `search_service`: the base URL of the search service at a ESGF Index Node</span>
+<span class="sd">    - `service_type`: ``search`` or ``wget``</span>
+<span class="sd">    - `aggregate` : :meth:`getDatasets` returns aggregated datasets or not</span>
+<span class="sd">    - `datatype_xarray` : :meth:`getDatasets` returns xarray or netCDF4</span>
+<span class="sd">- [ESGFSearch.keywords] : keyword parameters of RESTful API</span>
+<span class="sd">- [ESGFSearch.facets] : facet parameters of RESTful API</span>
+
+<span class="sd">Local data store</span>
+<span class="sd">================</span>
+
+<span class="sd">This module assumes that local data files are stored in the DRS</span>
+<span class="sd">complient directory structure. See :mod:`drs` module for the details</span>
+<span class="sd">of DRS.  If you use `synda install` for download and replication of</span>
+<span class="sd">CMIP6 data files from ESGF, files are stored in such way.  So you can</span>
+<span class="sd">use :meth:`ESGFSearch.getLocalPath` with :attr:`ESGFSearch.base_dir`</span>
+<span class="sd">being set as the root of this directory structure to find and open</span>
+<span class="sd">your local files with the same interface with</span>
+<span class="sd">:meth:`ESGFSearch.getCatURLs`.</span>
+
+
+<span class="sd">.. _ESGF RESTful API: </span>
+<span class="sd">   https://earthsystemcog.org/projects/cog/esgf_search_restful_api</span>
+
+<span class="sd">.. _OPeNDAP:</span>
+<span class="sd">   https://www.earthsystemcog.org/projects/cog/doc/opendap</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
 <span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
-<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190602&#39;</span>
-<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/02&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190612&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/12&#39;</span>
 
 <span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">drs</span><span class="p">,</span> <span class="n">config</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">urllib3</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span> <span class="k">as</span> <span class="nn">nc</span>
 <span class="kn">from</span> <span class="nn">siphon.catalog</span> <span class="k">import</span> <span class="n">TDSCatalog</span>
 <span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">basename</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
 
 
+<span class="c1">#: OPeNDAP Catalog URL not found</span>
 <div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.NotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="ESGFSearch"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch">[docs]</a><span class="k">class</span> <span class="nc">ESGFSearch</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Search by ESGF RESTful API, get to the datafile via OPenDAP.</span>
+<span class="sd">    Search by ESGF RESTful API, get via OPeNDAP.</span>
 
-
-<span class="sd">    If `conffile` is ``None``, use default conffile, defined in</span>
-<span class="sd">    :mod:`config`.</span>
-
-<span class="sd">    This class read below sections from conffile;</span>
-
-<span class="sd">    - [ESGFSearch]</span>
-<span class="sd">        - `cmip6_data_dir`: CMIP6 date directory</span>
-<span class="sd">        - `search_service`: the base URL of the search service at a ESGF Index Node</span>
-<span class="sd">        - `service_type`: ``search`` or ``wget``</span>
-<span class="sd">        - `aggregate` : :meth:`getDataset` returns aggregated datasets or not</span>
-<span class="sd">        - `datatype_xarray` : :meth:`getDataset` returns xarray or netCDF4</span>
-<span class="sd">    - [ESGFSearch.keywords] : keyword parameters of RESTful API</span>
-<span class="sd">    - [ESGFSearch.facets] : facet parameters of RESTful API</span>
-
+<span class="sd">    If `conffile` is ``None``, no config file is read and *blank* instance</span>
+<span class="sd">    is created.  If you want only default config files, set ``conffile=&quot;&quot;``.</span>
+<span class="sd">    See :mod:`config` module for details.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        conffile (path-like): configure file</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
 
+<span class="sd">    Attributes:</span>
+<span class="sd">        conf: :class:`config.Conf` instance</span>
+<span class="sd">        search_service: search service for RESTful API, eg.,</span>
+<span class="sd">                        ``http://esgf-node.llnl.gov/esg-search/``</span>
+<span class="sd">        service_type: service type for RESTful API.</span>
+<span class="sd">                      currently ``search`` only allowed.</span>
+<span class="sd">        aggregate: access aggregated via OPeNDAP.</span>
+<span class="sd">        datatype_xarray: open dataset as xarray or netCDF4</span>
+<span class="sd">        params: keyword parameters and facet parameters for RESTful API</span>
+<span class="sd">        cat_urls (list(str)): obtained catalog URLs</span>
+<span class="sd">        data_urls (list(str) or list of list(str)): obtained dataset URLs</span>
+<span class="sd">        datasets: list of obtained datasets</span>
+<span class="sd">        base_dir: base(root) path for local data directory structure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def debug(cls):</span>
+    <span class="c1">#     return cls._debug</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conffile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conffile</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">][</span><span class="s1">&#39;search_service&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">][</span><span class="s1">&#39;service_type&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate_default</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;aggregate&#39;</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span><span class="s1">&#39;aggregate&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">datatype_xarray_default</span>
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">has_option</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span> <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">,</span><span class="s1">&#39;datatype_xarray&#39;</span><span class="p">)</span>
+        <span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="n">sec</span><span class="p">[</span><span class="s1">&#39;search_service&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="n">sec</span><span class="p">[</span><span class="s1">&#39;service_type&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="n">search_service_default</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="n">service_type_default</span>
 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">sec</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;aggregate&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate_default</span>
 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">sec</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;datatype_xarray&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">datatype_xarray_default</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">commonSection</span><span class="p">[</span><span class="s1">&#39;cmip6_data_dir&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ESGFSearch.getCatURLs"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getCatURLs">[docs]</a>    <span class="k">def</span> <span class="nf">getCatURLs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.</span>
+
+<span class="sd">        Obtained catalog URLs are set as :attr:`cat_urls` attribute of</span>
+<span class="sd">        `self`.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            params (dict): keyword parameters and facet parameters.</span>
@@ -143,13 +236,13 @@
 <span class="sd">            NotFoundError: raised if no catalog found.</span>
 
 <span class="sd">        Return:</span>
-<span class="sd">            list of str:  TDS catalog URLs found.</span>
+<span class="sd">            None</span>
 
-<span class="sd">        If `base_url` is None, :data:`.search_service` +</span>
-<span class="sd">        :data:`.service_type` is used.</span>
+<span class="sd">        If `base_url` is not ``None``, override :attr:`search_service` +</span>
+<span class="sd">        :attr:`service_type` of `self`.</span>
 
 <span class="sd">        `params` is to *update* (use `update()` method of python dict)</span>
-<span class="sd">        to the ones read from conf file.</span>
+<span class="sd">        to :attr:`params` of `self`.</span>
 
 <span class="sd">        TODO:</span>
 <span class="sd">            - How to enable *a negative facet* of RESTful API ?</span>
@@ -159,7 +252,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">base_url</span><span class="p">:</span>
             <span class="n">base_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span>
 
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;dbg:ESGFSearch.getCatURLs:base_url:</span><span class="si">{base_url}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:ESGFSeaerch.getCatURLs:params:&#39;</span><span class="p">)</span>
             <span class="n">pprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
 
         <span class="n">http</span> <span class="o">=</span> <span class="n">urllib3</span><span class="o">.</span><span class="n">PoolManager</span><span class="p">()</span>
@@ -180,50 +275,40 @@
         <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">][</span><span class="s1">&#39;numFound&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">NotFoundError</span><span class="p">(</span><span class="s1">&#39;No catalog found.&#39;</span><span class="p">)</span>
 
-        <span class="n">urls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_urls</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">][</span><span class="s1">&#39;docs&#39;</span><span class="p">]:</span>
             <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]:</span>
                 <span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">mime</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
                 <span class="c1"># select TDS catalog</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">service</span> <span class="o">==</span> <span class="s1">&#39;THREDDS&#39;</span><span class="p">):</span>
-                    <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cat_urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">url</span><span class="p">)</span></div>
 
-        <span class="k">return</span> <span class="n">urls</span></div>
-
-<div class="viewcode-block" id="ESGFSearch.getDataset"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getDataset">[docs]</a>    <span class="k">def</span> <span class="nf">getDataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">aggregate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datatype_xarray</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ESGFSearch.getDataURLs"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getDataURLs">[docs]</a>    <span class="k">def</span> <span class="nf">getDataURLs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        From given URL of TDS catalog, return xarray or netCDF4 dataset.</span>
+<span class="sd">        From URLs of TDS catalog, obtain URLs of dataset.</span>
 
-<span class="sd">        A URL of TDS catalog is obtained by, for example,</span>
-<span class="sd">        :meth:`getCatURLs()`.</span>
+<span class="sd">        Catalog URLs are set as :attr:`cat_urls` attribute of `self`,</span>
+<span class="sd">        that is obtained by, for example, :meth:`getCatURLs()`.</span>
 
-<span class="sd">        If `aggregate` is ``True``, access aggregated dataset, else</span>
-<span class="sd">        access all of files listed in the catalog.</span>
+<span class="sd">        If :attr:`aggregate` of `self` is ``True``, obtain URLs of</span>
+<span class="sd">        aggregated dataset, else URLs of all of files listed in the</span>
+<span class="sd">        catalog.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            url(str): url of TDS catalog</span>
-<span class="sd">            aggregate(bool): if True, access aggregate link in TDS catalog.</span>
-<span class="sd">            netcdf(bool): if True return netCDF4&#39;s dataset, instead of xarray&#39;s.</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            xarray.dataset() or xarray.mfdataset() or netCDF4.Dataset() or</span>
-<span class="sd">            netCDF4.MFDataset() or None: opened dataset</span>
+<span class="sd">        Obtained dataset URLs are set as :attr:`.data_urls` of `self`.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_urls</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_getDataURL</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_urls</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_getDataURL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">cat</span> <span class="o">=</span> <span class="n">TDSCatalog</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in siphon.TDSCatalog():&#39;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
             <span class="k">raise</span>
 
-
-        <span class="k">if</span> <span class="n">aggregate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate</span>
-        <span class="k">if</span> <span class="n">datatype_xarray</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span> <span class="o">=</span> <span class="n">datatype_xarray</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:aggregate:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:datatype_xarray:&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:ESGFSearch.aggregate:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span><span class="p">:</span>
             <span class="c1"># construct base url</span>
@@ -235,65 +320,142 @@
             <span class="n">ds</span> <span class="o">=</span> <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>   <span class="c1"># Is this universal ?</span>
 
             <span class="n">data_url</span> <span class="o">+=</span> <span class="n">ds</span><span class="o">.</span><span class="n">url_path</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">):</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span>
-                                         <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">data_url</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">e</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in Opening dataset:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  from url:&quot;</span><span class="p">,</span> <span class="n">data_url</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">access_urls</span><span class="p">[</span><span class="s1">&#39;OpenDAPServer&#39;</span><span class="p">]</span>
-                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="s1">&#39;OpenDAPServer&#39;</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">access_urls</span><span class="p">]</span>
-            <span class="n">urls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="n">data_url</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">access_urls</span><span class="p">[</span><span class="s1">&#39;OpenDAPServer&#39;</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="s1">&#39;OpenDAPServer&#39;</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">access_urls</span><span class="p">]</span>
+            <span class="n">data_url</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">):</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ds</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in xr.open_mfdataset:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Skip&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">data_url</span>
 
-        <span class="k">return</span> <span class="n">ds</span></div>
-
-
-<div class="viewcode-block" id="ESGFSearch.getLocalPath"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getLocalPath">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ESGFSearch.openDatasets"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.openDatasets">[docs]</a>    <span class="k">def</span> <span class="nf">openDatasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Search local data directory for CMIP6 data.</span>
+<span class="sd">        Open and return dataset object from dataset URLs.</span>
 
-<span class="sd">        Using same interface with getCatURLs()</span>
+<span class="sd">        Dataset URLs are set as :attr:`data_urls` attribute of `self`,</span>
+<span class="sd">        obtained by, for example, :meth:`getDataURLs`.</span>
+
+<span class="sd">        If :attr:`datatype_xarray` of `self` is ``True``,</span>
+<span class="sd">        open by ``xarray.open_dataset()``, else open by</span>
+<span class="sd">        ``netCDF4.Dataset()``.</span>
+
+<span class="sd">        If `url` is a list, they are opened as a multi-file dataset,</span>
+<span class="sd">        via `xarray.open_mfdataset()` or `netCDF4.MFDataset()`.</span>
+
+<span class="sd">        Opened datasets are stored as :attr:`dataset` of `self`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_openDataset</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_urls</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">res</span> <span class="k">if</span> <span class="n">d</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_openDataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatype_xarray</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># ds = xr.open_dataset(url,</span>
+                    <span class="c1">#                      decode_times=False, decode_cf=False)</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Error in opening xarray dataset:&quot;</span>
+                      <span class="n">f</span><span class="s2">&quot;{basename(url)}:</span><span class="si">{e.args}</span><span class="se">\n</span><span class="s2"> Skip.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ds</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">MFDataset</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ds</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Error in opening netCDF dataset:&quot;</span>
+                      <span class="n">f</span><span class="s2">&quot;{basename(url)}:</span><span class="si">{e.args}</span><span class="se">\n</span><span class="s2"> Skip.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ds</span>
+
+<div class="viewcode-block" id="ESGFSearch.getDatasets"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getDatasets">[docs]</a>    <span class="k">def</span> <span class="nf">getDatasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        From URLs of TDS catalog, open xarray or netCDF4 dataset.</span>
+
+<span class="sd">        Catalog URLs are set as :attr:`cat_urls` attribute of `self`,</span>
+<span class="sd">        that is obtained by, for example, :meth:`getCatURLs()`.</span>
+
+<span class="sd">        If :attr:`aggregate` of `self` is ``True``, obtain URLs of</span>
+<span class="sd">        aggregated dataset, else URLs of all of files listed in the</span>
+<span class="sd">        catalog.</span>
+
+<span class="sd">        Obtained datasets are set as :attr:`.dataset` of `self`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getDataURLs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">openDatasets</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ESGFSearch.getLocalPath"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.getLocalPath">[docs]</a>    <span class="k">def</span> <span class="nf">getLocalPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get local path(s) to match given search condition.</span>
+
+<span class="sd">        Using same interface with :meth:`getCatURLs()`, obtained path</span>
+<span class="sd">        are set as :attr:`local_dirs` attribute.</span>
+
+<span class="sd">        Resulting paths (set as :attr:`localpath`) are DRS compliant</span>
+<span class="sd">        (see `Local data store`_) **real existing** ones, braces are</span>
+<span class="sd">        expanded and asterisk are globed.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            params(dict): keyword parameters and facet parameters.</span>
-<span class="sd">            base_url : base path for local data directory.</span>
+<span class="sd">            params (dict): keyword parameters and facet parameters.</span>
+<span class="sd">            base_dir (str or path-like): base path for local data directory.</span>
 <span class="sd">        Raises:</span>
 <span class="sd">            NotFoundError: raised if no paths found.</span>
-<span class="sd">        Return:</span>
-<span class="sd">            list of path-like:  paths found to match given facets.</span>
 
-<span class="sd">        `field` is initialized by :data:`.keyword_defautls` and</span>
-<span class="sd">        :data:`.facet_defaults`.</span>
+
+<span class="sd">        If `base_dir` is not ``None``, override :attr:`base_dir`.</span>
+
+<span class="sd">        `params` is to *update* (use `update()` method of python dict)</span>
+<span class="sd">        to :attr:`params` of `self`.</span>
 
 <span class="sd">        Example:</span>
-<span class="sd">            &gt;&gt;&gt; params = {&#39;source_id&#39;: &#39;MIROC6&#39;, &#39;experiment_id&#39;: &#39;historical&#39;,</span>
-<span class="sd">            ...    &#39;variant_label&#39;: &#39;r1i1p1f1&#39;, &#39;variable&#39;: &#39;tas&#39;, }</span>
-<span class="sd">            &gt;&gt;&gt; str(getLocalPath(params, base_dir=&#39;/data/&#39;))</span>
-<span class="sd">            &#39;/data/CMIP6/*/*/MIROC6/historical/r1i1p1f1/Amon/*/*/*/*_Amon_MIROC6_historical_r1i1p1f1_*_*.nc&#39;</span>
+<span class="sd">            &gt;&gt;&gt; from cmiputil import esgfsearch</span>
+<span class="sd">            &gt;&gt;&gt; params = {&#39;source_id&#39;: &#39;MIROC6&#39;,</span>
+<span class="sd">            ...           &#39;experiment_id&#39;: &#39;historical&#39;,</span>
+<span class="sd">            ...           &#39;variant_label&#39;: &#39;r1i1p1f1&#39;,</span>
+<span class="sd">            ...           &#39;variable&#39;: &#39;tas&#39;, }</span>
+<span class="sd">            &gt;&gt;&gt; es = esgfsearch.ESGFSearch()</span>
+<span class="sd">            &gt;&gt;&gt; es.getLocalPath(params, base_dir=&#39;/data&#39;)</span>
+
+<span class="sd">            In above, ``es.local_dirs`` is set as below if they are exists::</span>
+
+<span class="sd">                [&#39;/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212&#39;,</span>
+<span class="sd">                 &#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">base_dir</span><span class="p">)</span>
-        <span class="n">f</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">fileName</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="n">f</span></div></div>
+        <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">base_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">base_dir</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_dirs</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dirNameList</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ESGFSearch.openLocalDatasets"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.ESGFSearch.openLocalDatasets">[docs]</a>    <span class="k">def</span> <span class="nf">openLocalDatasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open and return dataset object from local dataset paths.</span>
+
+<span class="sd">        Dataset paths are set as :attr:`local_dirs` of `self`, obtained</span>
+<span class="sd">        by, for example, :meth:`getLocalPath()`.</span>
+
+<span class="sd">        Opened datasets are stored as :attr:`detaset` of `self`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_dirs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_openLocalDataset</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">local_dirs</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">res</span> <span class="k">if</span> <span class="n">d</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_openLocalDataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()),</span>
+                                 <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_getServiceBase</span><span class="p">(</span><span class="n">services</span><span class="p">):</span>
@@ -310,6 +472,7 @@
 
 <span class="c1">########################################################################</span>
 <span class="c1"># defaults</span>
+
 
 <span class="c1">#: Default search service URL</span>
 <span class="n">search_service_default</span> <span class="o">=</span> <span class="s1">&#39;http://esgf-node.llnl.gov/esg-search/&#39;</span>
@@ -333,9 +496,7 @@
 
 <span class="c1">#: Default fasets for RESTful API.</span>
 <span class="n">facets_default</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;project&#39;</span><span class="p">:</span> <span class="s1">&#39;CMIP6&#39;</span><span class="p">,</span>
     <span class="s1">&#39;table_id&#39;</span><span class="p">:</span> <span class="s1">&#39;Amon&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;frequency&#39;</span><span class="p">:</span> <span class="s1">&#39;mon&#39;</span><span class="p">,</span>
     <span class="p">}</span>
 
 <span class="c1"># params_default = dict(keywords_default)</span>
@@ -344,25 +505,28 @@
 
 <div class="viewcode-block" id="getDefaultConf"><a class="viewcode-back" href="../esgfsearch.html#esgfsearch.getDefaultConf">[docs]</a><span class="k">def</span> <span class="nf">getDefaultConf</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Set default values for config file.</span>
+<span class="sd">    Return default values for config file.</span>
 
-<span class="sd">    Intended to be called before config.Conf.writeSampleConf()</span>
+<span class="sd">    Intended to be called before :meth:`config.writeConf` in</span>
+<span class="sd">    :mod:`config`.</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">       &gt;&gt;&gt; conf = config.Conf(None)</span>
-<span class="sd">       &gt;&gt;&gt; conf.setDefaultSection()</span>
-<span class="sd">       &gt;&gt;&gt; conf.read_dict(getDefaultConf())</span>
-<span class="sd">       &gt;&gt;&gt; conf.writeSampleConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
+<span class="sd">        &gt;&gt;&gt; from cmiputil import esgfsearch, config</span>
+<span class="sd">        &gt;&gt;&gt; conf = config.Conf(None)   #  to create brank config</span>
+<span class="sd">        &gt;&gt;&gt; conf.setCommonSection()</span>
+<span class="sd">        &gt;&gt;&gt; d = esgfsearch.getDefaultConf()</span>
+<span class="sd">        &gt;&gt;&gt; conf.read_dict(d)</span>
+<span class="sd">        &gt;&gt;&gt; conf.writeConf(&#39;/tmp/cmiputil.conf&#39;, overwrite=True)</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;search_service&#39;</span><span class="p">:</span> <span class="n">search_service_default</span><span class="p">,</span>
                          <span class="s1">&#39;service_type&#39;</span><span class="p">:</span> <span class="n">service_type_default</span><span class="p">,</span>
                          <span class="s1">&#39;aggregate&#39;</span><span class="p">:</span> <span class="n">aggregate_default</span><span class="p">,</span>
-                         <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">:</span> <span class="n">datatype_xarray_default</span> <span class="p">}</span>
-    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">keywords_default</span>
+                         <span class="s1">&#39;datatype_xarray&#39;</span><span class="p">:</span> <span class="n">datatype_xarray_default</span><span class="p">}</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords_default</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">facets_default</span>
     <span class="k">return</span> <span class="n">res</span></div>
-
 
 
 <span class="k">if</span> <span class="p">(</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">):</span>
