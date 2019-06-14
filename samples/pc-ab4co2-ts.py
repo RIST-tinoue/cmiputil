@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Compare piControl and abrupt-4xCO2 timeseries of tas.
+
 """
 from cmiputil import esgfsearch
 from cmiputil.timer import timer
@@ -15,15 +16,15 @@ import matplotlib.pyplot as plt
 
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190607'
-__date__ = '2019/06/07'
+__version__ = 'v20190614'
+__date__ = '2019/06/14'
 
 
 desc = __doc__
-epilog = ""
-
-# TODO: Currently aggregation not working.
-aggregate = False
+epilog = """
+`Experiment_id` and `variable` are forced as above, regardless of the
+setting in config file and command line option.
+"""
 
 
 def my_parser():
@@ -31,6 +32,8 @@ def my_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=desc,
         epilog=epilog)
+    parser.add_argument(
+        '-d', '--debug', action='store_true', default=False)
     parser.add_argument(
         '-c', '--conffile', type=str, default="",
         help='config file')
@@ -134,14 +137,22 @@ def main():
         'variable': 'tas'}
     params.update(params_force)
 
-    pprint(params)
-
+    if (a.debug):
+        esgfsearch.ESGFSearch._enable_debug()
     es = esgfsearch.ESGFSearch(conffile=a.conffile)
 
-    es.getCatURLs(params)
+    with timer('getting Catalog URLs'):
+        es.getCatURLs(params)
+
+    if es.cat_urls:
+        pprint(es.cat_urls)
 
     with timer('getting Dataset URLs'):
         es.getDataURLs()
+        
+    if es.data_urls:
+        pprint(es.data_urls)
+
 
     with timer('getting Dataset'):
         es.getDatasets()

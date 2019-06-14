@@ -5,7 +5,8 @@ Draw time-series of CMIP6 data, searched via RESTful API and accessed
 by OPeNDAP.
 
 This is just a "Proof-of-concept" for accessing CMIP6/ESGF data via
-cmiputil. 
+cmiputil. Process after opening dataset is a sloppy and dirty hack.
+You should implemnt properly by yourself.
 """
 
 from cmiputil import esgfsearch
@@ -16,14 +17,12 @@ from pprint import pprint
 
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190602'
-__date__ = '2019/06/02'
+__version__ = 'v20190614'
+__date__ = '2019/06/14'
 
 
 desc = __doc__
 epilog = """
-Process after opening dataset is a sloppy and dirty hack.
-You should implemnt properly by yourself.
 """
 
 def my_parser():
@@ -31,6 +30,8 @@ def my_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=desc,
         epilog=epilog)
+    parser.add_argument(
+        '-d', '--debug', action='store_true', default=False)
     parser.add_argument(
         '-c', '--conffile', type=str, default="",
         help='config file')
@@ -73,6 +74,8 @@ def main():
         k, v = p.split('=')
         params[k] = v
 
+    if (a.debug):
+        esgfsearch.ESGFSearch._enable_debug()
     es = esgfsearch.ESGFSearch(conffile=a.conffile)
 
     # Do search, return a list of catalog URLs
