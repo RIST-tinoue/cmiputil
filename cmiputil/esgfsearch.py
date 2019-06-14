@@ -343,7 +343,7 @@ class ESGFSearch():
         self.data_files = [self._getDataFiles(d) for d in self.local_dirs]
 
     def _getDataFiles(self, directory):
-        return list(Path(directory).iterdir())
+        return list(directory.iterdir())
 
 
 def _getServiceBase(services):

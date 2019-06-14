@@ -667,8 +667,8 @@ class DRS:
 
         """
         dname = self.dirName(prefix=prefix)  # may contain '*' and braces
-        plist = [glob.glob(p) for p in braceexpand(str(dname))]
-        return [p for pp in plist for p in pp]
+        plist = [glob.iglob(p) for p in braceexpand(str(dname))]
+        return [Path(p) for pp in plist for p in pp]
 
     def splitFileName(self, fname, validate=False):
         """Split filename to attributes for DRS.
