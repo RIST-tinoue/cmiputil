@@ -9,42 +9,57 @@ This version uses
 Basic Usage
 ===========
 
+Note:
+    From ver.0.8, opening dataset, such as xarray or netCDF4, is dropped.
+    You have to open them by yourself with your favorit datatype. 
+
+
 
 Typical flow of searching and downloading CMIP6 data from ESGF is as
 follows;
 
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
-2. get catalog URLs via :meth:`ESGFSearch.getCatURLs` method,
-3. get dataset URLs via :meth:`ESGFSearch.getDataURLs` method,
-4. get dataset via :meth:`ESGFSearch.openDatasets` method,
+2. get catalog URLs via :meth:`.getCatURLs` method,
+3. get dataset URLs via :meth:`.getDataURLs` method,
+4. get and open dataset URLs via your favorit datatype, such as xarray
+   or netCDF4.
 
-Catalog URLs, dataset URLs, and dataset objects are all stored as
-instance attributes.
-
-:meth:`getDataset` does 3. and 4. above at once.
+Catalog URLs and dataset URLs are stored as instance attributes.
 
 Example:
+
+    >>> from cmiputil import esgfsearch
+    >>> import xarray as xr
     >>> params = {'source_id': 'MIROC6',
     ...           'experiment_id': 'historical',
-    ...           'variable': 'tas',
+    ...           'variable_id': 'tas',
     ...           'variant_label': 'r1i1p1f1'}
-    >>> es = ESGFSearch()
+    >>> es = esgfsearch.ESGFSearch()
     >>> es.getCatURLs(params)
     >>> es.getDataURLs()
-    >>> es.openDatasets()
+    >>> ds = []
+    >>> for url in es.data_urls:
+    ...     if type(url) is list:
+    ...         ds.append(xr.open_mfdataset(url, decode_times=False))
+    ...     else:
+    ...         ds.append(xr.open_dataset(url, decode_times=False))
 
+    In above, `es.cat_urls` and `es.data_urls` are set as below::
 
+         'cat_urls': ['http://esgf-data2.diasjp.net/thredds/catalog/esgcet/1/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212.xml#CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212'],
+         'data_urls': ['http://esgf-data2.diasjp.net/thredds/dodsC/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.tas.20181212.aggregation.1']}
 
 Config File
 ===========
 
 This module read in config file, sections below;
 
+- [cmiputil]
+    - `cmip6_data_dir`: the root of local data store (described below).
 - [ESGFSearch]
     - `search_service`: the base URL of the search service at a ESGF Index Node
     - `service_type`: ``search`` or ``wget``
-    - `aggregate` : :meth:`getDatasets` returns aggregated datasets or not
-    - `datatype_xarray` : :meth:`getDatasets` returns xarray or netCDF4
+    - `aggregate` : :meth:`getDataURLs` returns aggregated datasets or not
 - [ESGFSearch.keywords] : keyword parameters of RESTful API
 - [ESGFSearch.facets] : facet parameters of RESTful API
 
@@ -55,10 +70,30 @@ This module assumes that local data files are stored in the DRS
 complient directory structure. See :mod:`drs` module for the details
 of DRS.  If you use `synda install` for download and replication of
 CMIP6 data files from ESGF, files are stored in such way.  So you can
-use :meth:`ESGFSearch.getLocalPath` with :attr:`ESGFSearch.base_dir`
-being set as the root of this directory structure to find and open
-your local files with the same interface with
-:meth:`ESGFSearch.getCatURLs`.
+use :meth:`.getLocalDirs()` and :meth:`.getDataFiles()` with the same
+interface with :meth:`.getCatURLs` and :meth:`.getDataURLs()`.
+
+Do not forget to set :attr:`.base_dir` attribute or `cmip6_data_dir`
+in config file as the root of this directory structure.
+
+Example:
+    >>> import xarray as xr
+    >>> params = {'source_id': 'MIROC6',
+    ...           'experiment_id': 'historical',
+    ...           'variable_id': 'tas',
+    ...           'variant_label': 'r1i1p1f1'}
+    >>> es = ESGFSearch()
+    >>> es.getLocalDirs(params, base_dir='/data')
+    >>> es.getDataFiles()
+    >>> ds = []
+    >>> for files in es.data_files:
+    ...     ds.append(xr.open_mfdataset(files, decode_cf=False))
+
+
+    In above, ``es.local_dirs`` is set as below if they are exists::
+
+        ['/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212',
+         '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
 
 
 .. _ESGF RESTful API: 
@@ -75,11 +110,8 @@ __date__ = '2019/06/12'
 from cmiputil import drs, config
 import urllib3
 import json
-import xarray as xr
-import netCDF4 as nc
 from siphon.catalog import TDSCatalog
 from pprint import pprint
-from os.path import basename
 from pathlib import Path
 
 
@@ -105,13 +137,13 @@ class ESGFSearch():
                         ``http://esgf-node.llnl.gov/esg-search/``
         service_type: service type for RESTful API.
                       currently ``search`` only allowed.
-        aggregate: access aggregated via OPeNDAP.
-        datatype_xarray: open dataset as xarray or netCDF4
+        aggregate (bool): access aggregated via OPeNDAP.
         params: keyword parameters and facet parameters for RESTful API
         cat_urls (list(str)): obtained catalog URLs
         data_urls (list(str) or list of list(str)): obtained dataset URLs
-        datasets: list of obtained datasets
         base_dir: base(root) path for local data directory structure
+        local_dirs: obtained local directories for local dataset files.
+        data_files: obtained local dataset files
     """
     _debug = False
 
@@ -128,6 +160,11 @@ class ESGFSearch():
     #     return cls._debug
 
     def __init__(self, conffile=""):
+
+        if self._debug:
+            config.Conf._enable_debug()
+            drs.DRS._enable_debug()
+            
         self.conf = config.Conf(conffile)
 
         sec = self.conf['ESGFSearch']
@@ -143,18 +180,15 @@ class ESGFSearch():
         except KeyError:
             self.aggregate = aggregate_default
 
+        sec = self.conf['ESGFSearch.keywords']
         try:
-            self.datatype_xarray = sec.getboolean('datatype_xarray')
-        except KeyError:
-            self.datatype_xarray = datatype_xarray_default
-
-        try:
-            self.params = dict(self.conf['ESGFSearch.keywords'].items())
+            self.params = dict(sec.items())
         except KeyError:
             self.params = {}
 
+        sec = self.conf['ESGFSearch.facets']
         try:
-            self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
+            self.params.update(dict(sec.items()))
         except KeyError:
             pass
 
@@ -167,8 +201,7 @@ class ESGFSearch():
         """
         Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
 
-        Obtained catalog URLs are set as :attr:`cat_urls` attribute of
-        `self`.
+        Obtained catalog URLs are set as :attr:`cat_urls` attribute.
 
         Args:
             params (dict): keyword parameters and facet parameters.
@@ -180,11 +213,11 @@ class ESGFSearch():
         Return:
             None
 
-        If `base_url` is not ``None``, override :attr:`search_service` +
-        :attr:`service_type` of `self`.
+        If `base_url` is not ``None``, overrides :attr:`search_service` +
+        :attr:`service_type` attributes.
 
         `params` is to *update* (use `update()` method of python dict)
-        to :attr:`params` of `self`.
+        to :attr:`params` attribute.
 
         TODO:
             - How to enable *a negative facet* of RESTful API ?
@@ -229,14 +262,14 @@ class ESGFSearch():
         """
         From URLs of TDS catalog, obtain URLs of dataset.
 
-        Catalog URLs are set as :attr:`cat_urls` attribute of `self`,
+        Catalog URLs are set as :attr:`cat_urls` attribute,
         that is obtained by, for example, :meth:`getCatURLs()`.
 
-        If :attr:`aggregate` of `self` is ``True``, obtain URLs of
+        If :attr:`aggregate` attribute is ``True``, obtain URLs of
         aggregated dataset, else URLs of all of files listed in the
         catalog.
 
-        Obtained dataset URLs are set as :attr:`.data_urls` of `self`.
+        Obtained dataset URLs are set as :attr:`.data_urls` attribute.
 
         """
         self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
@@ -270,69 +303,7 @@ class ESGFSearch():
 
         return data_url
 
-    def openDatasets(self):
-        """
-        Open and return dataset object from dataset URLs.
-
-        Dataset URLs are set as :attr:`data_urls` attribute of `self`,
-        obtained by, for example, :meth:`getDataURLs`.
-
-        If :attr:`datatype_xarray` of `self` is ``True``,
-        open by ``xarray.open_dataset()``, else open by
-        ``netCDF4.Dataset()``.
-
-        If `url` is a list, they are opened as a multi-file dataset,
-        via `xarray.open_mfdataset()` or `netCDF4.MFDataset()`.
-
-        Opened datasets are stored as :attr:`dataset` of `self`.
-        """
-        res = [self._openDataset(url) for url in self.data_urls]
-        self.datasets = [d for d in res if d]
-
-    def _openDataset(self, url):
-        if self.datatype_xarray:
-            try:
-                if type(url) is list:
-                    ds = xr.open_mfdataset(url, decode_cf=False)
-                else:
-                    # ds = xr.open_dataset(url,
-                    #                      decode_times=False, decode_cf=False)
-                    ds = xr.open_dataset(url, decode_cf=False)
-            except (KeyError, OSError) as e:
-                print(f"Error in opening xarray dataset:"
-                      f"{basename(url)}:{e.args}\n Skip.")
-            else:
-                return ds
-        else:
-            try:
-                if type(url) is list:
-                    ds = nc.MFDataset(url)
-                else:
-                    ds = nc.Dataset(url, 'r')
-            except (KeyError, OSError) as e:
-                print(f"Error in opening netCDF dataset:"
-                      f"{basename(url)}:{e.args}\n Skip.")
-            else:
-                return ds
-
-    def getDatasets(self):
-        """
-        From URLs of TDS catalog, open xarray or netCDF4 dataset.
-
-        Catalog URLs are set as :attr:`cat_urls` attribute of `self`,
-        that is obtained by, for example, :meth:`getCatURLs()`.
-
-        If :attr:`aggregate` of `self` is ``True``, obtain URLs of
-        aggregated dataset, else URLs of all of files listed in the
-        catalog.
-
-        Obtained datasets are set as :attr:`.dataset` of `self`.
-
-        """
-        self.getDataURLs()
-        self.openDatasets()
-
-    def getLocalPath(self, params=None, base_dir=None):
+    def getLocalDirs(self, params=None, base_dir=None):
         """
         Get local path(s) to match given search condition.
 
@@ -350,24 +321,10 @@ class ESGFSearch():
             NotFoundError: raised if no paths found.
 
 
-        If `base_dir` is not ``None``, override :attr:`base_dir`.
+        If `base_dir` is not ``None``, overrides :attr:`base_dir`.
 
         `params` is to *update* (use `update()` method of python dict)
-        to :attr:`params` of `self`.
-
-        Example:
-            >>> from cmiputil import esgfsearch
-            >>> params = {'source_id': 'MIROC6',
-            ...           'experiment_id': 'historical',
-            ...           'variant_label': 'r1i1p1f1',
-            ...           'variable': 'tas', }
-            >>> es = esgfsearch.ESGFSearch()
-            >>> es.getLocalPath(params, base_dir='/data')
-
-            In above, ``es.local_dirs`` is set as below if they are exists::
-
-                ['/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212',
-                 '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
+        to :attr:`params` attribute.
         """
         if params:
             self.params.update(params)
@@ -375,29 +332,28 @@ class ESGFSearch():
         if base_dir is not None:
             self.base_dir = base_dir
 
+        if (self._debug):
+            print(f'dbg:ESGFSearch.getLocalDirs:base_dir:{self.base_dir}')
+            print('dbg:ESGFSeaerch.getLocalDirs:params:')
+            pprint(self.params)
+
         d = drs.DRS(**self.params)
         self.local_dirs = d.dirNameList(prefix=self.base_dir)
 
-
-    def openLocalDatasets(self):
+    def getDataFiles(self):
         """
-        Open and return dataset object from local dataset paths.
+        From directories of local data store, obtain dataset files.
 
-        Dataset paths are set as :attr:`local_dirs` of `self`, obtained
-        by, for example, :meth:`getLocalPath()`.
+        Directories are set as :attr:`local_dirs` attribute,
+        that is obtained by, for example, :meth:`getLocalDirs()`.
 
-        Opened datasets are stored as :attr:`detaset` of `self`.
+        Obtained dataset files are set as :attr:`.data_files` attribute.
+
         """
-        if not self.local_dirs:
-            self.datasets = None
-        else:
-            res = [self._openLocalDataset(p) for p in self.local_dirs]
-            self.datasets = [d for d in res if d]
+        self.data_files = [self._getDataFiles(d) for d in self.local_dirs]
 
-    def _openLocalDataset(self, p):
-        return xr.open_mfdataset(list(Path(p).iterdir()),
-                                 decode_times=False)
-
+    def _getDataFiles(self, directory):
+        return list(directory.iterdir())
 
 
 def _getServiceBase(services):
@@ -424,7 +380,6 @@ search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
 service_type_default = 'search'
 
 aggregate_default = True
-datatype_xarray_default = True
 
 #: Default keywords for RESTful API.
 keywords_default = {
@@ -449,7 +404,7 @@ def getDefaultConf():
     """
     Return default values for config file.
 
-    Intended to be called before :meth:`config.writeConf` in
+    Intended to be called before :meth:`.writeConf()` in
     :mod:`config`.
 
     Example:
@@ -465,7 +420,7 @@ def getDefaultConf():
     res['ESGFSearch'] = {'search_service': search_service_default,
                          'service_type': service_type_default,
                          'aggregate': aggregate_default,
-                         'datatype_xarray': datatype_xarray_default}
+    }
     res['ESGFSearch.keywords'] = keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
