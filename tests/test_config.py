@@ -14,13 +14,13 @@ class test_Config(unittest.TestCase):
             "experiment_id = amip",
             "source_id = BCC-CSM2-MR",
             "table_id = Amon",
-            "variable = pr",
+            "variable_id = pr",
             "variant_label = r1i1p1f1, r2i1p1f1, r3i1p1f1"))
         self.confdict = {
             'experiment_id': 'amip',
             'source_id': 'BCC-CSM2-MR',
             'table_id': 'Amon',
-            'variable': 'pr',
+            'variable_id': 'pr',
             'variant_label': 'r1i1p1f1, r2i1p1f1, r3i1p1f1'}
         self.conffile = '/tmp/test_config_local.conf'
         pass

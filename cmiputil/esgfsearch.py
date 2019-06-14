@@ -32,7 +32,7 @@ Example:
     >>> import xarray as xr
     >>> params = {'source_id': 'MIROC6',
     ...           'experiment_id': 'historical',
-    ...           'variable': 'tas',
+    ...           'variable_id': 'tas',
     ...           'variant_label': 'r1i1p1f1'}
     >>> es = esgfsearch.ESGFSearch()
     >>> es.getCatURLs(params)
@@ -80,7 +80,7 @@ Example:
     >>> import xarray as xr
     >>> params = {'source_id': 'MIROC6',
     ...           'experiment_id': 'historical',
-    ...           'variable': 'tas',
+    ...           'variable_id': 'tas',
     ...           'variant_label': 'r1i1p1f1'}
     >>> es = ESGFSearch()
     >>> es.getLocalDirs(params, base_dir='/data')
