@@ -283,8 +283,10 @@ class ESGFSearch():
                 if (service == 'THREDDS'):
                     dinfo.cat_url = url
 
+    @property
+    def cat_urls(self):
         #  for backward compatibility
-        self.cat_urls = [dinfo.cat_url for dinfo in self.datainfo]
+        return [dinfo.cat_url for dinfo in self.datainfo]
 
 
 
@@ -305,9 +307,6 @@ class ESGFSearch():
         for dinfo in self.datainfo:
             dinfo.data_url = self._getDataURL(dinfo.cat_url)
 
-        #  for backward compatibility
-        self.data_urls = [dinfo.data_url for dinfo in self.datainfo]
-
         if self._debug:
             print('dbg:ESGFSearch.getDataURLs:')
             for dinfo in self.datainfo:
@@ -316,6 +315,11 @@ class ESGFSearch():
 
         # self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
         # for dinfo in self.datainfo:
+
+    @property
+    def data_urls(self):
+        #  for backward compatibility
+        return [dinfo.data_url for dinfo in self.datainfo]
 
 
     def _getDataURL(self, url):
