@@ -288,8 +288,6 @@ class ESGFSearch():
         #  for backward compatibility
         return [dinfo.cat_url for dinfo in self.datainfo]
 
-
-
     def getDataURLs(self):
         """
         From URLs of TDS catalog, obtain URLs of dataset.
@@ -313,17 +311,12 @@ class ESGFSearch():
                 print(f"- master id:{dinfo.master_id},\n data_url:")
                 pprint(dinfo.data_url)
 
-        # self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
-        # for dinfo in self.datainfo:
-
     @property
     def data_urls(self):
         #  for backward compatibility
         return [dinfo.data_url for dinfo in self.datainfo]
 
-
     def _getDataURL(self, url):
-
         try:
             cat = TDSCatalog(url)
         except Exception as e:
@@ -350,6 +343,25 @@ class ESGFSearch():
             data_url.sort()
 
         return data_url
+
+    def findLocalFile(self, base_dir=None):
+        """
+        from ESGFDataInfo instance, find local file.
+        """
+
+        if base_dir is not None:
+            self.base_dir = base_dir
+
+        for dinfo in self.datainfo:
+            self._findLocalFile(dinfo)
+
+    def _findLocalFile(self, dinfo):
+        pprint(dinfo.managedAttribs)
+        d = drs.DRS(**dinfo.managedAttribs)
+        dname = d.dirName(prefix=self.base_dir)
+        fname = str(d.fileName())
+        dinfo.localfiles = list(dname.glob(fname))
+
 
     def getLocalDirs(self, params=None, base_dir=None):
         """
