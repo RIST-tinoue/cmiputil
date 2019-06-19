@@ -170,9 +170,12 @@ class ESGFSearch():
         sec = self.conf['ESGFSearch']
         try:
             self.search_service = sec['search_service']
-            self.service_type = sec['service_type']
         except KeyError:
             self.search_service = search_service_default
+
+        try:
+            self.service_type = sec['service_type']
+        except KeyError:
             self.service_type = service_type_default
 
         try:
