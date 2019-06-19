@@ -6,7 +6,7 @@ Attributes are collected from ESGF RESTful API search result and
 OPeNDAP Catalog, which are not in datafile global attributes.
 
 """
-
+import re
 from pprint import pprint
 
 
@@ -104,6 +104,14 @@ class ESGFDataInfo():
                 if ( a != 'url'):
                     v = v[0]
             setattr(self, a, v)
+
+        #  in drs <version> must be 'vYYYYMMDD'.
+        if hasattr(self, 'version'):
+            pat = re.compile(r'\d{8}')
+            if pat.fullmatch(self.version):
+                self.version = 'v'+self.version
+        if self._debug:
+            print('dbg:ESGFDataInfo.set():modified version:',self.version)
 
     @property
     def managedAttribs(self):
