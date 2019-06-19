@@ -104,7 +104,10 @@ class ESGFDataInfo():
 
     @property
     def managedAttribs(self):
-        return {a: getattr(self, a) for a in self.managed_attributes}
+        return {a: getattr(self, a) 
+                for a in self.managed_attributes
+                if hasattr(self, a)
+        }
 
 
 
