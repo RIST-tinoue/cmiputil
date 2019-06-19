@@ -83,6 +83,7 @@ class ESGFDataInfo():
         'member_id',
         'table_id',
         'variable_id',
+        'variant_label',
         'grid_label',
         'sub_experiment_id'
     ]
