@@ -100,6 +100,9 @@ class ESGFDataInfo():
         attribs = {a: argv[a] for a in argv
                    if a in self.managed_attributes}
         for a,v in attribs.items():
+            if type(v) is list and len(v) == 1:
+                if ( a != 'url'):
+                    v = v[0]
             setattr(self, a, v)
 
     @property
