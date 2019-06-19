@@ -11,7 +11,7 @@ Basic Usage
 
 Note:
     From ver.0.8, opening dataset, such as xarray or netCDF4, is dropped.
-    You have to open them by yourself with your favorit datatype. 
+    You have to open them by yourself with your favorit datatype.
 
 
 
@@ -96,7 +96,7 @@ Example:
          '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
 
 
-.. _ESGF RESTful API: 
+.. _ESGF RESTful API:
    https://earthsystemcog.org/projects/cog/esgf_search_restful_api
 
 .. _OPeNDAP:
@@ -164,15 +164,18 @@ class ESGFSearch():
         if self._debug:
             config.Conf._enable_debug()
             drs.DRS._enable_debug()
-            
+
         self.conf = config.Conf(conffile)
 
         sec = self.conf['ESGFSearch']
         try:
             self.search_service = sec['search_service']
-            self.service_type = sec['service_type']
         except KeyError:
             self.search_service = search_service_default
+
+        try:
+            self.service_type = sec['service_type']
+        except KeyError:
             self.service_type = service_type_default
 
         try:
@@ -196,6 +199,10 @@ class ESGFSearch():
             self.base_dir = self.conf.commonSection['cmip6_data_dir']
         except KeyError:
             self.base_dir = None
+
+        if self._debug:
+            print('dbg:ESGFSearch():')
+            pprint(vars(self))
 
     def getCatURLs(self, params=None, base_url=None):
         """
@@ -228,8 +235,8 @@ class ESGFSearch():
             base_url = self.search_service + self.service_type
 
         if (self._debug):
-            print(f'dbg:ESGFSearch.getCatURLs:base_url:{base_url}')
-            print('dbg:ESGFSeaerch.getCatURLs:params:')
+            print(f'dbg:ESGFSearch.getCatURLs():base_url:{base_url}')
+            print('dbg:ESGFSeaerch.getCatURLs():params:')
             pprint(self.params)
 
         http = urllib3.PoolManager()
@@ -246,6 +253,10 @@ class ESGFSearch():
             return []
         # don't know why but returned are bytes, not str.
         result = json.loads(r.data.decode())
+
+        if self._debug:
+            print('dbg:getCatURLs:numFound:',
+                  result['response']['numFound'])
 
         if (result['response']['numFound'] == 0):
             raise NotFoundError('No catalog found.')
@@ -419,8 +430,7 @@ def getDefaultConf():
     res = {}
     res['ESGFSearch'] = {'search_service': search_service_default,
                          'service_type': service_type_default,
-                         'aggregate': aggregate_default,
-    }
+                         'aggregate': aggregate_default,}
     res['ESGFSearch.keywords'] = keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
