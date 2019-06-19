@@ -19,9 +19,10 @@ Typical flow of searching and downloading CMIP6 data from ESGF is as
 follows;
 
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
-2. get catalog URLs via :meth:`.getCatURLs` method,
-3. get dataset URLs via :meth:`.getDataURLs` method,
-4. get and open dataset URLs via your favorit datatype, such as xarray
+2. do search via :meth:`.doSearch` method,
+3. get catalog URLs via :meth:`.getCatURLs` method,
+4. get dataset URLs via :meth:`.getDataURLs` method,
+5. get and open dataset URLs via your favorit datatype, such as xarray
    or netCDF4.
 
 Catalog URLs and dataset URLs are stored as instance attributes.
@@ -35,7 +36,8 @@ Example:
     ...           'variable_id': 'tas',
     ...           'variant_label': 'r1i1p1f1'}
     >>> es = esgfsearch.ESGFSearch()
-    >>> es.getCatURLs(params)
+    >>> es.doSearch(params)
+    >>> es.getCatURLs()
     >>> es.getDataURLs()
     >>> ds = []
     >>> for url in es.data_urls:
@@ -107,7 +109,7 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190612'
 __date__ = '2019/06/12'
 
-from cmiputil import drs, config
+from cmiputil import esgfdatainfo, drs, config
 import urllib3
 import json
 from siphon.catalog import TDSCatalog
@@ -164,6 +166,7 @@ class ESGFSearch():
         if self._debug:
             config.Conf._enable_debug()
             drs.DRS._enable_debug()
+            esgfdatainfo.ESGFDataInfo._enable_debug()
 
         self.conf = config.Conf(conffile)
 
@@ -204,11 +207,9 @@ class ESGFSearch():
             print('dbg:ESGFSearch():')
             pprint(vars(self))
 
-    def getCatURLs(self, params=None, base_url=None):
+    def doSearch(self, params=None, base_url=None):
         """
-        Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
-
-        Obtained catalog URLs are set as :attr:`cat_urls` attribute.
+        Do search by ESGF RESTful API
 
         Args:
             params (dict): keyword parameters and facet parameters.
@@ -219,15 +220,6 @@ class ESGFSearch():
 
         Return:
             None
-
-        If `base_url` is not ``None``, overrides :attr:`search_service` +
-        :attr:`service_type` attributes.
-
-        `params` is to *update* (use `update()` method of python dict)
-        to :attr:`params` attribute.
-
-        TODO:
-            - How to enable *a negative facet* of RESTful API ?
         """
         if params:
             self.params.update(params)
@@ -235,8 +227,8 @@ class ESGFSearch():
             base_url = self.search_service + self.service_type
 
         if (self._debug):
-            print(f'dbg:ESGFSearch.getCatURLs():base_url:{base_url}')
-            print('dbg:ESGFSeaerch.getCatURLs():params:')
+            print(f'dbg:ESGFSearch.doSearch():base_url:{base_url}')
+            print('dbg:ESGFSeaerch.doSearch():params:')
             pprint(self.params)
 
         http = urllib3.PoolManager()
@@ -255,19 +247,46 @@ class ESGFSearch():
         result = json.loads(r.data.decode())
 
         if self._debug:
-            print('dbg:getCatURLs:numFound:',
+            print('dbg:doSearch:numFound:',
                   result['response']['numFound'])
 
         if (result['response']['numFound'] == 0):
             raise NotFoundError('No catalog found.')
 
-        self.cat_urls = []
-        for r in result['response']['docs']:
-            for l in r['url']:
+        self.datainfo = [esgfdatainfo.ESGFDataInfo(**doc)
+                         for doc in result['response']['docs']]
+
+
+    def getCatURLs(self):
+        """
+        Get URLs for OPeNDAP TDS catalog.
+
+        Obtained catalog URLs are set as :attr:`cat_urls` attribute.
+
+        Return:
+            None
+
+        If `base_url` is not ``None``, overrides :attr:`search_service` +
+        :attr:`service_type` attributes.
+
+        `params` is to *update* (use `update()` method of python dict)
+        to :attr:`params` attribute.
+
+        TODO:
+            - How to enable *a negative facet* of RESTful API ?
+        """
+
+        for dinfo in self.datainfo:
+            for l in dinfo.url:
                 (url, mime, service) = l.split('|')
                 # select TDS catalog
                 if (service == 'THREDDS'):
-                    self.cat_urls.append(url)
+                    dinfo.cat_url = url
+
+        #  for backward compatibility
+        self.cat_urls = [dinfo.cat_url for dinfo in self.datainfo]
+
+
 
     def getDataURLs(self):
         """
@@ -283,7 +302,21 @@ class ESGFSearch():
         Obtained dataset URLs are set as :attr:`.data_urls` attribute.
 
         """
-        self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
+        for dinfo in self.datainfo:
+            dinfo.data_url = self._getDataURL(dinfo.cat_url)
+
+        #  for backward compatibility
+        self.data_urls = [dinfo.data_url for dinfo in self.datainfo]
+
+        if self._debug:
+            print('dbg:ESGFSearch.getDataURLs:')
+            for dinfo in self.datainfo:
+                print(f"- master id:{dinfo.master_id},\n data_url:")
+                pprint(dinfo.data_url)
+
+        # self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
+        # for dinfo in self.datainfo:
+
 
     def _getDataURL(self, url):
 
