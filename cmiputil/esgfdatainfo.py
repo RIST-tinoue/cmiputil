@@ -74,6 +74,17 @@ class ESGFDataInfo():
         'type',
         'url',
         'version',
+        'mip_era',
+        'activity_drs',
+        'activity_id',
+        'institution_id',
+        'source_id',
+        'experiment_id',
+        'member_id',
+        'table_id',
+        'variable_id',
+        'grid_label',
+        'sub_experiment_id'
     ]
 
 
@@ -89,6 +100,11 @@ class ESGFDataInfo():
                    if a in self.managed_attributes}
         for a,v in attribs.items():
             setattr(self, a, v)
+
+    @property
+    def managedAttribs(self):
+        return {a: getattr(self, a) for a in self.managed_attributes}
+
 
 
 if (__name__ == '__main__'):
