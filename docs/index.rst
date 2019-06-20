@@ -20,11 +20,12 @@ Modules
 .. toctree::
    :maxdepth: 4
 
-   convoc
-   drs
    esgfsearch
-   timer
+   esgfdatainfo
+   drs
+   convoc
    config
+   timer
    braceexpand
 
 
