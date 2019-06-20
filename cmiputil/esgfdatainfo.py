@@ -209,7 +209,7 @@ class ESGFDataInfo():
         d = drs.DRS(**self.managedAttribs)
         dname = d.dirName(prefix=base_dir)
         fname = str(d.fileName())
-        self.localfiles = list(dname.glob(fname))
+        self.local_files = list(dname.glob(fname))
 
 
 def _getServiceBase(services):

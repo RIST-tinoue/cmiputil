@@ -345,7 +345,7 @@ class ESGFSearch():
 
         :type: list(str) or list(list(str))
         """
-        return [dinfo.localfiles for dinfo in self.datainfo]
+        return [dinfo.local_files for dinfo in self.datainfo]
 
     def getLocalDirs(self, params=None, base_dir=None):
         """
