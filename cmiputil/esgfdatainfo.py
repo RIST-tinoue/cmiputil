@@ -147,7 +147,6 @@ class ESGFDataInfo():
             # select TDS catalog
             if (service == 'THREDDS'):
                 self.cat_url = url
-        print('dbg:ESGFDataInfo.set():cat_url:', self.cat_url)
 
         #  in drs <version> must be 'vYYYYMMDD'.
         if hasattr(self, 'version'):
