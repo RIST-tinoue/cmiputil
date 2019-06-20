@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """
-Manage ESGF dataset info.
-
-This is a supporting module for esgfsearch.
+Supporting module for :mod:`esgfsearch`.
 
 Class :class:`ESGFDataInfo` holds and manages research result
-of ESGF RESTful API, issued by :class:`esgfsearch.ESGFSearch`.
+of ESGF RESTful API, issued by :meth:`esgfsearch.ESGFSearch.doSearch`.
 
-One instance of this class corresponds to one search result, and the
+One instance of this class corresponds to one search result, and a
 list of instances is set as the attribute of
 :attr:`esgfsearch.ESGFSearch.datainfo`.
 
@@ -15,6 +13,34 @@ This class also have some methods to access OPeNDAP catalog and
 retrieve additional information, search local (pre-downloaded) files
 to match the search result, etc.
 
+Example:
+
+    >>> from cmiputil import esgfdatainfo
+    >>> import urllib3
+    >>> keywords = {
+    ... 'distrib':'true',
+    ... 'type':'Dataset',
+    ... 'format':r'application/solr+json',
+    ... 'offset':0,
+    ... 'replica':'False'}
+    >>> params = {
+    ... 'experiment_id':'piControl',
+    ... 'variable_id':'tas',
+    ... 'table_id':'Amon',
+    ... 'source_id':'BCC-CSM2-MR'}
+    >>> base_url = 'http://esgf-node.llnl.gov/esg-search/' 'search'
+    >>> params.update(keywords)
+    >>> http = urllib3.PoolManager()
+    >>> r = http.request('GET', base_url, fields=params)
+    >>> result = json.loads(r.data.decode())
+    >>> attrs = result['response']['docs'][0]
+    >>> dinfo = esgfdatainfo.ESGFDataInfo(**attrs)
+    >>> dinfo.id
+    'CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn'
+
+Actually, doing search as above is done by
+:class:`esgfsearch.ESGFSearch`.  A list of instances of this class
+is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
 """
 from cmiputil import drs
 import re
@@ -30,41 +56,16 @@ __date__ = '2019/06/19'
 
 class ESGFDataInfo():
     """
-    Info of ESGF dataset.
+    Holds and maintains search result of ESGF dataset.
 
     Among attributes obtained from one search result, ones listed in
     :attr:`managed_attributes` are stored as attributes of this class.
 
-    Example:
-
-        >>> from cmiputil import esgfdatainfo
-        >>> import urllib3
-        >>> keywords = {
-        ... 'distrib':'true',
-        ... 'type':'Dataset',
-        ... 'format':r'application/solr+json',
-        ... 'offset':0,
-        ... 'replica':'False'}
-        >>> params = {
-        ... 'experiment_id':'piControl',
-        ... 'variable_id':'tas',
-        ... 'table_id':'Amon',
-        ... 'source_id':'BCC-CSM2-MR'}
-        >>> base_url = 'http://esgf-node.llnl.gov/esg-search/' 'search'
-        >>> params.update(keywords)
-        >>> http = urllib3.PoolManager()
-        >>> r = http.request('GET', base_url, fields=params)
-        >>> result = json.loads(r.data.decode())
-        >>> attrs = result['response']['docs'][0]
-        >>> dinfo = esgfdatainfo.ESGFDataInfo(**attrs)
-        >>> dinfo.id
-        'CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn'
-
-    Actually, doing search such as above is done by
-    :class:`esgfsearch.ESGFSearch`.  A list of instances of this class
-    is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
+    Attributes:
+        cat_url: URL of OPeNDAP catalog
+        data_url: URL of dataset
+        local_files: Paths of local file corresponding to the search result.
     """
-
     _debug = False
 
     @classmethod
@@ -106,13 +107,13 @@ class ESGFDataInfo():
         'sub_experiment_id'
     ]
 
-    def __init__(self, **attrs):
+    def __init__(self, **argv):
         """
         Args:
-            attrs (dict): search parameters for RESTFul API, see :meth:`.set:
+            argv (dict): attributes to be set, see :meth:`.set`:
 
         """
-        self.set(**attrs)
+        self.set(**argv)
 
         if self._debug:
             print('dbg:ESGFDataInfo.__init__():')
@@ -122,11 +123,12 @@ class ESGFDataInfo():
         """
         Set attributes.
 
-        In the `argv` attributes listed in :attr:`managed_attributes`
-        are set.
+        Among the `argv`, that is a dict usually obtained from one
+        result of the search via ESGF RESTful API, attributes listed
+        in :attr:`managed_attributes` are set.
 
         Args:
-            argv (dict): search parameters for RESTFul API
+            argv (dict): attributes to be set.
 
         """
         attribs = {a: argv[a] for a in argv
@@ -157,13 +159,20 @@ class ESGFDataInfo():
 
     @property
     def managedAttribs(self):
-        """Returns stored global attributes in the instance."""
+        """Global attributes stored in the instance."""
         return {a: getattr(self, a)
                 for a in self.managed_attributes
                 if hasattr(self, a)}
 
     def getDataURL(self, aggregate):
-        print('dbg:ESGFDataInfo.getDataURL():cat_url:', self.cat_url)
+        """
+        Get URL(s) of dataset from the OPeNDAP Catalog.
+
+        Results are set as :attr:`.data_url`
+
+        Args:
+            aggregate (bool): retrieve aggregated dataset, or not.
+        """
         try:
             cat = TDSCatalog(self.cat_url)
         except Exception as e:
@@ -189,6 +198,14 @@ class ESGFDataInfo():
         self.data_url = data_url
 
     def findLocalFile(self, base_dir):
+        """
+        Find local (pre-downloaded) files corresponds to the search
+        result.
+
+        See **Local data store** section in :mod:`esgfsearch`.
+
+        """
+
         d = drs.DRS(**self.managedAttribs)
         dname = d.dirName(prefix=base_dir)
         fname = str(d.fileName())
