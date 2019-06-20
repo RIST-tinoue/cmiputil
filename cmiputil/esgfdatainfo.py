@@ -16,7 +16,7 @@ to match the search result, etc.
 Example:
 
     >>> from cmiputil import esgfdatainfo
-    >>> import urllib3
+    >>> import urllib3, json
     >>> keywords = {
     ... 'distrib':'true',
     ... 'type':'Dataset',
