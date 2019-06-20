@@ -20,9 +20,8 @@ follows;
 
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
 2. do search via :meth:`.doSearch` method,
-3. get catalog URLs via :meth:`.getCatURLs` method,
-4. get dataset URLs via :meth:`.getDataURLs` method,
-5. get and open dataset URLs via your favorit datatype, such as xarray
+3. get dataset URLs via :meth:`.getDataURLs` method,
+4. open dataset URLs via your favorit datatype, such as xarray
    or netCDF4.
 
 Catalog URLs and dataset URLs are stored as instance attributes.
@@ -57,13 +56,25 @@ Config File
 This module read in config file, sections below;
 
 - [cmiputil]
-    - `cmip6_data_dir`: the root of local data store (described below).
+
+    ``cmip6_data_dir`` (str):
+        the root of local data store (described below).
+
 - [ESGFSearch]
-    - `search_service`: the base URL of the search service at a ESGF Index Node
-    - `service_type`: ``search`` or ``wget``
-    - `aggregate` : :meth:`getDataURLs` returns aggregated datasets or not
+
+    ``search_service`` (str):
+        the base URL of the search service at a ESGF Index Node
+
+    ``service_type`` (str):
+        ``search`` or ``wget``
+
+    ``aggregate`` (bool):
+         retrieve OPeNDAP aggregated datasets or not
+
 - [ESGFSearch.keywords] : keyword parameters of RESTful API
+
 - [ESGFSearch.facets] : facet parameters of RESTful API
+
 
 Local data store
 ================
@@ -71,9 +82,11 @@ Local data store
 This module assumes that local data files are stored in the DRS
 complient directory structure. See :mod:`drs` module for the details
 of DRS.  If you use `synda install` for download and replication of
-CMIP6 data files from ESGF, files are stored in such way.  So you can
-use :meth:`.getLocalDirs()` and :meth:`.getDataFiles()` with the same
-interface with :meth:`.getCatURLs` and :meth:`.getDataURLs()`.
+CMIP6 data files from ESGF, files are stored in such way. 
+
+After :meth:`.doSearch()` you can find local files corresponding to the
+search result via :meth:`.findLocalFiles` so that you can use local
+files instead of downloading them.
 
 Do not forget to set :attr:`.base_dir` attribute or `cmip6_data_dir`
 in config file as the root of this directory structure.
@@ -133,15 +146,15 @@ class ESGFSearch():
 
     Attributes:
         conf: :class:`config.Conf` instance
+        datainfo: list of :class:`esgfdatainfo.ESGFDataInfo` instance
         search_service: search service for RESTful API, eg.,
                         ``http://esgf-node.llnl.gov/esg-search/``
         service_type: service type for RESTful API.
                       currently ``search`` only allowed.
         aggregate (bool): access aggregated via OPeNDAP.
         params: keyword parameters and facet parameters for RESTful API
-        cat_urls (list(str)): obtained catalog URLs
         data_urls (list(str) or list of list(str)): obtained dataset URLs
-        base_dir: base(root) path for local data directory structure
+        base_dir (str): base(root) path for local data directory structure
         local_dirs: obtained local directories for local dataset files.
         data_files: obtained local dataset files
     """
@@ -268,17 +281,14 @@ class ESGFSearch():
             for dinfo in self.datainfo:
                 print(dinfo.cat_url)
 
-    def getCatURLs(self):
-        """
-        Currently do nothing.
-
-        Left for a while for backward compatibility.
-        """
-        pass
-
     @property
     def cat_urls(self):
-        #  for backward compatibility
+        """
+        Obtained catalog URLs
+
+        :type: list(str)
+        """
+
         return [dinfo.cat_url for dinfo in self.datainfo]
 
     def getDataURLs(self):
@@ -306,12 +316,20 @@ class ESGFSearch():
 
     @property
     def data_urls(self):
-        #  for backward compatibility
+        """
+        URLs of each dataset.
+
+        If :attr:`.aggregate` is ``False``, one dataset consists of
+        multiple datafile, type of this is list of list(str).
+
+        :type: list(str) or list(list(str))
+        """
         return [dinfo.data_url for dinfo in self.datainfo]
 
     def findLocalFiles(self, base_dir=None):
         """
-        from ESGFDataInfo instance, find local file.
+        From :class:`esgfdatainfo.ESGFDataInfo` instance, find
+        corresponding local files.
         """
 
         if base_dir is not None:
@@ -322,6 +340,11 @@ class ESGFSearch():
 
     @property
     def local_files(self):
+        """
+        Paths of local file corresponding to the search result.
+
+        :type: list(str) or list(list(str))
+        """
         return [dinfo.localfiles for dinfo in self.datainfo]
 
     def getLocalDirs(self, params=None, base_dir=None):
