@@ -142,11 +142,12 @@ class ESGFDataInfo():
             setattr(self, a, v)
 
         # extract THREDDS URL
-        for l in self.url:
-            (url, mime, service) = l.split('|')
-            # select TDS catalog
-            if (service == 'THREDDS'):
-                self.cat_url = url
+        if hasattr(self, 'url'):
+            for l in self.url:
+                (url, mime, service) = l.split('|')
+                # select TDS catalog
+                if (service == 'THREDDS'):
+                    self.cat_url = url
 
         #  in drs <version> must be 'vYYYYMMDD'.
         if hasattr(self, 'version'):
