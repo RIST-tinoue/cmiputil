@@ -2,7 +2,7 @@
 """
 Supporting module for :mod:`esgfsearch`.
 
-Class :class:`ESGFDataInfo` holds and manages research result
+Class :class:`ESGFDataInfo` holds and manages search result
 of ESGF RESTful API, issued by :meth:`esgfsearch.ESGFSearch.doSearch`.
 
 One instance of this class corresponds to one search result, and a
@@ -34,7 +34,7 @@ Example:
     >>> r = http.request('GET', base_url, fields=params)
     >>> result = json.loads(r.data.decode())
     >>> attrs = result['response']['docs'][0]
-    >>> dinfo = esgfdatainfo.ESGFDataInfo(**attrs)
+    >>> dinfo = esgfdatainfo.ESGFDataInfo(attrs)
     >>> dinfo.id
     'CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn'
 
@@ -43,8 +43,9 @@ Actually, doing search as above is done by
 is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
 """
 from cmiputil import drs
-import re
 from siphon.catalog import TDSCatalog
+from collections.abc import MutableMapping
+import re
 from pprint import pprint
 
 
@@ -54,16 +55,21 @@ __version__ = 'v20190619'
 __date__ = '2019/06/19'
 
 
-class ESGFDataInfo():
+class ESGFDataInfo(MutableMapping):
     """
     Holds and maintains search result of ESGF dataset.
 
-    Among attributes obtained from one search result, ones listed in
-    :attr:`managed_attributes` are stored as attributes of this class.
+    Among attributes obtained from one search result, you can access
+    several useful ones via :attr:`managedAttribs`.
+
+    As this class inherits MutableMapping ABC, you can access an
+    instance of this class as *mapping*, such as ``datainfo['source_id']``.
 
     Attributes:
         cat_url: URL of OPeNDAP catalog
         data_url: URL of dataset
+        agg_data_url: URL of aggregated dataset
+        mf_data_url: URL of multi-files dataset
         local_files: Paths of local file corresponding to the search result.
     """
     _debug = False
@@ -80,60 +86,27 @@ class ESGFDataInfo():
     # def debug(cls):
     #     return cls._debug
 
-    #: stored global attributes in this class
-    managed_attributes = [
-        'data_node',
-        # 'dataset_id',
-        'id',
-        'instance_id',
-        'master_id',
-        'number_of_aggregations',
-        'number_of_files',
-        'title',
-        'type',
-        'url',
-        'version',
-        'mip_era',
-        'activity_drs',
-        'activity_id',
-        'institution_id',
-        'source_id',
-        'experiment_id',
-        'member_id',
-        'table_id',
-        'variable_id',
-        'variant_label',
-        'grid_label',
-        'sub_experiment_id'
-    ]
 
-    def __init__(self, **argv):
+    def __init__(self, attribs={}):
         """
         Args:
-            argv (dict): attributes to be set, see :meth:`.set`:
+            attribs (dict): attributes to be set, see :meth:`.setFrom`:.
 
         """
-        self.set(**argv)
+        self.setFrom(attribs)
 
         if self._debug:
             print('dbg:ESGFDataInfo.__init__():')
             pprint(vars(self))
 
-    def set(self, **argv):
+    def setFrom(self, attribs):
         """
-        Set attributes.
-
-        Among the `argv`, that is a dict usually obtained from one
-        result of the search via ESGF RESTful API, attributes listed
-        in :attr:`managed_attributes` are set.
+        Set attributes from one ESGF RESTful API search result.
 
         Args:
-            argv (dict): attributes to be set.
+            attribs (dict): attributes to be set.
 
         """
-        attribs = {a: argv[a] for a in argv
-                   if a in self.managed_attributes}
-
         # flatten list, except `url`
         for a, v in attribs.items():
             if type(v) is list and len(v) == 1:
@@ -142,7 +115,8 @@ class ESGFDataInfo():
             setattr(self, a, v)
 
         # extract THREDDS URL
-        if hasattr(self, 'url'):
+        # if hasattr(self, 'url'):
+        if 'url' in self:
             for l in self.url:
                 (url, mime, service) = l.split('|')
                 # select TDS catalog
@@ -159,10 +133,36 @@ class ESGFDataInfo():
 
     @property
     def managedAttribs(self):
-        """Global attributes stored in the instance."""
-        return {a: getattr(self, a)
-                for a in self.managed_attributes
-                if hasattr(self, a)}
+        """dict of useful global attributes."""
+        attributes = [
+            'data_node',
+            # 'dataset_id',
+            'id',
+            'instance_id',
+            'master_id',
+            'number_of_aggregations',
+            'number_of_files',
+            'title',
+            'type',
+            'url',
+            'version',
+            'mip_era',
+            'activity_drs',
+            'activity_id',
+            'institution_id',
+            'source_id',
+            'experiment_id',
+            'member_id',
+            'table_id',
+            'variable_id',
+            'variant_label',
+            'grid_label',
+            'sub_experiment_id'
+        ]
+
+        return {a: self[a]
+                for a in attributes
+                if a in self}
 
     def getDataURL(self, aggregate):
         """
@@ -179,23 +179,19 @@ class ESGFDataInfo():
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
+        self.agg_data_url = (cat.base_tds_url + 
+                             _getServiceBase(cat.services) +
+                             cat.datasets[-1].url_path)  # Is this universal ?
+
+        self.mf_data_url = [x.access_urls['OpenDAPServer']
+                    for x in cat.datasets.values()
+                    if 'OpenDAPServer' in x.access_urls]
+        self.mf_data_url.sort()
+
         if aggregate:
-            # construct base url
-            data_url = cat.base_tds_url
-            service_base = _getServiceBase(cat.services)
-            data_url += service_base
-
-            # url of Aggregated dataset
-            ds = cat.datasets[-1]   # Is this universal ?
-
-            data_url += ds.url_path
+            self.data_url = self.agg_data_url
         else:
-            data_url = [x.access_urls['OpenDAPServer']
-                        for x in cat.datasets.values()
-                        if 'OpenDAPServer' in x.access_urls]
-            data_url.sort()
-
-        self.data_url = data_url
+            self.data_url = self.mf_data_url
 
     def findLocalFile(self, base_dir):
         """
@@ -211,6 +207,37 @@ class ESGFDataInfo():
         fname = str(d.fileName())
         self.local_files = list(dname.glob(fname))
 
+    def __getitem__(self, key):
+        if hasattr(self, key):
+            return getattr(self, key)
+        else:
+            raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        if type(key) == str:
+            setattr(self, key, value)
+        else:
+            raise TypeError(key,type(key))
+
+    def __delitem__(self, key):
+        if hasattr(self, key):
+            delattr(self, key)
+        else:
+            raise KeyError(key)
+
+    def __missing__(self, key):
+        raise NotImplementedError
+
+    def __iter__(self):
+        return self.__dict__.__iter__()
+
+    def __str__(self):
+        res = {k: getattr(self, k)
+               for k in self.__dict__}
+        return str(res)
+
+    def __len__(self):
+        return len(self.__dict__)
 
 def _getServiceBase(services):
     # `services` must be a list of SimpleService or CompoundService

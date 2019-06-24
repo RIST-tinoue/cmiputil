@@ -3,6 +3,7 @@
 
 from cmiputil import esgfdatainfo
 import unittest
+import copy
 
 sample_attrs = {
             '_timestamp': '2018-12-12T10:01:59.852Z',
@@ -93,13 +94,23 @@ managed_attribs = {
     'version': 'v20181212'}
 
 
-class set_ESGFDataInfo(unittest.TestCase):
+keys = ['master_id', 'source_id', 'type']
+vals = [managed_attribs[k] for k in keys]
+elements = {k: managed_attribs[k] for k in keys}
+
+
+class test_ESGFDataInfo(unittest.TestCase):
     def setUp(self):
         self.sample_attrs={}
         self.sample_attrs.update(sample_attrs)
-        
+
         self.managed_attribs={}
         self.managed_attribs.update(managed_attribs)
+
+        self.keys = copy.copy(keys)
+        self.vals = copy.copy(vals)
+        self.elements = {}
+        self.elements.update(elements)
 
     def tearDown(self):
         pass
@@ -112,17 +123,98 @@ class set_ESGFDataInfo(unittest.TestCase):
     def test_init01(self):
         "Test constructor w/ real attributes"
         ref = self.managed_attribs
-        dinfo = esgfdatainfo.ESGFDataInfo(**self.sample_attrs)
-        res = {a: getattr(dinfo, a) for a in dinfo.managed_attributes}
+        dinfo = esgfdatainfo.ESGFDataInfo(self.sample_attrs)
+        res = {a: getattr(dinfo, a) for a in self.managed_attribs.keys()}
         self.assertEqual(ref, res)
 
     def test_managedAttribs00(self):
         "@property method managed_attribs"
         ref = self.managed_attribs
 
-        dinfo = esgfdatainfo.ESGFDataInfo(**self.sample_attrs)
+        dinfo = esgfdatainfo.ESGFDataInfo(self.sample_attrs)
         res = dinfo.managedAttribs
         self.assertEqual(ref, res)
+
+
+    def test_getattr(self):
+        """test __getattr__()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        for k in self.elements:
+            self.assertEqual(self.elements[k], dinfo[k])
+        with self.assertRaises(KeyError):
+            res = dinfo['d']
+
+    def test_setattr(self):
+        """test __setattr__()"""
+        ref = 'Amon'
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+
+        dinfo['table_id'] = ref
+        self.assertEqual(dinfo.table_id, ref)
+
+        with self.assertRaises(TypeError):
+            dinfo[1] = ref
+        with self.assertRaises(TypeError):
+            dinfo[True] = ref
+        with self.assertRaises(TypeError):
+            dinfo[(1,2)] = ref
+
+    def test_str(self):
+        """test __str__()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        ref = str(self.elements)
+        res = str(dinfo)
+        self.assertEqual(ref, res)
+
+        self.elements['d'] = (1,2)
+        dinfo['d'] = (1,2)
+        ref = str(self.elements)
+        res = str(dinfo)
+        self.assertEqual(ref, res)
+
+    def test_delitem(self):
+        """test __del_()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        res = dinfo[self.keys[2]]
+        self.assertEqual(res, self.vals[2])
+        del dinfo[self.keys[2]]
+        with self.assertRaises(KeyError):
+            res = dinfo[self.keys[2]]
+        with self.assertRaises(KeyError):
+            del dinfo['d']
+
+    def test_iter(self):
+        """ test __iter__()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        for k in dinfo:
+            self.assertEqual(self.elements[k], dinfo[k])
+
+    def test_len(self):
+        """test __len__()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        self.assertEqual(len(self.elements), len(dinfo))
+
+    def test_update(self):
+        """ test update()"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+        update = {'c':False, 'd':(1,2)}
+        self.elements.update(update)
+        dinfo.update(update)
+
+        for k in self.elements:
+            self.assertEqual(self.elements[k], dinfo[k])
+        self.assertEqual(type(dinfo), esgfdatainfo.ESGFDataInfo)
+        self.assertEqual(type(self.elements), dict)
+
+    def test_in(self):
+        """ test in operator"""
+        dinfo = esgfdatainfo.ESGFDataInfo(self.elements)
+
+        self.assertTrue(('master_id' in dinfo))
+        self.assertTrue(('source_id' in dinfo))
+        self.assertTrue(('type' in dinfo))
+        self.assertFalse(('id' in dinfo))
+
 
 
 def main():
@@ -131,5 +223,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    
