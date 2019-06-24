@@ -211,8 +211,10 @@ def main():
         else:
             exit(1)
     else:
+        with timer('Do Search'):
+            es.doSearch(params)
         with timer('getting Catalog URLs'):
-            es.getCatURLs(params)
+            es.getCatURLs()
         if es.cat_urls:
             pprint(es.cat_urls)
 

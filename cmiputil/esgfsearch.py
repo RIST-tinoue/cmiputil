@@ -19,9 +19,9 @@ Typical flow of searching and downloading CMIP6 data from ESGF is as
 follows;
 
 1. instantiate :class:`esgfsearch.ESGFSearch` instance,
-2. get catalog URLs via :meth:`.getCatURLs` method,
+2. do search via :meth:`.doSearch` method,
 3. get dataset URLs via :meth:`.getDataURLs` method,
-4. get and open dataset URLs via your favorit datatype, such as xarray
+4. open dataset URLs via your favorit datatype, such as xarray
    or netCDF4.
 
 Catalog URLs and dataset URLs are stored as instance attributes.
@@ -35,7 +35,8 @@ Example:
     ...           'variable_id': 'tas',
     ...           'variant_label': 'r1i1p1f1'}
     >>> es = esgfsearch.ESGFSearch()
-    >>> es.getCatURLs(params)
+    >>> es.doSearch(params)
+    >>> es.getCatURLs()
     >>> es.getDataURLs()
     >>> ds = []
     >>> for url in es.data_urls:
@@ -55,13 +56,25 @@ Config File
 This module read in config file, sections below;
 
 - [cmiputil]
-    - `cmip6_data_dir`: the root of local data store (described below).
+
+    ``cmip6_data_dir`` (str):
+        the root of local data store (described below).
+
 - [ESGFSearch]
-    - `search_service`: the base URL of the search service at a ESGF Index Node
-    - `service_type`: ``search`` or ``wget``
-    - `aggregate` : :meth:`getDataURLs` returns aggregated datasets or not
+
+    ``search_service`` (str):
+        the base URL of the search service at a ESGF Index Node
+
+    ``service_type`` (str):
+        ``search`` or ``wget``
+
+    ``aggregate`` (bool):
+         retrieve OPeNDAP aggregated datasets or not
+
 - [ESGFSearch.keywords] : keyword parameters of RESTful API
+
 - [ESGFSearch.facets] : facet parameters of RESTful API
+
 
 Local data store
 ================
@@ -69,9 +82,11 @@ Local data store
 This module assumes that local data files are stored in the DRS
 complient directory structure. See :mod:`drs` module for the details
 of DRS.  If you use `synda install` for download and replication of
-CMIP6 data files from ESGF, files are stored in such way.  So you can
-use :meth:`.getLocalDirs()` and :meth:`.getDataFiles()` with the same
-interface with :meth:`.getCatURLs` and :meth:`.getDataURLs()`.
+CMIP6 data files from ESGF, files are stored in such way. 
+
+After :meth:`.doSearch()` you can find local files corresponding to the
+search result via :meth:`.findLocalFiles` so that you can use local
+files instead of downloading them.
 
 Do not forget to set :attr:`.base_dir` attribute or `cmip6_data_dir`
 in config file as the root of this directory structure.
@@ -107,12 +122,10 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190612'
 __date__ = '2019/06/12'
 
-from cmiputil import drs, config
+from cmiputil import esgfdatainfo, drs, config
 import urllib3
 import json
-from siphon.catalog import TDSCatalog
 from pprint import pprint
-from pathlib import Path
 
 
 #: OPeNDAP Catalog URL not found
@@ -133,15 +146,15 @@ class ESGFSearch():
 
     Attributes:
         conf: :class:`config.Conf` instance
+        datainfo: list of :class:`esgfdatainfo.ESGFDataInfo` instance
         search_service: search service for RESTful API, eg.,
                         ``http://esgf-node.llnl.gov/esg-search/``
         service_type: service type for RESTful API.
                       currently ``search`` only allowed.
         aggregate (bool): access aggregated via OPeNDAP.
         params: keyword parameters and facet parameters for RESTful API
-        cat_urls (list(str)): obtained catalog URLs
         data_urls (list(str) or list of list(str)): obtained dataset URLs
-        base_dir: base(root) path for local data directory structure
+        base_dir (str): base(root) path for local data directory structure
         local_dirs: obtained local directories for local dataset files.
         data_files: obtained local dataset files
     """
@@ -164,6 +177,7 @@ class ESGFSearch():
         if self._debug:
             config.Conf._enable_debug()
             drs.DRS._enable_debug()
+            esgfdatainfo.ESGFDataInfo._enable_debug()
 
         self.conf = config.Conf(conffile)
 
@@ -204,11 +218,11 @@ class ESGFSearch():
             print('dbg:ESGFSearch():')
             pprint(vars(self))
 
-    def getCatURLs(self, params=None, base_url=None):
+    def doSearch(self, params=None, base_url=None):
         """
-        Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.
+        Do search by ESGF RESTful API
 
-        Obtained catalog URLs are set as :attr:`cat_urls` attribute.
+        Retrieved URL of OPeNDAP catalog is set as :attr:`.cat_urls`.
 
         Args:
             params (dict): keyword parameters and facet parameters.
@@ -235,8 +249,8 @@ class ESGFSearch():
             base_url = self.search_service + self.service_type
 
         if (self._debug):
-            print(f'dbg:ESGFSearch.getCatURLs():base_url:{base_url}')
-            print('dbg:ESGFSeaerch.getCatURLs():params:')
+            print(f'dbg:ESGFSearch.doSearch():base_url:{base_url}')
+            print('dbg:ESGFSeaerch.doSearch():params:')
             pprint(self.params)
 
         http = urllib3.PoolManager()
@@ -255,26 +269,34 @@ class ESGFSearch():
         result = json.loads(r.data.decode())
 
         if self._debug:
-            print('dbg:getCatURLs:numFound:',
+            print('dbg:doSearch:numFound:',
                   result['response']['numFound'])
 
         if (result['response']['numFound'] == 0):
             raise NotFoundError('No catalog found.')
 
-        self.cat_urls = []
-        for r in result['response']['docs']:
-            for l in r['url']:
-                (url, mime, service) = l.split('|')
-                # select TDS catalog
-                if (service == 'THREDDS'):
-                    self.cat_urls.append(url)
+        self.datainfo = [esgfdatainfo.ESGFDataInfo(**doc)
+                         for doc in result['response']['docs']]
+        if self._debug:
+            for dinfo in self.datainfo:
+                print(dinfo.cat_url)
+
+    @property
+    def cat_urls(self):
+        """
+        Obtained catalog URLs
+
+        :type: list(str)
+        """
+
+        return [dinfo.cat_url for dinfo in self.datainfo]
 
     def getDataURLs(self):
         """
         From URLs of TDS catalog, obtain URLs of dataset.
 
         Catalog URLs are set as :attr:`cat_urls` attribute,
-        that is obtained by, for example, :meth:`getCatURLs()`.
+        that is obtained by, :meth:`doSearch`.
 
         If :attr:`aggregate` attribute is ``True``, obtain URLs of
         aggregated dataset, else URLs of all of files listed in the
@@ -283,36 +305,47 @@ class ESGFSearch():
         Obtained dataset URLs are set as :attr:`.data_urls` attribute.
 
         """
-        self.data_urls = [self._getDataURL(u) for u in self.cat_urls]
-
-    def _getDataURL(self, url):
-
-        try:
-            cat = TDSCatalog(url)
-        except Exception as e:
-            print('Error in siphon.TDSCatalog():', e.args)
-            raise
+        for dinfo in self.datainfo:
+            dinfo.getDataURL(self.aggregate)
 
         if self._debug:
-            print('dbg:ESGFSearch.aggregate:', self.aggregate)
+            print('dbg:ESGFSearch.getDataURLs:')
+            for dinfo in self.datainfo:
+                print(f"- master id:{dinfo.master_id},\n data_url:")
+                pprint(dinfo.data_url)
 
-        if self.aggregate:
-            # construct base url
-            data_url = cat.base_tds_url
-            service_base = _getServiceBase(cat.services)
-            data_url += service_base
+    @property
+    def data_urls(self):
+        """
+        URLs of each dataset.
 
-            # url of Aggregated dataset
-            ds = cat.datasets[-1]   # Is this universal ?
+        If :attr:`.aggregate` is ``False``, one dataset consists of
+        multiple datafile, type of this is list of list(str).
 
-            data_url += ds.url_path
-        else:
-            data_url = [x.access_urls['OpenDAPServer']
-                        for x in cat.datasets.values()
-                        if 'OpenDAPServer' in x.access_urls]
-            data_url.sort()
+        :type: list(str) or list(list(str))
+        """
+        return [dinfo.data_url for dinfo in self.datainfo]
 
-        return data_url
+    def findLocalFiles(self, base_dir=None):
+        """
+        From :class:`esgfdatainfo.ESGFDataInfo` instance, find
+        corresponding local files.
+        """
+
+        if base_dir is not None:
+            self.base_dir = base_dir
+
+        for dinfo in self.datainfo:
+            dinfo.findLocalFile(self.base_dir)
+
+    @property
+    def local_files(self):
+        """
+        Paths of local file corresponding to the search result.
+
+        :type: list(str) or list(list(str))
+        """
+        return [dinfo.local_files for dinfo in self.datainfo]
 
     def getLocalDirs(self, params=None, base_dir=None):
         """
@@ -367,21 +400,8 @@ class ESGFSearch():
         return list(directory.iterdir())
 
 
-def _getServiceBase(services):
-    # `services` must be a list of SimpleService or CompoundService
-    # class, attribute of TDSCatalog instance.
-
-    for s in services:
-        # search 'OpenDAP' service.
-        if (s.service_type.lower() == 'opendap'):
-            return s.base
-        # if service_type is compound, do recursive call.
-        elif (s.service_type.lower() == 'compound'):
-            return _getServiceBase(s.services)
-
 ########################################################################
 # defaults
-
 
 #: Default search service URL
 search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
@@ -430,7 +450,7 @@ def getDefaultConf():
     res = {}
     res['ESGFSearch'] = {'search_service': search_service_default,
                          'service_type': service_type_default,
-                         'aggregate': aggregate_default,}
+                         'aggregate': aggregate_default}
     res['ESGFSearch.keywords'] = keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res

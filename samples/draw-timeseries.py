@@ -151,7 +151,8 @@ def main():
 
     else:
         # Do search, return a list of catalog URLs
-        es.getCatURLs(params)
+        es.doSearch(params)
+        es.getCatURLs()
         print('Catalog URLs:')
         pprint(es.cat_urls)
 

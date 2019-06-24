@@ -1000,7 +1000,8 @@ class DRS:
                 if exps[e]['sub_experiment_id'][0] != 'none']
 
         if (hasattr(self, 'variant_label')):
-            if (hasattr(self, 'sub_experiment_id')):
+            if (hasattr(self, 'sub_experiment_id')
+                and self.sub_experiment_id != 'none'):
                 subexp = self.sub_experiment_id
                 varlab = self.variant_label
                 res = f"{subexp}-{varlab}"
