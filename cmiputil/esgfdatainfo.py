@@ -193,6 +193,38 @@ class ESGFDataInfo(MutableMapping):
         else:
             self.data_url = self.mf_data_url
 
+    def getDDS(self):
+        """
+        Get OPeNDAP DDS (Dataset Descriptor Structure).
+
+        Example of DDS::
+
+            Dataset {
+                Float64 lat[lat = 160];
+                Float64 lat_bnds[lat = 160][bnds = 2];
+                Float64 lon[lon = 320];
+                Float64 lon_bnds[lon = 320][bnds = 2];
+                Float64 height;
+                Float64 time[time = 8412];
+                Float64 time_bnds[time = 8412][bnds = 2];
+                Grid {
+                 ARRAY:
+                    Float32 tas[time = 8412][lat = 160][lon = 320];
+                 MAPS:
+                    Float64 time[time = 8412];
+                    Float64 lat[lat = 160];
+                    Float64 lon[lon = 320];
+                } tas;
+            } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
+
+
+
+        """
+        self.agg_dds = _getDDS(self.agg_data_url)
+
+        self.mf_dds = [_getDDS(url) for url in self.mf_data_url]
+
+
     def findLocalFile(self, base_dir):
         """
         Find local (pre-downloaded) files corresponds to the search
@@ -250,6 +282,26 @@ def _getServiceBase(services):
         # if service_type is compound, do recursive call.
         elif (s.service_type.lower() == 'compound'):
             return _getServiceBase(s.services)
+
+
+import urllib3
+_http = None
+
+
+def _getDDS(url):
+    global _http
+
+    if not _http:
+        _http = urllib3.PoolManager()
+
+    r = _http.request('GET', url + '.dds')
+    if (r.status == 200):
+        result = r.data.decode()
+    else:
+        result = None
+
+    return result
+
 
 
 if (__name__ == '__main__'):
