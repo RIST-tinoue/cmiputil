@@ -3,7 +3,9 @@
 """
 Module to parse DDS.
 
-Text form of DDS will be obtained by :meth:`.ESGFDataInfo.getDDS`. Use :func:`parse_dataset` to parse it and return the tree structure of DDS.
+Text form of DDS will be obtained by :meth:`.ESGFDataInfo.getDDS`. Use
+:func:`parse_dataset` to parse it and return the tree structure of
+DDS.
 
 You can get any attributes by :func:`hogehoge`.
 
@@ -44,12 +46,12 @@ Example:
     ...     VarLine("lon_bnds", btype="Float64", arr=[
     ...         ArrDecl(name="lon", val=320),
     ...         ArrDecl(name="bnds", val=2)]),
-    ...     VarLine("height", btype="Float64"), 
+    ...     VarLine("height", btype="Float64"),
     ...     VarLine("time", btype="Float64", arr=[
     ...         ArrDecl(name="time", val=8412)]),
     ...     VarLine("time_bnds", btype="Float64", arr=[
     ...         ArrDecl(name="time", val=8412),
-    ...         ArrDecl(name="bnds", val=2)]), 
+    ...         ArrDecl(name="bnds", val=2)]),
     ...     Grid("tas", stype="Grid",
     ...         ARRAY = VarLine("tas", btype="Float32", arr=[
     ...            ArrDecl(name="time", val=8412),
@@ -104,20 +106,8 @@ Example:
 """
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 import re
-from textwrap import shorten, fill
+import textwrap as tw
 from pprint import pprint
 import enum
 
@@ -167,16 +157,18 @@ class SType(enum.Enum):
 _idents_btype = [t.name for t in BType]
 _idents_stype = [t.name for t in SType]
 _idents = _idents_btype + _idents_stype
-_pat_idents_stype = re.compile('|'.join(_idents_stype))
-_pat_ident = re.compile('|'.join(_idents))
-_pat_struct = re.compile(r'^\s*(' + r'|'.join(_idents_stype)
+_pat_idents_stype = re.compile(r'^\s*(' + '|'.join(_idents_stype) + ')')
+_pat_ident = re.compile(r'^\s*(' + '|'.join(_idents) + ')')
+_pat_struct = re.compile(r'^\s*('
+                         + r'|'.join(_idents_stype)
                          + r')\s*\{(.*)\}\s*(\S+);\s*', re.DOTALL)
 _pat_dataset = re.compile(r'^\s*Dataset\s+'
                           r'\{(.+)\}\s*(\S+);\s*$', re.DOTALL)
-_pat_grid = re.compile(r'Grid\s*\{\s*Array:(.+)Maps:'
-                       r'\s*(.+)\s*\}\s*(\w+);', re.I)
+_pat_grid = re.compile(r'^\s*Grid\s*\{\s*Array:(.+)Maps:'
+                       r'\s*(.+)\s*\}\s*(\w+);', re.IGNORECASE | re.DOTALL)
 _pat_varline = re.compile(r'^\s*(\w+)\s*(\w+)(\[.+\])*;\s*$', re.DOTALL)
-_pat_arrdecl = re.compile(r'\[(\w+?) = (\d+)\]')
+_pat_arrdecl = re.compile(r'\[(\w+?)\s*=\s*(\d+)\]')
+_pat_arrdecl_line = re.compile(r'\[\w+?\s*=\s*\d+\]')
 
 
 class Declaration:
@@ -187,9 +179,19 @@ class Declaration:
     | *declaration* := *VarLine* or *Struct*
 
     """
-    def __init__(self, name='', decl=None):
+    def __init__(self, name=''):
         self.name = name
-        self.decl = decl
+
+    def __eq__(self, other):
+        _debug_write(f'Declaration.__eq__():{type(self)},{type(other)}')
+        if not isinstance(other, type(self)):
+            return False
+        res = [getattr(self, a) == getattr(other, a)
+               for a in self.__dict__]
+        return all(res)
+
+    def text_formatted(self, indent=None, linebreak=True):
+        pass
 
 
 class Struct(Declaration):
@@ -222,7 +224,7 @@ class Struct(Declaration):
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-        super().__init__(name=name, decl=decl)
+        self.name = name
         if stype is None:
             self.stype = stype
         elif isinstance(stype, SType):
@@ -230,8 +232,17 @@ class Struct(Declaration):
         elif type(stype) is str:
             self.stype = SType(stype)
         else:
-            raise TypeError(f'Invalid type for stype:'
-                            f'type={type(stype)}, val={stype}')
+            raise TypeError(f'stype={stype} is invalid type: {type(stype)}')
+
+        if decl is None:
+            self.decl = None
+        elif type(decl) is list and isinstance(decl[0], Declaration):
+            self.decl = decl
+        elif type(decl) is str:
+            self.decl = parse_declarations(decl)
+        else:
+            raise TypeError(f'decl={decl} is invalid type: {type(decl)}')
+
         if text:
             self.parse(text)
 
@@ -239,80 +250,88 @@ class Struct(Declaration):
         """
         Parse `text` to construct :class:`Struct`.
         """
-        _debug_write(fill(f'Struct.parse: text="{text}"'))
+        _debug_write(tw.fill(f'Struct.parse: text="{text}"'))
         res = _pat_struct.match(text)
         if res:
-            _debug_write(fill(f'Struct.parse:name="{res.group(3)}"'))
-            _debug_write(fill(f'Struct.parse:decl="{res.group(2).strip()}"'))
+            _debug_write(tw.fill(f'Struct.parse:name="{res.group(3)}"'))
+            _debug_write(tw.fill(f'Struct.parse:decl="{res.group(2)}"'))
             self.stype = SType(res.group(1))
-            self.decl = parse_declarations(res.group(2).strip())
+            self.decl = parse_declarations(res.group(2))
             self.name = res.group(3)
 
     def __repr__(self):
-        if self.name == '':
+        if self.name:
+            name = f'"{self.name}"'
+        else:
             name = ''
+        if self.stype:
+            stype = f'stype="{self.stype.name}"'
         else:
-            name = f'name="{self.name}"'
-        if self.stype is None:
             stype = ''
+        if self.decl:
+            decl = f'decl={self.decl.__repr__()}'
         else:
-            stype = f', stype="{self.stype.name}"'
-        if self.decl is None:
             decl = ''
-        else:
-            decl = ', decl='
-            for d in self.decl:
-                if d:
-                    decl += d.text
 
-        return (f'{type(self).__name__}({name}'
-                f'{stype} decl={self.decl})')
+        res = ', '.join([l for l in [name, stype, decl] if l])
+        return (f'{self.__class__.__name__}({res})')
 
     def __str__(self):
-        if self.decl is None:
-            decl = ''
+        if self.name:
+            name = f'"{self.name}"'
         else:
-            decl = '  '.join([d.text for d in self.decl if d is not None])
-        lb = '{'
-        rb = '}'
-        return (f'{type(self).__name__}(name="{self.name}",'
-                f' stype="{self.stype}", decl="{decl}")')
+            name = ''
+        if self.stype:
+            stype = f'stype="{self.stype.name}"'
+        else:
+            stype = ''
+        if self.decl:
+            decl = f'decl={self.decl.__repr__()}'
+        else:
+            decl = ''
+        res = ', '.join([l for l in [name, stype, decl] if l])
+        return (f'{self.__class__.__name__}({res})')
 
-    def text_formatted(self, linebreak=False):
+    def text_formatted(self, indent=4, linebreak=True):
         """
         Return formatted text.
         """
-        if self.decl is None:
-            decl = ''
-            lb, rb = '', ''
+        if self.name:
+            name = self.name + ';'
         else:
+            name = ''
+        if self.decl:
             if linebreak:
-                decl = '\n  '.join([d.text for d in self.decl
-                                    if d is not None])
-                lb, rb = '{\n  ', '\n}'
+                decl = '\n'.join([d.text_formatted(indent, linebreak)
+                                  for d in self.decl if d])
+                decl = tw.indent(decl, ' '*indent)
+                decl = '\n'.join(('{', decl, '}'))
             else:
-                decl = '  '.join([d.text for d in self.decl
-                                  if d is not None])
-                lb, rb = '{  ',  '}'
-        if self.stype is None:
-            stype = ''
+                decl = ' '.join([d.text for d in self.decl if d])
+                decl = ''.join(('{', decl, '}'))
         else:
+            decl = ''
+        if self.stype:
             stype = f'{self.stype.name}'
-        return f'{stype} {lb}{decl}{rb} {self.name};'
+        else:
+            stype = ''
+
+        res = ' '.join([l for l in [stype, decl, name] if l])
+        return res
 
     @property
     def text(self):
         """
         Text to construct this instance.
         """
-        return self.text_formatted(linebreak=False)
+        return self.text_formatted(indent=0, linebreak=False)
 
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        res = [getattr(self, a) == getattr(other, a)
-               for a in self.__dict__]
-        return all(res)
+    # def __eq__(self, other):
+    #     if not isinstance(other, type(self)):
+    #         return False
+    #     res = [getattr(self, a) == getattr(other, a)
+    #            for a in self.__dict__]
+    #     return all(res)
 
 
 class Grid(Struct):
@@ -330,15 +349,15 @@ class Grid(Struct):
 
     """
 
-    def __init__(self, name='', stype='Grid', ARRAY=None, MAPS=None,
+    def __init__(self, name='', stype='Grid', array=None, maps=None,
                  decl=None, text=None):
         """
         Parameters:
             name(str): *name*
             stype(str or SType): *stype*
             decl(list(Declarations): *declarations*
-            ARRAY(ArrDecl): ARRAY *declaration*
-            MAPS(list(ArrDecl): MAPS *declarations*
+            array(ArrDecl): ARRAY *declaration*
+            maps(list(ArrDecl): MAPS *declarations*
             text(str): text to be parsed.
 
         Raises:
@@ -348,8 +367,8 @@ class Grid(Struct):
         the result of :meth:`.parse`.
         """
         super().__init__(name, stype, decl)
-        self.array = ARRAY      # Declaration()
-        self.maps = MAPS        # list(Declaration())
+        self.array = array      # Declaration()
+        self.maps = maps        # list(Declaration())
         if text:
             self.parse(text)
 
@@ -362,9 +381,88 @@ class Grid(Struct):
         if res:
             _debug_write(f'Struct.parse: array_line="{res.group(1).strip()}"')
             _debug_write(f'Struct.parse: maps_line="{res.group(2).strip()}"')
-            self.array = VarLine(res.group(1).strip())
-            self.maps = parse_declarations(res.group(2).strip())
+            self.array = VarLine(text=res.group(1))
+            self.maps = parse_declarations(res.group(2))
             self.name = res.group(3)
+        # self.decl = {'ARRAY':self.array, 'MAPS':self.maps}
+
+    def __repr__(self):
+        if self.name:
+            name = f'"{self.name}"'
+        else:
+            name = ''
+        if self.stype:
+            stype = f'stype="{self.stype.name}"'
+        else:
+            stype = ''
+        if self.array:
+            array = f'array={self.array.__repr__()}'
+        else:
+            array = ''
+        if self.maps:
+            maps = f'maps={self.maps.__repr__()}'
+        else:
+            maps = ''
+
+        res = ', '.join([l for l in [name, stype, array, maps] if l])
+        return (f'{self.__class__.__name__}({res})')
+
+    def __str__(self):
+        if self.name:
+            name = f'name="{self.name}"'
+        else:
+            name = ''
+        if self.stype:
+            stype = f'stype="{self.stype.name}"'
+        else:
+            stype = ''
+        if self.array:
+            array = f'array={self.array.__repr__()}'
+        else:
+            array = ''
+        if self.maps:
+            maps = f'maps={self.maps.__repr__()}'
+        else:
+            maps = ''
+
+        res = ', '.join([l for l in [name, stype, array, maps] if l])
+        return (f'{self.__class__.__name__}({res})')
+
+    def text_formatted(self, indent=4, linebreak=True):
+        """
+        Return formatted text.
+        """
+        _debug_write(f'Grid.text_formatted:indent={indent},linebreak={linebreak}')
+        if self.name:
+            name = self.name + ';'
+        else:
+            name = ''
+        if self.stype:
+            stype = f'{self.stype.name}'
+        else:
+            stype = ''
+        if self.array is None or self.maps is None:
+            decl = ''
+        else:
+            if linebreak:
+                array = ' ARRAY:\n' + tw.indent(self.array.text, ' '*indent)
+                ll = '\n'.join([d.text_formatted(indent, linebreak)
+                                for d in self.maps if d])
+                maps = ' MAPS:\n' + tw.indent(ll, ' '*indent)
+                decl = '\n'.join(('{', array,  maps, '}'))
+            else:
+                array = 'ARRAY:' + tw.indent(self.array.text, ' '*indent)
+                ll = ''.join([d.text_formatted(indent, linebreak)
+                              for d in self.maps if d])
+                maps = 'MAPS:' + tw.indent(ll, ' '*indent)
+                decl = ' '.join(('{', array,  maps, '}'))
+
+        res = ' '.join([l for l in [stype, decl, name] if l])
+        return res
+
+    @property
+    def text(self):
+        return self.text_formatted(indent=0, linebreak=False)
 
 
 class VarLine(Declaration):
@@ -395,7 +493,7 @@ class VarLine(Declaration):
         the result of :meth:`.parse`.
         """
 
-        super().__init__(name)
+        self.name = name
         if btype is None:
             self.btype = btype
         elif isinstance(btype, BType):
@@ -403,17 +501,17 @@ class VarLine(Declaration):
         elif type(btype) is str:
             self.btype = BType(btype)
         else:
-            raise TypeError(f'Invalid type for btype:'
-                            f'type={type(btype)}, val={btype}')
-        if arr is None:
+            raise TypeError(f'btype={btype} is invalid type: {type(btype)}')
+        if arr is None or arr == []:
             self.arr = None
-        elif type(arr) is ArrDecl:
+        elif isinstance(arr, ArrDecl):
             self.arr = arr
-        elif type(arr) is str:
+        elif type(arr) is list and isinstance(arr[0], ArrDecl):
+            self.arr = arr
+        elif isinstance(arr, str):
             self.arr = parse_arrdecls(arr)
         else:
-            raise TypeError(f'Invalid type for arr:'
-                            f'type={type(arr)}, val={arr}')
+            raise TypeError(f'arr={arr} is invalid type: {type(arr)}')
         if text:
             self.parse(text)
 
@@ -422,10 +520,13 @@ class VarLine(Declaration):
         Parse `text` to construct :class:`VarLine`.
         """
 
-        _debug_write(shorten(f'VarLine.parse():text="{text[:120]}"', 60))
+        _debug_write(tw.shorten(f'VarLine.parse():text="{text}"', 60))
         res = _pat_varline.match(text)
         if res:
-            self.btype = BType(res.group(1))
+            try:
+                self.btype = BType(res.group(1))
+            except ValueError:
+                return None
             self.name = res.group(2)
             if res.group(3):
                 self.arr = parse_arrdecls(res.group(3))
@@ -434,18 +535,18 @@ class VarLine(Declaration):
         if self.name == '':
             name = ''
         else:
-            name = f'name="{self.name}"'
+            name = f'"{self.name}"'
         if self.btype is None:
             btype = ''
         else:
-            btype = f', btype="{self.btype.name}"'
+            btype = f'btype="{self.btype.name}"'
 
         if self.arr:
-            arr = ', arr='+str([a for a in self.arr])
+            arr = 'arr='+str([a for a in self.arr])
         else:
             arr = ''
 
-        args = ''.join([name, btype, arr])
+        args = ', '.join([elem for elem in [name, btype, arr] if elem != ''])
 
         return f'VarLine({args})'
 
@@ -457,21 +558,21 @@ class VarLine(Declaration):
         if self.btype is None:
             btype = ''
         else:
-            btype = f', btype="{self.btype.name}"'
+            btype = f'btype="{self.btype.name}"'
 
         if self.arr:
-            arr = ', arr='+str([a for a in self.arr])
+            arr = 'arr='+str([a for a in self.arr])
         else:
             arr = ''
 
-        args = ''.join([name, btype, arr])
-
+        args = ', '.join([l for l in [name, btype, arr] if l != ''])
         return f'VarLine({args})'
 
-    @property
-    def text(self):
+    def text_formatted(self, indent=None, linebreak=None):
         """
-        Text to construct this instance.
+        Formatted text expression of this instance.
+
+        `indent` and `linebreak` are dummy arguments here.
         """
         if self.btype is None:
             res = ''
@@ -481,14 +582,16 @@ class VarLine(Declaration):
             res += f' {self.name}'
         if self.arr:
             res += ''.join([a.text for a in self.arr])
-        return res.strip()+';'
+        if res:
+            res += ';'
+        return res
 
-    def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        res = [getattr(self, a) == getattr(other, a)
-               for a in self.__dict__]
-        return all(res)
+    @property
+    def text(self):
+        """
+        Text to construct this instance.
+        """
+        return self.text_formatted(linebreak=False)
 
 
 class ArrDecl():
@@ -505,6 +608,7 @@ class ArrDecl():
             self.parse(text)
 
     def parse(self, text):
+        _debug_write(f'ArrDecl.parse():text="{text}"')
         res = _pat_arrdecl.match(text)
         if res:
             self.name = res.group(1)
@@ -512,13 +616,24 @@ class ArrDecl():
 
     @property
     def text(self):
-        return f"[{self.name} = {self.val}]"
+        if self.name:
+            return f"[{self.name} = {self.val}]"
+        else:
+            return ''
 
     def __str__(self):
-        return f'ArrDecl(name="{self.name}", val={self.val})'
+        if self.name:
+            res = f'ArrDecl(name="{self.name}", val={self.val})'
+        else:
+            res = ''
+        return res
 
     def __repr__(self):
-        return f'ArrDecl(name="{self.name}", val={self.val})'
+        if self.name:
+            res = f'ArrDecl("{self.name}", {self.val})'
+        else:
+            res = ''
+        return res
 
     def __eq__(self, other):
         if type(other) is not type(self):
@@ -571,8 +686,6 @@ def check_braces_matching(text):
                          f'too many left braces: {count} more.')
 
 
-
-
 def parse_dataset(text):
     """
     Parse toplevel dataset
@@ -600,7 +713,7 @@ def parse_declarations(text):
     res = []
     while text != '':
         _debug_write('='*20)
-        _debug_write(fill(f'parse_declarations:text="{text}"'))
+        _debug_write(tw.fill(f'parse_declarations:text="{text}"'))
         type_ident = find_type_identifier(text)
         _debug_write(f'type_ident:"{type_ident}"')
         if type_ident == 'G' or type_ident == 'S':
@@ -612,7 +725,8 @@ def parse_declarations(text):
             res.append(vl)
             text = rest.strip()
         else:
-            raise ValueError('Invalid text: no type identifier found.')
+            # raise ValueError('Invalid text: no type identifier found.')
+            return None
     return res
 
 
@@ -628,11 +742,13 @@ def find_type_identifier(text):
     Return value is one of single character ``S``, ``B`` or ``G`` for
     each `type_identifier`, or ``None`` if not found valid identifyer.
     """
-    _debug_write(shorten(f'find_type_identifier:text="{text}"', 60))
+    _debug_write(tw.shorten(f'find_type_identifier:text="{text}"', 80))
 
-    res_ident = _pat_ident.search(text)
+    res_ident = _pat_ident.match(text)
 
-    ident = res_ident.group(0)
+    if not res_ident:
+        return None
+    ident = res_ident.group(1)
     _debug_write(f'ident="{ident}"')
 
     if ident == 'Grid':
@@ -718,8 +834,8 @@ def parse_arrdecls(text):
     Parse `text` contains multiple :class:`ArrDecl` definitions and return
     a list of them.
     """
-    pat = re.compile(r'(\[\w+ = \d+\])', re.S)
-    res = pat.findall(text)
+    _debug_write(f'parse_arrdecls:text="{text}"')
+    res = _pat_arrdecl_line.findall(text)
     if res:
         return [ArrDecl(text=l) for l in res]
     else:
@@ -766,8 +882,9 @@ Dataset {
 } data;
 '''
 
-#_enable_debug()
+# _enable_debug()
 _disable_debug()
+
 
 def _test_mod():
     import doctest
@@ -776,5 +893,3 @@ def _test_mod():
 
 if __name__ == '__main__':
     _test_mod()
-
-
