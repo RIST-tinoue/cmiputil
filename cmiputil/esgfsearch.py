@@ -122,10 +122,12 @@ __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190612'
 __date__ = '2019/06/12'
 
-from cmiputil import esgfdatainfo, drs, config
-import urllib3
 import json
 from pprint import pprint
+
+import urllib3
+
+from cmiputil import config, drs, esgfdatainfo
 
 
 #: OPeNDAP Catalog URL not found
@@ -269,14 +271,15 @@ class ESGFSearch():
         result = json.loads(r.data.decode())
 
         if self._debug:
-            print('dbg:doSearch:numFound:',
-                  result['response']['numFound'])
+            print('dbg:doSearch:numFound:', result['response']['numFound'])
 
         if (result['response']['numFound'] == 0):
             raise NotFoundError('No catalog found.')
 
-        self.datainfo = [esgfdatainfo.ESGFDataInfo(**doc)
-                         for doc in result['response']['docs']]
+        self.datainfo = [
+            esgfdatainfo.ESGFDataInfo(attribs=doc)
+            for doc in result['response']['docs']
+        ]
         if self._debug:
             for dinfo in self.datainfo:
                 print(dinfo.cat_url)
@@ -420,12 +423,12 @@ keywords_default = {
     'limit': 10000,
     'type': 'Dataset',  # must be to get catalog
     'fields': 'url',
-    }
+}
 
 #: Default fasets for RESTful API.
 facets_default = {
     'table_id': 'Amon',
-    }
+}
 
 # params_default = dict(keywords_default)
 # params_default.update(facets_default)
@@ -448,9 +451,11 @@ def getDefaultConf():
 
     """
     res = {}
-    res['ESGFSearch'] = {'search_service': search_service_default,
-                         'service_type': service_type_default,
-                         'aggregate': aggregate_default}
+    res['ESGFSearch'] = {
+        'search_service': search_service_default,
+        'service_type': service_type_default,
+        'aggregate': aggregate_default
+    }
     res['ESGFSearch.keywords'] = keywords_default
     res['ESGFSearch.facets'] = facets_default
     return res
