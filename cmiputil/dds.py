@@ -105,11 +105,10 @@ Example:
 
 """
 
-
+import enum
 import re
 import textwrap as tw
 from pprint import pprint
-import enum
 
 _debug = False
 
@@ -159,13 +158,14 @@ _idents_stype = [t.name for t in SType]
 _idents = _idents_btype + _idents_stype
 _pat_idents_stype = re.compile(r'^\s*(' + '|'.join(_idents_stype) + ')')
 _pat_ident = re.compile(r'^\s*(' + '|'.join(_idents) + ')')
-_pat_struct = re.compile(r'^\s*('
-                         + r'|'.join(_idents_stype)
-                         + r')\s*\{(.*)\}\s*(\S+);\s*', re.DOTALL)
+_pat_struct = re.compile(
+    r'^\s*(' + r'|'.join(_idents_stype) + r')\s*\{(.*)\}\s*(\S+);\s*',
+    re.DOTALL)
 _pat_dataset = re.compile(r'^\s*Dataset\s+'
                           r'\{(.+)\}\s*(\S+);\s*$', re.DOTALL)
-_pat_grid = re.compile(r'^\s*Grid\s*\{\s*Array:(.+)Maps:'
-                       r'\s*(.+)\s*\}\s*(\w+);', re.IGNORECASE | re.DOTALL)
+_pat_grid = re.compile(
+    r'^\s*Grid\s*\{\s*Array:(.+)Maps:'
+    r'\s*(.+)\s*\}\s*(\w+);', re.IGNORECASE | re.DOTALL)
 _pat_varline = re.compile(r'^\s*(\w+)\s*(\w+)(\[.+\])*;\s*$', re.DOTALL)
 _pat_arrdecl = re.compile(r'\[(\w+?)\s*=\s*(\d+)\]')
 _pat_arrdecl_line = re.compile(r'\[\w+?\s*=\s*\d+\]')
@@ -179,6 +179,7 @@ class Declaration:
     | *declaration* := *VarLine* or *Struct*
 
     """
+
     def __init__(self, name=''):
         self.name = name
 
@@ -186,8 +187,7 @@ class Declaration:
         _debug_write(f'Declaration.__eq__():{type(self)},{type(other)}')
         if not isinstance(other, type(self)):
             return False
-        res = [getattr(self, a) == getattr(other, a)
-               for a in self.__dict__]
+        res = [getattr(self, a) == getattr(other, a) for a in self.__dict__]
         return all(res)
 
     def text_formatted(self, indent=None, linebreak=True):
@@ -302,9 +302,10 @@ class Struct(Declaration):
             name = ''
         if self.decl:
             if linebreak:
-                decl = '\n'.join([d.text_formatted(indent, linebreak)
-                                  for d in self.decl if d])
-                decl = tw.indent(decl, ' '*indent)
+                decl = '\n'.join([
+                    d.text_formatted(indent, linebreak) for d in self.decl if d
+                ])
+                decl = tw.indent(decl, ' ' * indent)
                 decl = '\n'.join(('{', decl, '}'))
             else:
                 decl = ' '.join([d.text for d in self.decl if d])
@@ -349,8 +350,13 @@ class Grid(Struct):
 
     """
 
-    def __init__(self, name='', stype='Grid', array=None, maps=None,
-                 decl=None, text=None):
+    def __init__(self,
+                 name='',
+                 stype='Grid',
+                 array=None,
+                 maps=None,
+                 decl=None,
+                 text=None):
         """
         Parameters:
             name(str): *name*
@@ -367,8 +373,8 @@ class Grid(Struct):
         the result of :meth:`.parse`.
         """
         super().__init__(name, stype, decl)
-        self.array = array      # Declaration()
-        self.maps = maps        # list(Declaration())
+        self.array = array  # Declaration()
+        self.maps = maps  # list(Declaration())
         if text:
             self.parse(text)
 
@@ -432,7 +438,8 @@ class Grid(Struct):
         """
         Return formatted text.
         """
-        _debug_write(f'Grid.text_formatted:indent={indent},linebreak={linebreak}')
+        _debug_write(
+            f'Grid.text_formatted:indent={indent},linebreak={linebreak}')
         if self.name:
             name = self.name + ';'
         else:
@@ -445,17 +452,19 @@ class Grid(Struct):
             decl = ''
         else:
             if linebreak:
-                array = ' ARRAY:\n' + tw.indent(self.array.text, ' '*indent)
-                ll = '\n'.join([d.text_formatted(indent, linebreak)
-                                for d in self.maps if d])
-                maps = ' MAPS:\n' + tw.indent(ll, ' '*indent)
-                decl = '\n'.join(('{', array,  maps, '}'))
+                array = ' ARRAY:\n' + tw.indent(self.array.text, ' ' * indent)
+                ll = '\n'.join([
+                    d.text_formatted(indent, linebreak) for d in self.maps if d
+                ])
+                maps = ' MAPS:\n' + tw.indent(ll, ' ' * indent)
+                decl = '\n'.join(('{', array, maps, '}'))
             else:
-                array = 'ARRAY:' + tw.indent(self.array.text, ' '*indent)
-                ll = ''.join([d.text_formatted(indent, linebreak)
-                              for d in self.maps if d])
-                maps = 'MAPS:' + tw.indent(ll, ' '*indent)
-                decl = ' '.join(('{', array,  maps, '}'))
+                array = 'ARRAY:' + tw.indent(self.array.text, ' ' * indent)
+                ll = ''.join([
+                    d.text_formatted(indent, linebreak) for d in self.maps if d
+                ])
+                maps = 'MAPS:' + tw.indent(ll, ' ' * indent)
+                decl = ' '.join(('{', array, maps, '}'))
 
         res = ' '.join([l for l in [stype, decl, name] if l])
         return res
@@ -542,7 +551,7 @@ class VarLine(Declaration):
             btype = f'btype="{self.btype.name}"'
 
         if self.arr:
-            arr = 'arr='+str([a for a in self.arr])
+            arr = 'arr=' + str([a for a in self.arr])
         else:
             arr = ''
 
@@ -561,7 +570,7 @@ class VarLine(Declaration):
             btype = f'btype="{self.btype.name}"'
 
         if self.arr:
-            arr = 'arr='+str([a for a in self.arr])
+            arr = 'arr=' + str([a for a in self.arr])
         else:
             arr = ''
 
@@ -601,9 +610,10 @@ class ArrDecl():
     | *array-decl* := [integer] or [*name* = integer]
 
     """
+
     def __init__(self, name='', val=None, text=None):
-        self.name = name   # "name"
-        self.val = val    # "integer"
+        self.name = name  # "name"
+        self.val = val  # "integer"
         if text:
             self.parse(text)
 
@@ -712,7 +722,7 @@ def parse_declarations(text):
     # _debug_write('======parse_declarations======')
     res = []
     while text != '':
-        _debug_write('='*20)
+        _debug_write('=' * 20)
         _debug_write(tw.fill(f'parse_declarations:text="{text}"'))
         type_ident = find_type_identifier(text)
         _debug_write(f'type_ident:"{type_ident}"')
@@ -772,7 +782,7 @@ def pop_struct(text):
     """
 
     leftpos = text.find('{')
-    if (leftpos < 0):               # no braces, no Struct instance.
+    if (leftpos < 0):  # no braces, no Struct instance.
         return None
 
     nestlevel = 0
@@ -782,10 +792,10 @@ def pop_struct(text):
         if c == '}':
             nestlevel -= 1
         if nestlevel == 0:
-            rightpos = leftpos+n
+            rightpos = leftpos + n
             break
 
-    lastdelim = rightpos+text[rightpos:].find(';')+1
+    lastdelim = rightpos + text[rightpos:].find(';') + 1
     _debug_write(f'parse_struct:lastdelim="{lastdelim}"')
 
     sline = text[:lastdelim].strip()
