@@ -53,11 +53,11 @@ Example:
     ...         ArrDecl(name="time", val=8412),
     ...         ArrDecl(name="bnds", val=2)]),
     ...     Grid("tas", stype="Grid",
-    ...         ARRAY = VarLine("tas", btype="Float32", arr=[
+    ...         array = VarLine("tas", btype="Float32", arr=[
     ...            ArrDecl(name="time", val=8412),
     ...            ArrDecl(name="lat", val=160),
     ...            ArrDecl(name="lon", val=320)]),
-    ...         MAPS = [
+    ...         maps = [
     ...            VarLine("time", btype="Float64", arr=[
     ...               ArrDecl(name="time", val=8412)]),
     ...            VarLine("lat", btype="Float64", arr=[
@@ -65,6 +65,7 @@ Example:
     ...            VarLine("lon", btype="Float64", arr=[
     ...               ArrDecl(name="lon", val=320)])])])
     >>> ref == res
+    True
 
     >>> sample2 = '''
     ... Dataset {
