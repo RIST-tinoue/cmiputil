@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from cmiputil import convoc, config
+from cmiputil import convoc
 import unittest
 from pathlib import Path
 import os
-from tempfile import NamedTemporaryFile
+
 
 class test_ConVoc(unittest.TestCase):
     def setUp(self):
