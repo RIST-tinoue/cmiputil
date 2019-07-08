@@ -654,7 +654,7 @@ class ArrDecl():
         if self.name:
             return f'ArrDecl("{self.name}", {self.val})'
         elif self.val:
-            return f"ArrDecl[name="", val={self.val}]"
+            return f'ArrDecl["", {self.val}]'
         else:
             return ''
 
