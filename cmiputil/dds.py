@@ -169,7 +169,8 @@ _pat_grid = re.compile(
     r'\s*(.+)\s*\}\s*(\w+);', re.IGNORECASE | re.DOTALL)
 _pat_varline = re.compile(r'^\s*(\w+)\s*(\w+)(\[.+\])*;\s*$', re.DOTALL)
 _pat_arrdecl = re.compile(r'\[(\w+?)\s*=\s*(\d+)\]')
-_pat_arrdecl_line = re.compile(r'\[\w+?\s*=\s*\d+\]')
+_pat_arrdecl_valonly = re.compile(r'^s*\[(\d+)]')
+_pat_arrdecl_line = re.compile(r'\[(?:\w+?\s*=)*\s*\d+\]')
 
 
 class Declaration:
@@ -624,27 +625,39 @@ class ArrDecl():
         if res:
             self.name = res.group(1)
             self.val = int(res.group(2))
+        else:
+            res = _pat_arrdecl_valonly.match(text)
+            if res:
+                self.val = int(res.group(1))
+        _debug_write(f'ArrDecl.parse():name="{self.name}",val="{self.val}"')
+
 
     @property
     def text(self):
         if self.name:
             return f"[{self.name} = {self.val}]"
+        elif self.val:
+            return f"[{self.val}]"
         else:
             return ''
 
     def __str__(self):
         if self.name:
-            res = f'ArrDecl(name="{self.name}", val={self.val})'
+            return f'ArrDecl(name="{self.name}", val={self.val})'
+        elif self.val:
+            return f"[{self.val}]"
         else:
-            res = ''
-        return res
+            return ''
+
 
     def __repr__(self):
         if self.name:
-            res = f'ArrDecl("{self.name}", {self.val})'
+            return f'ArrDecl("{self.name}", {self.val})'
+        elif self.val:
+            return f"ArrDecl[name="", val={self.val}]"
         else:
-            res = ''
-        return res
+            return ''
+
 
     def __eq__(self, other):
         if type(other) is not type(self):
