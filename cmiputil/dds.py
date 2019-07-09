@@ -35,7 +35,7 @@ Example:
     ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
     ... '''
     >>> res = parse_dataset(text=sample1)
-    >>> ref = Struct('CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1', stype='Dataset', decl=[
+    >>> ref = Dataset('CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1', decl=[
     ...     VarLine("lat", btype="Float64", arr=[
     ...         ArrDecl(name="lat", val=160)]),
     ...     VarLine("lat_bnds", btype="Float64", arr=[
@@ -52,7 +52,7 @@ Example:
     ...     VarLine("time_bnds", btype="Float64", arr=[
     ...         ArrDecl(name="time", val=8412),
     ...         ArrDecl(name="bnds", val=2)]),
-    ...     Grid("tas", stype="Grid",
+    ...     Grid("tas",
     ...         array = VarLine("tas", btype="Float32", arr=[
     ...            ArrDecl(name="time", val=8412),
     ...            ArrDecl(name="lat", val=160),
@@ -87,23 +87,21 @@ Example:
     ... } data;
     ... '''
     >>> res = parse_dataset(text=sample2)
-    >>> ref = Struct('data',stype='Dataset', decl=[
+    >>> ref = Dataset('data', decl=[
     ...     VarLine('catalog_number', btype=BType.Int32),
-    ...     Struct('station', stype='Sequence', decl=[
+    ...     Sequence('station', decl=[
     ...         VarLine('experimenter', btype=BType.String),
     ...         VarLine('time', btype=BType.Int32),
-    ...         Struct('location', stype='Structure', decl=[
+    ...         Structure('location', decl=[
     ...             VarLine('latitude', btype=BType.Float64),
     ...             VarLine('longitude', btype=BType.Float64) ]),
-    ...         Struct('cast', stype='Sequence', decl=[
+    ...         Sequence('cast', decl=[
     ...             VarLine('depth', btype=BType.Float64),
     ...             VarLine('salinity', btype=BType.Float64),
     ...             VarLine('oxygen', btype=BType.Float64),
     ...             VarLine('temperature', btype=BType.Float64)])])])
     >>> res == ref
     True
-
-
 """
 
 import enum
@@ -198,12 +196,12 @@ class Declaration:
 
 class Struct(Declaration):
     """
-    Class for *Struct*.
+    Base class for *Struct* type.
+
+    Do not use this directly.
 
     | *Struct* := *stype* { *declarations* } *var*
     | *stype* := Dataset|Structure|Sequence|Grid
-
-    For *Grid* use :class:`Grid` instead.
 
     Attributes:
         name(str): *name*
@@ -226,38 +224,41 @@ class Struct(Declaration):
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-        self.name = name
-        if stype is None:
-            self.stype = stype
-        elif isinstance(stype, SType):
-            self.stype = stype
-        elif type(stype) is str:
-            self.stype = SType(stype)
-        else:
-            raise TypeError(f'stype={stype} is invalid type: {type(stype)}')
-
-        if decl is None:
-            self.decl = None
-        elif type(decl) is list and isinstance(decl[0], Declaration):
-            self.decl = decl
-        elif type(decl) is str:
-            self.decl = parse_declarations(decl)
-        else:
-            raise TypeError(f'decl={decl} is invalid type: {type(decl)}')
 
         if text:
             self.parse(text)
+        else:
+            self.name = name
+
+            if isinstance(stype, SType):
+                self.stype = stype
+            elif isinstance(stype, str):
+                self.stype = SType(stype)
+            else:
+                raise TypeError(
+                    f'stype={stype} is invalid type: {type(stype)}')
+
+            if decl is None:
+                self.decl = None
+            elif type(decl) is list and isinstance(decl[0], Declaration):
+                self.decl = decl
+            elif type(decl) is str:
+                self.decl = parse_declarations(decl)
+            else:
+                raise TypeError(f'decl={decl} is invalid type: {type(decl)}')
 
     def parse(self, text):
         """
         Parse `text` to construct :class:`Struct`.
         """
-        _debug_write(tw.fill(f'Struct.parse: text="{text}"'))
+        _debug_write(f'{self.__class__.__name__}.parse: text="{text}"')
         res = _pat_struct.match(text)
-        if res:
-            _debug_write(tw.fill(f'Struct.parse:name="{res.group(3)}"'))
-            _debug_write(tw.fill(f'Struct.parse:decl="{res.group(2)}"'))
-            self.stype = SType(res.group(1))
+        if not res:
+            return None
+
+        _debug_write(f'{self.__class__.__name__}.parse:name="{res.group(3)}"')
+        _debug_write(f'{self.__class__.__name__}.parse:decl="{res.group(2)}"')
+        if self.stype and self.stype == SType(res.group(1)):
             self.decl = parse_declarations(res.group(2))
             self.name = res.group(3)
 
@@ -266,33 +267,16 @@ class Struct(Declaration):
             name = f'"{self.name}"'
         else:
             name = ''
-        if self.stype:
-            stype = f'stype="{self.stype.name}"'
-        else:
-            stype = ''
         if self.decl:
             decl = f'decl={self.decl.__repr__()}'
         else:
             decl = ''
 
-        res = ', '.join([l for l in [name, stype, decl] if l])
+        res = ', '.join([l for l in [name, decl] if l])
         return (f'{self.__class__.__name__}({res})')
 
     def __str__(self):
-        if self.name:
-            name = f'"{self.name}"'
-        else:
-            name = ''
-        if self.stype:
-            stype = f'stype="{self.stype.name}"'
-        else:
-            stype = ''
-        if self.decl:
-            decl = f'decl={self.decl.__repr__()}'
-        else:
-            decl = ''
-        res = ', '.join([l for l in [name, stype, decl] if l])
-        return (f'{self.__class__.__name__}({res})')
+        return self.text_formatted()
 
     def text_formatted(self, indent=4, linebreak=True):
         """
@@ -337,6 +321,39 @@ class Struct(Declaration):
     #     return all(res)
 
 
+class Dataset(Struct):
+    """
+    Class for *Dataset*
+    """
+
+    def __init__(self, name='', decl=None, text=None):
+        super().__init__(name, stype='Dataset', decl=decl)
+        if text:
+            super().__init__(text=text)
+
+
+class Structure(Struct):
+    """
+    Class for *Structure*
+    """
+
+    def __init__(self, name='', decl=None, text=None):
+        super().__init__(name, stype='Structure', decl=decl)
+        if text:
+            super().__init__(text=text)
+
+
+class Sequence(Struct):
+    """
+    Class for *Sequence*
+    """
+
+    def __init__(self, name='', decl=None, text=None):
+        super().__init__(name, stype='Sequence', decl=decl)
+        if text:
+            super().__init__(text=text)
+
+
 class Grid(Struct):
     """
     Class for *Grid*.
@@ -352,13 +369,7 @@ class Grid(Struct):
 
     """
 
-    def __init__(self,
-                 name='',
-                 stype='Grid',
-                 array=None,
-                 maps=None,
-                 decl=None,
-                 text=None):
+    def __init__(self, name='', array=None, maps=None, decl=None, text=None):
         """
         Parameters:
             name(str): *name*
@@ -374,7 +385,7 @@ class Grid(Struct):
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-        super().__init__(name, stype, decl)
+        super().__init__(name, stype='Grid', decl=decl)
         self.array = array  # Declaration()
         self.maps = maps  # list(Declaration())
         if text:
@@ -382,17 +393,20 @@ class Grid(Struct):
 
     def parse(self, text):
         """
-        Parse `text` to construct :class:`Struct`.
+        Parse `text` to construct :class:`Grid`.
         """
-        _debug_write(f'Struct.parse: text="{text}"')
+        _debug_write(f'{self.__class__.__name__}.parse: text="{text}"')
         res = _pat_grid.match(text)
         if res:
-            _debug_write(f'Struct.parse: array_line="{res.group(1).strip()}"')
-            _debug_write(f'Struct.parse: maps_line="{res.group(2).strip()}"')
+            _debug_write(
+                f'{self.__class__.__name__}.parse: array_line="{res.group(1).strip()}"'
+            )
+            _debug_write(
+                f'{self.__class__.__name__}.parse: maps_line="{res.group(2).strip()}"'
+            )
             self.array = VarLine(text=res.group(1))
             self.maps = parse_declarations(res.group(2))
             self.name = res.group(3)
-        # self.decl = {'ARRAY':self.array, 'MAPS':self.maps}
 
     def __repr__(self):
         if self.name:
@@ -412,29 +426,11 @@ class Grid(Struct):
         else:
             maps = ''
 
-        res = ', '.join([l for l in [name, stype, array, maps] if l])
+        res = ', '.join([l for l in [name, array, maps] if l])
         return (f'{self.__class__.__name__}({res})')
 
     def __str__(self):
-        if self.name:
-            name = f'name="{self.name}"'
-        else:
-            name = ''
-        if self.stype:
-            stype = f'stype="{self.stype.name}"'
-        else:
-            stype = ''
-        if self.array:
-            array = f'array={self.array.__repr__()}'
-        else:
-            array = ''
-        if self.maps:
-            maps = f'maps={self.maps.__repr__()}'
-        else:
-            maps = ''
-
-        res = ', '.join([l for l in [name, stype, array, maps] if l])
-        return (f'{self.__class__.__name__}({res})')
+        return self.text_formatted()
 
     def text_formatted(self, indent=4, linebreak=True):
         """
@@ -531,7 +527,7 @@ class VarLine(Declaration):
         Parse `text` to construct :class:`VarLine`.
         """
 
-        _debug_write(tw.shorten(f'VarLine.parse():text="{text}"', 60))
+        _debug_write(f'VarLine.parse():text="{text[:60]}"')
         res = _pat_varline.match(text)
         if res:
             try:
@@ -558,26 +554,12 @@ class VarLine(Declaration):
             arr = ''
 
         args = ', '.join([elem for elem in [name, btype, arr] if elem != ''])
+        args = ', '.join([elem for elem in [name, btype, arr] if elem != ''])
 
         return f'VarLine({args})'
 
     def __str__(self):
-        if self.name == '':
-            name = ''
-        else:
-            name = f'name="{self.name}"'
-        if self.btype is None:
-            btype = ''
-        else:
-            btype = f'btype="{self.btype.name}"'
-
-        if self.arr:
-            arr = 'arr=' + str([a for a in self.arr])
-        else:
-            arr = ''
-
-        args = ', '.join([l for l in [name, btype, arr] if l != ''])
-        return f'VarLine({args})'
+        return self.text_formatted()
 
     def text_formatted(self, indent=None, linebreak=None):
         """
@@ -631,7 +613,6 @@ class ArrDecl():
                 self.val = int(res.group(1))
         _debug_write(f'ArrDecl.parse():name="{self.name}",val="{self.val}"')
 
-
     @property
     def text(self):
         if self.name:
@@ -649,7 +630,6 @@ class ArrDecl():
         else:
             return ''
 
-
     def __repr__(self):
         if self.name:
             return f'ArrDecl("{self.name}", {self.val})'
@@ -657,7 +637,6 @@ class ArrDecl():
             return f'ArrDecl["", {self.val}]'
         else:
             return ''
-
 
     def __eq__(self, other):
         if type(other) is not type(self):
@@ -668,14 +647,14 @@ class ArrDecl():
 
 def check_braces_matching(text):
     """
-    Check if braces(``{`` and ``}``) in given `text` match or not.
+    Check if braces(``{`` and ``}``) in given `text` match.
 
-    Raises ValueError unless match.
+    Raises `ValueError` unless match.
 
     Examples:
 
         >>> text = 'Dataset{varline} hoge'
-        >>> check_braces_matching(text)
+        >>> check_braces_matching(text)  # True
 
         >>> text = 'Struct{ Sequence{VarLine} fuga }} hoge'
         >>> check_braces_matching(text)
@@ -712,7 +691,7 @@ def check_braces_matching(text):
 
 def parse_dataset(text):
     """
-    Parse toplevel dataset
+    Parse toplevel *dataset*.
 
     *dataset* := Dataset { *declarations* } *name*;
     """
@@ -721,7 +700,7 @@ def parse_dataset(text):
     # Dataset is the toplevel, *greedy* is preferable.
     res = _pat_dataset.match(text)
     if res:
-        dataset = Struct(text=text)
+        dataset = Dataset(text=text)
     else:
         raise ValueError('Given text is not the Dataset definition.')
 
@@ -730,69 +709,35 @@ def parse_dataset(text):
 
 def parse_declarations(text):
     """
-    Return list of Declaration()
+    Return list of *Declaration* parsed from `text`.
     """
     # _debug_write(f'parse_declarations:text="{text}"')
     # _debug_write('======parse_declarations======')
     res = []
     while text != '':
         _debug_write('=' * 20)
-        _debug_write(tw.fill(f'parse_declarations:text="{text}"'))
-        type_ident = find_type_identifier(text)
-        _debug_write(f'type_ident:"{type_ident}"')
-        if type_ident == 'G' or type_ident == 'S':
-            ss, rest = pop_struct(text)
-            res.append(ss)
-            text = rest.strip()
-        elif type_ident == 'B':
-            vl, rest = pop_varline(text)
-            res.append(vl)
-            text = rest.strip()
+        _debug_write(f'parse_declarations:text="{text}"')
+        res_ident = _pat_ident.match(text)
+        if res_ident:
+            ident = res_ident.group(1)
+            _debug_write(f'parse_declarations:ident:"{ident}"')
+            if ident in _idents_stype:
+                ss, rest = pop_struct(text)
+                res.append(ss)
+                text = rest.strip()
+            elif ident in _idents_btype:
+                vl, rest = pop_varline(text)
+                res.append(vl)
+                text = rest.strip()
         else:
-            # raise ValueError('Invalid text: no type identifier found.')
             return None
     return res
 
 
-def find_type_identifier(text):
-    """
-    Find `type_identifier` at the fron to of `text`, showing the type
-    of following declaration.
-
-    If `type_identifier` is one of :class:`SType`, :class:`BType` or
-    ``Grid``, following declaration is :class:`Struct`,
-    :class:`VarLine`, :class:`Grid`, respectively.
-
-    Return value is one of single character ``S``, ``B`` or ``G`` for
-    each `type_identifier`, or ``None`` if not found valid identifyer.
-    """
-    _debug_write(tw.shorten(f'find_type_identifier:text="{text}"', 80))
-
-    res_ident = _pat_ident.match(text)
-
-    if not res_ident:
-        return None
-    ident = res_ident.group(1)
-    _debug_write(f'ident="{ident}"')
-
-    if ident == 'Grid':
-        return 'G'
-    elif ident in _idents_stype:
-        return 'S'
-    elif ident in _idents_btype:
-        return 'B'
-    else:
-        return None
-
-
-# def find_struct_block(text):
 def pop_struct(text):
     """
-    Pop one :class:`Struct` or :class:`Grid` instance parsed from the
+    Pop one :class:`Struct`-derived instance parsed from the
     first part of `text, return it and the rest of `text`.
-
-    This should be called after :meth:`find_type_identifier` returning
-    ``S`` or ``G``.
     """
 
     leftpos = text.find('{')
@@ -817,11 +762,17 @@ def pop_struct(text):
 
     res = _pat_idents_stype.match(text)
     if res:
-        ident = res.group()
+        ident = res.group(1)
+        _debug_write(f'parse_struct:ident="{ident}"')
+        _debug_write(f'parse_struct:sline="{sline}"')
         if ident == 'Grid':
             ss = Grid(text=sline)
-        else:
-            ss = Struct(text=sline)
+        elif ident == 'Dataset':
+            ss = Dataset(text=sline)
+        elif ident == 'Structure':
+            ss = Structure(text=sline)
+        elif ident == 'Sequence':
+            ss = Sequence(text=sline)
     else:
         raise ValueError('Invalid text')
 
@@ -832,9 +783,6 @@ def pop_varline(text):
     """
     Pop one :class:`VarLine` instance parsed from the first part of
     `text`, return it and rest of the `text`.
-
-    This should be called after :meth:`find_type_identifier` returning
-    ``B``.
     """
     _debug_write(f'pop_varline:text="{text}"')
     pat_split = re.compile(r' *(.+?;) *(.*)', re.DOTALL)
