@@ -34,39 +34,64 @@ Example:
     ...     } tas;
     ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
     ... '''
-    >>> res = parse_dataset(text=sample1)
-    >>> ref = Dataset('CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1', decl=[
-    ...     VarLine("lat", btype="Float64", arr=[
-    ...         ArrDecl(name="lat", val=160)]),
-    ...     VarLine("lat_bnds", btype="Float64", arr=[
-    ...         ArrDecl(name="lat", val=160),
-    ...         ArrDecl(name="bnds", val=2)]),
-    ...     VarLine("lon", btype="Float64", arr=[
-    ...         ArrDecl(name="lon", val=320)]),
-    ...     VarLine("lon_bnds", btype="Float64", arr=[
-    ...         ArrDecl(name="lon", val=320),
-    ...         ArrDecl(name="bnds", val=2)]),
-    ...     VarLine("height", btype="Float64"),
-    ...     VarLine("time", btype="Float64", arr=[
-    ...         ArrDecl(name="time", val=8412)]),
-    ...     VarLine("time_bnds", btype="Float64", arr=[
-    ...         ArrDecl(name="time", val=8412),
-    ...         ArrDecl(name="bnds", val=2)]),
-    ...     Grid("tas",
-    ...         array = VarLine("tas", btype="Float32", arr=[
-    ...            ArrDecl(name="time", val=8412),
-    ...            ArrDecl(name="lat", val=160),
-    ...            ArrDecl(name="lon", val=320)]),
-    ...         maps = [
-    ...            VarLine("time", btype="Float64", arr=[
-    ...               ArrDecl(name="time", val=8412)]),
-    ...            VarLine("lat", btype="Float64", arr=[
-    ...               ArrDecl(name="lat", val=160)]),
-    ...            VarLine("lon", btype="Float64", arr=[
-    ...               ArrDecl(name="lon", val=320)])])])
-    >>> ref == res
+    >>> sample1_struct = Dataset(
+    ...     'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
+    ...     decl=OrderedDict([
+    ...         ('lat',
+    ...          VarLine('lat',
+    ...                  BType.Float64,
+    ...                  arr=[ArrDecl('lat', val=160)])),
+    ...         ('lat_bnds',
+    ...          VarLine('lat_bnds',
+    ...                  BType.Float64,
+    ...                  arr=[ArrDecl('lat', val=160),
+    ...                       ArrDecl('bnds', val=2)])),
+    ...         ('lon',
+    ...          VarLine('lon',
+    ...                  BType.Float64,
+    ...                  arr=[ArrDecl('lon', val=320)])),
+    ...         ('lon_bnds',
+    ...          VarLine('lon_bnds',
+    ...                  BType.Float64,
+    ...                  arr=[ArrDecl('lon', val=320),
+    ...                       ArrDecl('bnds', val=2)])),
+    ...         ('height', VarLine('height', BType.Float64)),
+    ...         ('time',
+    ...          VarLine('time',
+    ...                  BType.Float64,
+    ...                      arr=[ArrDecl('time', val=8412)])),
+    ...         ('time_bnds',
+    ...          VarLine('time_bnds',
+    ...                  BType.Float64,
+    ...                  arr=[ArrDecl('time', val=8412),
+    ...                       ArrDecl('bnds', val=2)])),
+    ...         ('tas',
+    ...          Grid('tas',
+    ...               array=VarLine('tas',
+    ...                             BType.Float32,
+    ...                             arr=[
+    ...                                 ArrDecl('time', 8412),
+    ...                                 ArrDecl('lat', 160),
+    ...                                 ArrDecl('lon', 320)]),
+    ...               maps=OrderedDict([
+    ...                   ('time',
+    ...                    VarLine('time',
+    ...                            BType.Float64,
+    ...                            arr=[ArrDecl('time', 8412)])),
+    ...                   ('lat',
+    ...                    VarLine('lat',
+    ...                            BType.Float64,
+    ...                            arr=[ArrDecl('lat', 160)])),
+    ...                   ('lon',
+    ...                    VarLine('lon',
+    ...                            BType.Float64,
+    ...                            arr=[ArrDecl('lon', 320)]))
+    ...               ])))
+    ... ]))
+    >>> sample1_struct == parse_dataset(sample1)
     True
 
+    >>> from cmiputil import dds
     >>> sample2 = '''
     ... Dataset {
     ...   Int32 catalog_number;
@@ -87,23 +112,41 @@ Example:
     ... } data;
     ... '''
     >>> res = parse_dataset(text=sample2)
-    >>> ref = Dataset('data', decl=[
-    ...     VarLine('catalog_number', btype=BType.Int32),
-    ...     Sequence('station', decl=[
-    ...         VarLine('experimenter', btype=BType.String),
-    ...         VarLine('time', btype=BType.Int32),
-    ...         Structure('location', decl=[
-    ...             VarLine('latitude', btype=BType.Float64),
-    ...             VarLine('longitude', btype=BType.Float64) ]),
-    ...         Sequence('cast', decl=[
-    ...             VarLine('depth', btype=BType.Float64),
-    ...             VarLine('salinity', btype=BType.Float64),
-    ...             VarLine('oxygen', btype=BType.Float64),
-    ...             VarLine('temperature', btype=BType.Float64)])])])
-    >>> res == ref
+    >>> sample2_struct = Dataset(
+    ...     'data',
+    ...     decl=OrderedDict([
+    ...         ('catalog_number', VarLine('catalog_number', btype='Int32')),
+    ...         ('station',
+    ...          Sequence(
+    ...              'station',
+    ...              decl=OrderedDict([
+    ...                  ('experimenter', VarLine('experimenter', btype='String')),
+    ...                  ('time', VarLine('time', btype='Int32')),
+    ...                  ('location',
+    ...                   Structure('location',
+    ...                             decl=OrderedDict([('latitude',
+    ...                                                VarLine('latitude',
+    ...                                                        btype='Float64')),
+    ...                                               ('longitude',
+    ...                                                VarLine('longitude',
+    ...                                                        btype='Float64'))]))),
+    ...                  ('cast',
+    ...                   Sequence('cast',
+    ...                            decl=OrderedDict([
+    ...                                ('depth', VarLine('depth', btype='Float64')),
+    ...                                ('salinity', VarLine('salinity',
+    ...                                                     btype='Float64')),
+    ...                                ('oxygen', VarLine('oxygen', btype='Float64')),
+    ...                                ('temperature',
+    ...                                 VarLine('temperature', btype='Float64'))
+    ...                            ])))
+    ...              ])))
+    ...     ]))
+    >>> sample2_struct == parse_dataset(sample2)
     True
 """
 
+from collections import OrderedDict
 import enum
 import re
 import textwrap as tw
@@ -206,7 +249,7 @@ class Struct(Declaration):
     Attributes:
         name(str): *name*
         stype(SType): *stype*
-        decl(list(Declarations): *declarations*
+        decl(OrderedDict(name, Declarations)): *declarations*
 
     """
 
@@ -215,7 +258,7 @@ class Struct(Declaration):
         Parameters:
             name(str): *name*
             stype(str or SType): *stype*
-            decl(list(Declarations): *declarations*
+            decl(str or OrderedDict(Declarations)): *declarations*
             text(str): text to be parsed.
 
         Raises:
@@ -226,6 +269,7 @@ class Struct(Declaration):
         """
 
         if text:
+            _debug_write(f'{self.__class__.__name__}' f"text='{text}'")
             self.parse(text)
         else:
             self.name = name
@@ -240,7 +284,7 @@ class Struct(Declaration):
 
             if decl is None:
                 self.decl = None
-            elif type(decl) is list and isinstance(decl[0], Declaration):
+            elif isinstance(decl, OrderedDict):
                 self.decl = decl
             elif type(decl) is str:
                 self.decl = parse_declarations(decl)
@@ -264,7 +308,7 @@ class Struct(Declaration):
 
     def __repr__(self):
         if self.name:
-            name = f'"{self.name}"'
+            name = f"'{self.name}'"
         else:
             name = ''
         if self.decl:
@@ -288,14 +332,16 @@ class Struct(Declaration):
             name = ''
         if self.decl:
             if linebreak:
-                decl = '\n'.join([
-                    d.text_formatted(indent, linebreak) for d in self.decl if d
-                ])
-                decl = tw.indent(decl, ' ' * indent)
-                decl = '\n'.join(('{', decl, '}'))
+                lb = '\n'
             else:
-                decl = ' '.join([d.text for d in self.decl if d])
-                decl = ''.join(('{', decl, '}'))
+                lb = ''
+
+            decl = f'{lb}'.join([
+                self.decl[d].text_formatted(indent, linebreak)
+                for d in self.decl if d
+            ])
+            decl = tw.indent(decl, ' ' * indent)
+            decl = f'{lb}'.join(('{', decl, '}'))
         else:
             decl = ''
         if self.stype:
@@ -303,7 +349,10 @@ class Struct(Declaration):
         else:
             stype = ''
 
-        res = ' '.join([l for l in [stype, decl, name] if l])
+        if name == '' and decl == '':
+            res = ''
+        else:
+            res = ' '.join([l for l in [stype, decl, name] if l])
         return res
 
     @property
@@ -313,19 +362,11 @@ class Struct(Declaration):
         """
         return self.text_formatted(indent=0, linebreak=False)
 
-    # def __eq__(self, other):
-    #     if not isinstance(other, type(self)):
-    #         return False
-    #     res = [getattr(self, a) == getattr(other, a)
-    #            for a in self.__dict__]
-    #     return all(res)
-
 
 class Dataset(Struct):
     """
     Class for *Dataset*
     """
-
     def __init__(self, name='', decl=None, text=None):
         super().__init__(name, stype='Dataset', decl=decl)
         if text:
@@ -336,7 +377,6 @@ class Structure(Struct):
     """
     Class for *Structure*
     """
-
     def __init__(self, name='', decl=None, text=None):
         super().__init__(name, stype='Structure', decl=decl)
         if text:
@@ -347,7 +387,6 @@ class Sequence(Struct):
     """
     Class for *Sequence*
     """
-
     def __init__(self, name='', decl=None, text=None):
         super().__init__(name, stype='Sequence', decl=decl)
         if text:
@@ -364,9 +403,8 @@ class Grid(Struct):
         name(str): *name*
         stype(SType): *stype*
         array(ArrDecl): ARRAY *declaration*
-        maps(list(ArrDecl): MAPS *declarations*
-        decl(list(Declarations): ignored
-
+        maps(OrderedDict(ArrDecl): MAPS *declarations*
+        decl(OrderedDict(Declarations): ignored
     """
 
     def __init__(self, name='', array=None, maps=None, decl=None, text=None):
@@ -374,9 +412,9 @@ class Grid(Struct):
         Parameters:
             name(str): *name*
             stype(str or SType): *stype*
-            decl(list(Declarations): *declarations*
             array(ArrDecl): ARRAY *declaration*
-            maps(list(ArrDecl): MAPS *declarations*
+            maps(OrderedDict(ArrDecl): MAPS *declarations*
+            decl(str or OrderedDict(Declarations): *declarations*
             text(str): text to be parsed.
 
         Raises:
@@ -395,14 +433,14 @@ class Grid(Struct):
         """
         Parse `text` to construct :class:`Grid`.
         """
-        _debug_write(f'{self.__class__.__name__}.parse: text="{text}"')
+        _debug_write(f"{self.__class__.__name__}.parse: text='{text}'")
         res = _pat_grid.match(text)
         if res:
             _debug_write(
-                f'{self.__class__.__name__}.parse: array_line="{res.group(1).strip()}"'
+                f"{self.__class__.__name__}.parse: array_line='{res.group(1).strip()}'"
             )
             _debug_write(
-                f'{self.__class__.__name__}.parse: maps_line="{res.group(2).strip()}"'
+                f"{self.__class__.__name__}.parse: maps_line='{res.group(2).strip()}'"
             )
             self.array = VarLine(text=res.group(1))
             self.maps = parse_declarations(res.group(2))
@@ -410,13 +448,9 @@ class Grid(Struct):
 
     def __repr__(self):
         if self.name:
-            name = f'"{self.name}"'
+            name = f"'{self.name}'"
         else:
             name = ''
-        if self.stype:
-            stype = f'stype="{self.stype.name}"'
-        else:
-            stype = ''
         if self.array:
             array = f'array={self.array.__repr__()}'
         else:
@@ -442,29 +476,27 @@ class Grid(Struct):
             name = self.name + ';'
         else:
             name = ''
-        if self.stype:
-            stype = f'{self.stype.name}'
-        else:
-            stype = ''
+        stype = 'Grid'
         if self.array is None or self.maps is None:
             decl = ''
         else:
             if linebreak:
-                array = ' ARRAY:\n' + tw.indent(self.array.text, ' ' * indent)
-                ll = '\n'.join([
-                    d.text_formatted(indent, linebreak) for d in self.maps if d
-                ])
-                maps = ' MAPS:\n' + tw.indent(ll, ' ' * indent)
-                decl = '\n'.join(('{', array, maps, '}'))
+                lb = '\n'
             else:
-                array = 'ARRAY:' + tw.indent(self.array.text, ' ' * indent)
-                ll = ''.join([
-                    d.text_formatted(indent, linebreak) for d in self.maps if d
-                ])
-                maps = 'MAPS:' + tw.indent(ll, ' ' * indent)
-                decl = ' '.join(('{', array, maps, '}'))
+                lb = ''
 
-        res = ' '.join([l for l in [stype, decl, name] if l])
+            array = f' ARRAY:{lb}' + tw.indent(self.array.text, ' ' * indent)
+            ll = f'{lb}'.join([
+                self.maps[d].text_formatted(indent, linebreak)
+                for d in self.maps if d
+            ])
+            maps = f' MAPS:{lb}' + tw.indent(ll, ' ' * indent)
+            decl = f'{lb}'.join(('{', array, maps, '}'))
+
+        if name == '' and decl == '':
+            res = ''
+        else:
+            res = ' '.join([l for l in [stype, decl, name] if l])
         return res
 
     @property
@@ -542,11 +574,11 @@ class VarLine(Declaration):
         if self.name == '':
             name = ''
         else:
-            name = f'"{self.name}"'
+            name = f"'{self.name}'"
         if self.btype is None:
             btype = ''
         else:
-            btype = f'btype="{self.btype.name}"'
+            btype = f"btype='{self.btype.name}'"
 
         if self.arr:
             arr = 'arr=' + str([a for a in self.arr])
@@ -602,7 +634,7 @@ class ArrDecl():
             self.parse(text)
 
     def parse(self, text):
-        _debug_write(f'ArrDecl.parse():text="{text}"')
+        _debug_write(f"ArrDecl.parse():text='{text}'")
         res = _pat_arrdecl.match(text)
         if res:
             self.name = res.group(1)
@@ -611,7 +643,7 @@ class ArrDecl():
             res = _pat_arrdecl_valonly.match(text)
             if res:
                 self.val = int(res.group(1))
-        _debug_write(f'ArrDecl.parse():name="{self.name}",val="{self.val}"')
+        _debug_write(f"ArrDecl.parse():name='{self.name}',val='{self.val}'")
 
     @property
     def text(self):
@@ -624,7 +656,7 @@ class ArrDecl():
 
     def __str__(self):
         if self.name:
-            return f'ArrDecl(name="{self.name}", val={self.val})'
+            return f"ArrDecl(name='{self.name}', val={self.val})"
         elif self.val:
             return f"[{self.val}]"
         else:
@@ -632,9 +664,9 @@ class ArrDecl():
 
     def __repr__(self):
         if self.name:
-            return f'ArrDecl("{self.name}", {self.val})'
+            return f"ArrDecl('{self.name}', {self.val})"
         elif self.val:
-            return f'ArrDecl["", {self.val}]'
+            return f"ArrDecl['', {self.val}]"
         else:
             return ''
 
@@ -709,25 +741,27 @@ def parse_dataset(text):
 
 def parse_declarations(text):
     """
-    Return list of *Declaration* parsed from `text`.
+    Return OrderedDict of {name: *Declaration*} parsed from `text`.
     """
     # _debug_write(f'parse_declarations:text="{text}"')
     # _debug_write('======parse_declarations======')
-    res = []
+    res = OrderedDict()
     while text != '':
         _debug_write('=' * 20)
-        _debug_write(f'parse_declarations:text="{text}"')
+        _debug_write(f"parse_declarations:text='{text}'")
         res_ident = _pat_ident.match(text)
         if res_ident:
             ident = res_ident.group(1)
-            _debug_write(f'parse_declarations:ident:"{ident}"')
+            _debug_write(f"parse_declarations:ident:'{ident}'")
             if ident in _idents_stype:
                 ss, rest = pop_struct(text)
-                res.append(ss)
+                # res.append(ss)
+                res[ss.name] = ss
                 text = rest.strip()
             elif ident in _idents_btype:
                 vl, rest = pop_varline(text)
-                res.append(vl)
+                # res.append(vl)
+                res[vl.name] = vl
                 text = rest.strip()
         else:
             return None
@@ -755,7 +789,7 @@ def pop_struct(text):
             break
 
     lastdelim = rightpos + text[rightpos:].find(';') + 1
-    _debug_write(f'parse_struct:lastdelim="{lastdelim}"')
+    _debug_write(f"parse_struct:lastdelim='{lastdelim}'")
 
     sline = text[:lastdelim].strip()
     rest = text[lastdelim:].strip()
@@ -763,8 +797,8 @@ def pop_struct(text):
     res = _pat_idents_stype.match(text)
     if res:
         ident = res.group(1)
-        _debug_write(f'parse_struct:ident="{ident}"')
-        _debug_write(f'parse_struct:sline="{sline}"')
+        _debug_write(f"parse_struct:ident='{ident}'")
+        _debug_write(f"parse_struct:sline='{sline}'")
         if ident == 'Grid':
             ss = Grid(text=sline)
         elif ident == 'Dataset':
@@ -784,7 +818,7 @@ def pop_varline(text):
     Pop one :class:`VarLine` instance parsed from the first part of
     `text`, return it and rest of the `text`.
     """
-    _debug_write(f'pop_varline:text="{text}"')
+    _debug_write(f"pop_varline:text='{text}'")
     pat_split = re.compile(r' *(.+?;) *(.*)', re.DOTALL)
 
     res = pat_split.match(text)
@@ -793,8 +827,8 @@ def pop_varline(text):
         rest = res.group(2).strip()
     except AttributeError:
         rest = ''
-    _debug_write(f'pop_varline:vline="{vline}"')
-    _debug_write(f'pop_varline:rest="{rest}"')
+    _debug_write(f"pop_varline:vline='{vline}'")
+    _debug_write(f"pop_varline:rest='{rest}'")
 
     vl = VarLine(text=vline)
 
@@ -806,7 +840,7 @@ def parse_arrdecls(text):
     Parse `text` contains multiple :class:`ArrDecl` definitions and return
     a list of them.
     """
-    _debug_write(f'parse_arrdecls:text="{text}"')
+    _debug_write(f"parse_arrdecls:text='{text}'")
     res = _pat_arrdecl_line.findall(text)
     if res:
         return [ArrDecl(text=l) for l in res]
@@ -814,7 +848,8 @@ def parse_arrdecls(text):
         return None
 
 
-sample1 = '''
+# for debug use...
+_sample1 = '''
 Dataset {
     Float64 lat[lat = 160];
     Float64 lat_bnds[lat = 160][bnds = 2];
@@ -834,7 +869,54 @@ Dataset {
 } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
 '''
 
-sample2 = '''
+_sampl1_struct = Dataset(
+    'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
+    decl=OrderedDict([
+        ('lat', VarLine('lat', BType.Float64, arr=[ArrDecl('lat', val=160)])),
+        ('lat_bnds',
+         VarLine('lat_bnds',
+                 BType.Float64,
+                 arr=[ArrDecl('lat', val=160),
+                      ArrDecl('bnds', val=2)])),
+        ('lon', VarLine('lon', BType.Float64, arr=[ArrDecl('lon', val=320)])),
+        ('lon_bnds',
+         VarLine('lon_bnds',
+                 BType.Float64,
+                 arr=[ArrDecl('lon', val=320),
+                      ArrDecl('bnds', val=2)])),
+        ('height', VarLine('height', BType.Float64)),
+        ('time', VarLine('time',
+                         BType.Float64,
+                         arr=[ArrDecl('time', val=8412)])),
+        ('time_bnds',
+         VarLine('time_bnds',
+                 BType.Float64,
+                 arr=[ArrDecl('time', val=8412),
+                      ArrDecl('bnds', val=2)])),
+        ('tas',
+         Grid('tas',
+              array=VarLine('tas',
+                            BType.Float32,
+                            arr=[
+                                ArrDecl('time', 8412),
+                                ArrDecl('lat', 160),
+                                ArrDecl('lon', 320)
+                            ]),
+              maps=OrderedDict([('time',
+                                 VarLine('time',
+                                         BType.Float64,
+                                         arr=[ArrDecl('time', 8412)])),
+                                ('lat',
+                                 VarLine('lat',
+                                         BType.Float64,
+                                         arr=[ArrDecl('lat', 160)])),
+                                ('lon',
+                                 VarLine('lon',
+                                         BType.Float64,
+                                         arr=[ArrDecl('lon', 320)]))])))
+    ]))
+
+_sample2 = '''
 Dataset {
   Int32 catalog_number;
   Sequence {
@@ -854,8 +936,39 @@ Dataset {
 } data;
 '''
 
+_sample2_struct = Dataset(
+    'data',
+    decl=OrderedDict([
+        ('catalog_number', VarLine('catalog_number', btype='Int32')),
+        ('station',
+         Sequence(
+             'station',
+             decl=OrderedDict([
+                 ('experimenter', VarLine('experimenter', btype='String')),
+                 ('time', VarLine('time', btype='Int32')),
+                 ('location',
+                  Structure('location',
+                            decl=OrderedDict([('latitude',
+                                               VarLine('latitude',
+                                                       btype='Float64')),
+                                              ('longitude',
+                                               VarLine('longitude',
+                                                       btype='Float64'))]))),
+                 ('cast',
+                  Sequence('cast',
+                           decl=OrderedDict([
+                               ('depth', VarLine('depth', btype='Float64')),
+                               ('salinity', VarLine('salinity',
+                                                    btype='Float64')),
+                               ('oxygen', VarLine('oxygen', btype='Float64')),
+                               ('temperature',
+                                VarLine('temperature', btype='Float64'))
+                           ])))
+             ])))
+    ]))
+
 # _enable_debug()
-_disable_debug()
+#_disable_debug()
 
 
 def _test_mod():
