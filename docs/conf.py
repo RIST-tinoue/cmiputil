@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.abspath('../cmiputil'))
 sys.path.insert(0, os.path.abspath('../bin'))
 sys.path.insert(0, os.path.abspath('../samples'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'cmiputil'
@@ -35,9 +34,15 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
-    'sphinxarg.ext'
+    'sphinxarg.ext',
+    'sphinxcontrib.fulltoc',
+    'sphinxcontrib.autoprogram'
 ]
+
+# Link to the Python library manual
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -54,7 +59,6 @@ language = 'en'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -67,18 +71,24 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # html_theme = 'pyramid'
 # html_theme = 'agogo'
 # html_theme = 'nature'
-html_theme = 'bizstyle'
+# html_theme = 'bizstyle'
 # html_theme = 'cloud'
+
+# import sphinx_nameko_theme
+# html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
+# html_theme = 'nameko'
+
+import sphinx_readable_theme
+html_theme_path = [sphinx_readable_theme.get_html_theme_path()]
+html_theme = 'readable'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-
 # -- Extension configuration -------------------------------------------------
 autosummary_generate = True
-
 
 autodoc_member_order = "groupwise"
 autoclass_content = "both"
@@ -90,7 +100,6 @@ napoleon_use_rtype = False
 napoleon_use_admonition_for_examples = False
 napoleon_use_admonition_for_notes = True
 
-
 # set the theme path to point to cloud's theme data
 # import cloud_sptheme as csp
 # html_theme_path = [csp.get_theme_dir()]
@@ -101,7 +110,6 @@ napoleon_use_admonition_for_notes = True
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
 
 show_authors = True
 
