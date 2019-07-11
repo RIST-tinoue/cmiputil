@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from collections import OrderedDict
 from pprint import pprint
 
 from cmiputil import dds
@@ -29,62 +28,49 @@ Dataset {
 '''
 sample1_struct = dds.Dataset(
     'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
-    decl=OrderedDict([
-        ('lat',
-         dds.VarLine('lat',
-                     btype=dds.BType.Float64,
-                     arr=[dds.ArrDecl('lat', val=160)])),
-        ('lat_bnds',
-         dds.VarLine(
-             'lat_bnds',
-             btype=dds.BType.Float64,
-             arr=[dds.ArrDecl('lat', val=160),
-                  dds.ArrDecl('bnds', val=2)])),
-        ('lon',
-         dds.VarLine('lon',
-                     btype=dds.BType.Float64,
-                     arr=[dds.ArrDecl('lon', val=320)])),
-        ('lon_bnds',
-         dds.VarLine(
-             'lon_bnds',
-             btype=dds.BType.Float64,
-             arr=[dds.ArrDecl('lon', val=320),
-                  dds.ArrDecl('bnds', val=2)])),
-        ('height', dds.VarLine('height', btype=dds.BType.Float64)),
-        ('time',
-         dds.VarLine('time',
-                     btype=dds.BType.Float64,
-                     arr=[dds.ArrDecl('time', val=8412)])),
-        ('time_bnds',
-         dds.VarLine(
-             'time_bnds',
-             btype=dds.BType.Float64,
-             arr=[dds.ArrDecl('time', val=8412),
-                  dds.ArrDecl('bnds', val=2)])),
-        ('tas',
-         dds.Grid('tas',
-                  array=dds.VarLine('tas',
-                                    dds.BType.Float32,
-                                    arr=[
-                                        dds.ArrDecl('time', 8412),
-                                        dds.ArrDecl('lat', 160),
-                                        dds.ArrDecl('lon', 320)
-                                    ]),
-                  maps=OrderedDict([
-                      ('time',
-                       dds.VarLine('time',
-                                   dds.BType.Float64,
-                                   arr=[dds.ArrDecl('time', 8412)])),
-                      ('lat',
-                       dds.VarLine('lat',
-                                   dds.BType.Float64,
-                                   arr=[dds.ArrDecl('lat', 160)])),
-                      ('lon',
-                       dds.VarLine('lon',
-                                   dds.BType.Float64,
-                                   arr=[dds.ArrDecl('lon', 320)]))
-                  ])))
-    ]))
+    {
+        'lat':
+        dds.Var('lat', btype='Float64', arr=[dds.Arr('lat', 160)]),
+        'lat_bnds':
+        dds.Var('lat_bnds',
+                btype='Float64',
+                arr=[dds.Arr('lat', 160),
+                     dds.Arr('bnds', 2)]),
+        'lon':
+        dds.Var('lon', btype='Float64', arr=[dds.Arr('lon', 320)]),
+        'lon_bnds':
+        dds.Var('lon_bnds',
+                btype='Float64',
+                arr=[dds.Arr('lon', 320),
+                     dds.Arr('bnds', 2)]),
+        'height':
+        dds.Var('height', btype='Float64'),
+        'time':
+        dds.Var('time', btype='Float64', arr=[dds.Arr('time', 8412)]),
+        'time_bnds':
+        dds.Var('time_bnds',
+                btype='Float64',
+                arr=[dds.Arr('time', 8412),
+                     dds.Arr('bnds', 2)]),
+        'tas':
+        dds.Grid(
+            'tas',
+            array=dds.Var('tas',
+                          btype='Float32',
+                          arr=[
+                              dds.Arr('time', 8412),
+                              dds.Arr('lat', 160),
+                              dds.Arr('lon', 320)
+                          ]),
+            maps={
+                'time':
+                dds.Var('time', btype='Float64', arr=[dds.Arr('time', 8412)]),
+                'lat':
+                dds.Var('lat', btype='Float64', arr=[dds.Arr('lat', 160)]),
+                'lon':
+                dds.Var('lon', btype='Float64', arr=[dds.Arr('lon', 320)])
+            })
+    })
 
 sample2_text = '''\
 Dataset {
@@ -107,43 +93,32 @@ Dataset {
 '''
 
 sample2_struct = dds.Dataset(
-    'data',
-    decl=OrderedDict([
-        ('catalog_number', dds.VarLine('catalog_number', btype='Int32')),
-        ('station',
-         dds.Sequence('station',
-                      decl=OrderedDict([
-                          ('experimenter',
-                           dds.VarLine('experimenter', btype='String')),
-                          ('time', dds.VarLine('time', btype='Int32')),
-                          ('location',
-                           dds.Structure('location',
-                                         decl=OrderedDict([
-                                             ('latitude',
-                                              dds.VarLine('latitude',
-                                                          btype='Float64')),
-                                             ('longitude',
-                                              dds.VarLine('longitude',
-                                                          btype='Float64'))
-                                         ]))),
-                          ('cast',
-                           dds.Sequence('cast',
-                                        decl=OrderedDict([
-                                            ('depth',
-                                             dds.VarLine('depth',
-                                                         btype='Float64')),
-                                            ('salinity',
-                                             dds.VarLine('salinity',
-                                                         btype='Float64')),
-                                            ('oxygen',
-                                             dds.VarLine('oxygen',
-                                                         btype='Float64')),
-                                            ('temperature',
-                                             dds.VarLine('temperature',
-                                                         btype='Float64'))
-                                        ])))
-                      ])))
-    ]))
+    'data', {
+        'catalog_number':
+        dds.Var('catalog_number', 'Int32'),
+        'station':
+        dds.Sequence(
+            'station', {
+                'experimenter':
+                dds.Var('experimenter', 'String'),
+                'time':
+                dds.Var('time', 'Int32'),
+                'location':
+                dds.Structure(
+                    'location', {
+                        'latitude': dds.Var('latitude', 'Float64'),
+                        'longitude': dds.Var('longitude', 'Float64')
+                    }),
+                'cast':
+                dds.Sequence(
+                    'cast', {
+                        'depth': dds.Var('depth', 'Float64'),
+                        'salinity': dds.Var('salinity', 'Float64'),
+                        'oxygen': dds.Var('oxygen', 'Float64'),
+                        'temperature': dds.Var('temperature', 'Float64')
+                    })
+            })
+    })
 
 sample3_text = '''\
 Dataset {
@@ -162,28 +137,24 @@ Dataset {
 '''
 
 sample3_struct = dds.Dataset(
-    'xbt-station',
-    decl=OrderedDict([
-        ('location',
-         dds.Structure('location',
-                       decl=OrderedDict([
-                           ('lat', dds.VarLine('lat', btype='Float64')),
-                           ('lon', dds.VarLine('lon', btype='Float64')),
-                       ]))),
-        ('time',
-         dds.Structure('time',
-                       decl=OrderedDict([
-                           ('minutes', dds.VarLine('minutes', btype='Int32')),
-                           ('day', dds.VarLine('day', btype='Int32')),
-                           ('year', dds.VarLine('year', btype='Int32')),
-                       ]))),
-        ('depth',
-         dds.VarLine('depth', btype='Float64', arr=[dds.ArrDecl('', 500)])),
-        ('temperature',
-         dds.VarLine('temperature',
-                     btype='Float64',
-                     arr=[dds.ArrDecl('', 500)])),
-    ]))
+    'xbt-station', {
+        'location':
+        dds.Structure('location', {
+            'lat': dds.Var('lat', 'Float64'),
+            'lon': dds.Var('lon', 'Float64')
+        }),
+        'time':
+        dds.Structure(
+            'time', {
+                'minutes': dds.Var('minutes', 'Int32'),
+                'day': dds.Var('day', 'Int32'),
+                'year': dds.Var('year', 'Int32')
+            }),
+        'depth':
+        dds.Var('depth', 'Float64', arr=[dds.Arr('', 500)]),
+        'temperature':
+        dds.Var('temperature', 'Float64', arr=[dds.Arr('', 500)])
+    })
 
 
 class test_DDS(unittest.TestCase):
@@ -195,88 +166,86 @@ class test_DDS(unittest.TestCase):
     def tearUp(self):
         pass
 
-    def test_ArrDecl(self):
-        a = dds.ArrDecl()
-        self.assertIsInstance(a, dds.ArrDecl)
+    def test_Arr(self):
+        a = dds.Arr()
+        self.assertIsInstance(a, dds.Arr)
 
         name = 'lat'
         val = 160
         text = r'[lat = 160] \n'
 
         # set attributes
-        a = dds.ArrDecl(name=name, val=val)
+        a = dds.Arr(name=name, val=val)
         self.assertEqual(a.name, 'lat')
         self.assertEqual(a.val, 160)
 
         # parse()
-        a = dds.ArrDecl(text=text)
+        a = dds.Arr(text=text)
         self.assertEqual(a.name, 'lat')
         self.assertEqual(a.val, 160)
-        self.assertEqual(a, dds.ArrDecl(name='lat', val=160))
+        self.assertEqual(a, dds.Arr(name='lat', val=160))
 
         # Invalid text -> blank object
         text = 'lat = 160'
-        a = dds.ArrDecl(text=text)
+        a = dds.Arr(text=text)
         self.assertEqual(a.name, '')
         self.assertIsNone(a.val)
-        self.assertEqual(a, dds.ArrDecl())
+        self.assertEqual(a, dds.Arr())
 
         # test __repr__()
         text = '[time = 8412]'
-        a = dds.ArrDecl(text=text)
-        ref = "ArrDecl('time', 8412)"
+        a = dds.Arr(text=text)
+        ref = "Arr('time', 8412)"
         self.assertEqual(ref, a.__repr__())
 
         # test __str__()
         text = '[time = 8412]'
-        a = dds.ArrDecl(text=text)
-        ref = "ArrDecl(name='time', val=8412)"
+        a = dds.Arr(text=text)
+        ref = "Arr(name='time', val=8412)"
         self.assertEqual(ref, a.__str__())
 
         # test text
         text = '[time = 8412]'
         ref = '[time = 8412]'
-        a = dds.ArrDecl(text=text)
+        a = dds.Arr(text=text)
         res = a.text
         self.assertEqual(ref, res)
 
         # test __eq__
-        a1 = dds.ArrDecl(text=text)
-        a2 = dds.ArrDecl(name='time', val=8412)
+        a1 = dds.Arr(text=text)
+        a2 = dds.Arr(name='time', val=8412)
         self.assertEqual(a1, a2)
-        a2 = dds.ArrDecl(name='lon', val=8412)
+        a2 = dds.Arr(name='lon', val=8412)
         self.assertNotEqual(a1, a2)
         self.assertNotEqual(a1, text)
 
-    def test_VarLine(self):
+    def test_Var(self):
         text = '  Float64 height;'
-        vl = dds.VarLine(text=text)
+        vl = dds.Var(text=text)
         self.assertEqual(vl.btype, dds.BType.Float64)
         self.assertEqual(vl.name, 'height')
         self.assertIsNone(vl.arr)
 
         text = 'Float32 time[time = 8412];\n'
-        vl = dds.VarLine(text=text)
+        vl = dds.Var(text=text)
         self.assertEqual(vl.btype, dds.BType.Float32)
         self.assertEqual(vl.name, 'time')
-        self.assertEqual(vl.arr, [dds.ArrDecl('time', 8412)])
+        self.assertEqual(vl.arr, [dds.Arr('time', 8412)])
 
         text = 'Float64 time_bnds[time = 8412][bnds = 2];'
-        vl = dds.VarLine(text=text)
+        vl = dds.Var(text=text)
         self.assertEqual(vl.btype, dds.BType.Float64)
-        self.assertEqual(vl.arr,
-                         [dds.ArrDecl('time', 8412),
-                          dds.ArrDecl('bnds', 2)])
+        self.assertEqual(vl.arr, [dds.Arr('time', 8412), dds.Arr('bnds', 2)])
 
         # invalid text causes null object
         text = 'height;'
-        vl = dds.VarLine(text=text)
-        self.assertEqual(vl, dds.VarLine())
+        vl = dds.Var(text=text)
+        self.assertEqual(vl, dds.Var())
 
         # test __repr__()
         text = 'Float64 time_bnds[time = 8412][bnds = 2];'
-        vl = dds.VarLine(text=text)
-        ref = "VarLine('time_bnds', btype='Float64', arr=[ArrDecl('time', 8412), ArrDecl('bnds', 2)])"
+        vl = dds.Var(text=text)
+        ref = "Var('time_bnds', 'Float64', arr=[Arr('time', 8412), Arr('bnds', 2)])"
         self.assertEqual(ref, vl.__repr__())
 
         # test __str__()
@@ -289,18 +258,16 @@ class test_DDS(unittest.TestCase):
 
         # test __eq__()
         text = 'Float64 time_bnds[time = 8412][bnds = 2];'
-        vl1 = dds.VarLine(text=text)
-        vl2 = dds.VarLine(
-            'time_bnds',
-            btype='Float64',
-            arr=[dds.ArrDecl('time', 8412),
-                 dds.ArrDecl('bnds', 2)])
+        vl1 = dds.Var(text=text)
+        vl2 = dds.Var('time_bnds',
+                      btype='Float64',
+                      arr=[dds.Arr('time', 8412),
+                           dds.Arr('bnds', 2)])
         self.assertEqual(vl1, vl2)
-        vl2 = dds.VarLine(
-            'time_bnds',
-            btype='Float32',
-            arr=[dds.ArrDecl('time', 8412),
-                 dds.ArrDecl('bnds', 2)])
+        vl2 = dds.Var('time_bnds',
+                      btype='Float32',
+                      arr=[dds.Arr('time', 8412),
+                           dds.Arr('bnds', 2)])
         self.assertNotEqual(vl1, vl2)
 
     def test_Structure(self):
@@ -315,30 +282,52 @@ class test_DDS(unittest.TestCase):
                 } location; ''')
         res = dds.Structure(text=text)
         self.assertEqual(res.name, 'location')
-        ref_decl = OrderedDict([
-            ('latitude', dds.VarLine('latitude', 'Float64')),
-            ('longitude', dds.VarLine('longitude', 'Float64'))
-        ])
+        ref_decl = dict([('latitude', dds.Var('latitude', 'Float64')),
+                         ('longitude', dds.Var('longitude', 'Float64'))])
         self.assertEqual(ref_decl, res.decl)
 
         # test __eq__
         s1 = dds.Structure(text=text)
         s2 = dds.Structure('location',
-                           decl=OrderedDict([
-                               ('latitude', dds.VarLine('latitude', 'Float64')),
-                               ('longitude', dds.VarLine('longitude', 'Float64'))
+                           decl=dict([
+                               ('latitude', dds.Var('latitude', 'Float64')),
+                               ('longitude', dds.Var('longitude', 'Float64'))
                            ]))
         self.assertEqual(s1, s2)
 
         # test __repr__
         ss = dds.Structure(text=text)
-        ref = "Structure('location', decl=OrderedDict([('latitude', VarLine('latitude', btype='Float64')), ('longitude', VarLine('longitude', btype='Float64'))]))"
+        ref = "Structure('location', {'latitude': Var('latitude', 'Float64'), 'longitude': Var('longitude', 'Float64')})"
         self.assertEqual(ref, ss.__repr__())
 
         # test __str__
         ss = dds.Structure(text=text)
         ref = "Structure {\n    Float64 latitude;\n    Float64 longitude;\n} location;"
         self.assertEqual(ref, ss.__str__())
+
+        # test __getattr__
+        ss = dds.Structure(text=text)
+        ref = dds.Var('latitude', 'Float64')
+        self.assertEqual(ref, ss.latitude)
+
+        # non existent attribute raises AttributeError
+        with self.assertRaises(AttributeError):
+            ss.hoge
+
+        # test __getitem__
+        ss = dds.Structure(text=text)
+        ref = dds.Var('longitude', 'Float64')
+        self.assertEqual(ref, ss['longitude'])
+
+        # non existent item raises KeyError
+        with self.assertRaises(KeyError):
+            ss['hoge']
+
+        # test __contains__
+        ss = dds.Structure(text=text)
+        self.assertTrue('name' in ss)
+        self.assertTrue('latitude' in ss)
+        self.assertFalse('hoge' in ss)
 
         # test text_formatted
         ref = 'Structure {\n    Float64 latitude;\n    Float64 longitude;\n} location;'
@@ -370,25 +359,22 @@ class test_DDS(unittest.TestCase):
                 } location; ''')
         res = dds.Sequence(text=text)
         self.assertEqual(res.name, 'location')
-        ref_decl = OrderedDict([
-            ('latitude', dds.VarLine('latitude', 'Float64')),
-            ('longitude', dds.VarLine('longitude', 'Float64'))
-        ])
+        ref_decl = dict([('latitude', dds.Var('latitude', 'Float64')),
+                         ('longitude', dds.Var('longitude', 'Float64'))])
         self.assertEqual(ref_decl, res.decl)
 
         # test __eq__
         s1 = dds.Sequence(text=text)
         s2 = dds.Sequence('location',
-                          decl=OrderedDict([
-                              ('latitude', dds.VarLine('latitude', 'Float64')),
-                              ('longitude',
-                               dds.VarLine('longitude', 'Float64'))
+                          decl=dict([
+                              ('latitude', dds.Var('latitude', 'Float64')),
+                              ('longitude', dds.Var('longitude', 'Float64'))
                           ]))
         self.assertEqual(s1, s2)
 
         # test __repr__
         ss = dds.Sequence(text=text)
-        ref = "Sequence('location', decl=OrderedDict([('latitude', VarLine('latitude', btype='Float64')), ('longitude', VarLine('longitude', btype='Float64'))]))"
+        ref = "Sequence('location', {'latitude': Var('latitude', 'Float64'), 'longitude': Var('longitude', 'Float64')})"
         self.assertEqual(ref, ss.__repr__())
 
         # test __str__
@@ -396,6 +382,30 @@ class test_DDS(unittest.TestCase):
         ref = "Sequence {\n    Float64 latitude;\n    Float64 longitude;\n} location;"
 
         self.assertEqual(ref, ss.__str__())
+
+        # test __getattr__
+        ss = dds.Sequence(text=text)
+        ref = dds.Var('latitude', 'Float64')
+        self.assertEqual(ref, ss.latitude)
+
+        # non existent attribute raises AttributeError
+        with self.assertRaises(AttributeError):
+            ss.hoge
+
+        # test __getitem__
+        ss = dds.Sequence(text=text)
+        ref = dds.Var('longitude', 'Float64')
+        self.assertEqual(ref, ss['longitude'])
+
+        # non existent item raises KeyError
+        with self.assertRaises(KeyError):
+            ss['hoge']
+
+        # test __contains__
+        ss = dds.Sequence(text=text)
+        self.assertTrue('name' in ss)
+        self.assertTrue('latitude' in ss)
+        self.assertFalse('hoge' in ss)
 
         # test text_formatted
         ref = 'Sequence {\n    Float64 latitude;\n    Float64 longitude;\n} location;'
@@ -434,30 +444,27 @@ class test_DDS(unittest.TestCase):
         # self.assertEqual(g.stype, dds.SType.Grid)
         self.assertEqual(
             g.array,
-            dds.VarLine('tas', 'Float32',
-                        '[time = 8412][lat = 160][lon = 320]'))
+            dds.Var('tas', 'Float32', '[time = 8412][lat = 160][lon = 320]'))
         self.assertEqual(
             g.maps,
-            OrderedDict([('time',
-                          dds.VarLine('time', 'Float64', '[time = 8412]')),
-                         ('lat', dds.VarLine('lat', 'Float64', '[lat= 160]')),
-                         ('lon', dds.VarLine('lon', 'Float64',
-                                             '[lon= 320]'))]))
+            dict([('time', dds.Var('time', 'Float64', '[time = 8412]')),
+                  ('lat', dds.Var('lat', 'Float64', '[lat= 160]')),
+                  ('lon', dds.Var('lon', 'Float64', '[lon= 320]'))]))
 
         # test __eq__
-        ref = dds.Grid(
-            'tas',
-            array=dds.VarLine('tas', 'Float32',
-                              '[time = 8412][lat = 160][lon = 320]'),
-            maps=OrderedDict([
-                ('time', dds.VarLine('time', 'Float64', '[time = 8412]')),
-                ('lat', dds.VarLine('lat', 'Float64', '[lat= 160]')),
-                ('lon', dds.VarLine('lon', 'Float64', '[lon= 320]'))
-            ]))
+        ref = dds.Grid('tas',
+                       array=dds.Var('tas', 'Float32',
+                                     '[time = 8412][lat = 160][lon = 320]'),
+                       maps=dict([
+                           ('time', dds.Var('time', 'Float64',
+                                            '[time = 8412]')),
+                           ('lat', dds.Var('lat', 'Float64', '[lat= 160]')),
+                           ('lon', dds.Var('lon', 'Float64', '[lon= 320]'))
+                       ]))
         self.assertEqual(ref, g)
 
         # test __repr__
-        ref = "Grid('tas', array=VarLine('tas', btype='Float32', arr=[ArrDecl('time', 8412), ArrDecl('lat', 160), ArrDecl('lon', 320)]), maps=OrderedDict([('time', VarLine('time', btype='Float64', arr=[ArrDecl('time', 8412)])), ('lat', VarLine('lat', btype='Float64', arr=[ArrDecl('lat', 160)])), ('lon', VarLine('lon', btype='Float64', arr=[ArrDecl('lon', 320)]))]))"
+        ref = "Grid('tas', array=Var('tas', 'Float32', arr=[Arr('time', 8412), Arr('lat', 160), Arr('lon', 320)]), maps={'time': Var('time', 'Float64', arr=[Arr('time', 8412)]), 'lat': Var('lat', 'Float64', arr=[Arr('lat', 160)]), 'lon': Var('lon', 'Float64', arr=[Arr('lon', 320)])})"
         res = g.__repr__()
 
         self.assertEqual(ref, res)
@@ -466,6 +473,31 @@ class test_DDS(unittest.TestCase):
         ref = 'Grid {\n ARRAY:\n    Float32 tas[time = 8412][lat = 160][lon = 320];\n MAPS:\n    Float64 time[time = 8412];\n    Float64 lat[lat = 160];\n    Float64 lon[lon = 320];\n} tas;'
         res = g.__str__()
         self.assertEqual(ref, res)
+
+        # test __getattr__
+        ss = dds.Grid(text=text)
+        ref = dds.Var('lat', 'Float64', arr=[dds.Arr('lat', 160)])
+        self.assertEqual(ref, ss.lat)
+
+        # non existent attribute raises AttributeError
+        with self.assertRaises(AttributeError):
+            ss.hoge
+
+        # test __getitem__
+        ss = dds.Grid(text=text)
+        ref = dds.Var('lon', 'Float64', arr=[dds.Arr('lon', 320)])
+        self.assertEqual(ref, ss['lon'])
+
+        # non existent item raises KeyError
+        with self.assertRaises(KeyError):
+            ss['hoge']
+
+        # test __contains__
+        ss = dds.Grid(text=text)
+        self.assertTrue('name' in ss)
+        self.assertTrue('lat' in ss)
+        self.assertTrue('tas' in ss)
+        self.assertFalse('hoge' in ss)
 
         # test text_formatted
         ref = 'Grid {\n ARRAY:\n    Float32 tas[time = 8412][lat = 160][lon = 320];\n MAPS:\n    Float64 time[time = 8412];\n    Float64 lat[lat = 160];\n    Float64 lon[lon = 320];\n} tas;'
@@ -548,43 +580,37 @@ class test_DDS(unittest.TestCase):
         } station;
         '''
 
-        ref = OrderedDict([
-            ('catalog_number', dds.VarLine(name='catalog_number',
-                                           btype='Int32')),
+        ref = dict([
+            ('catalog_number', dds.Var(name='catalog_number', btype='Int32')),
             ('station',
-             dds.Sequence('station',
-                          decl=OrderedDict([
-                              ('experimenter',
-                               dds.VarLine('experimenter', btype='String')),
-                              ('time', dds.VarLine('time', btype='Int32')),
-                              ('location',
-                               dds.Structure('location',
-                                             decl=OrderedDict([
-                                                 ('latitude',
-                                                  dds.VarLine(
-                                                      'latitude',
-                                                      btype='Float64')),
-                                                 ('longitude',
-                                                  dds.VarLine('longitude',
-                                                              btype='Float64'))
-                                             ]))),
-                              ('cast',
-                               dds.Sequence('cast',
-                                            decl=OrderedDict([
-                                                ('depth',
-                                                 dds.VarLine('depth',
-                                                             btype='Float64')),
-                                                ('salinity',
-                                                 dds.VarLine('salinity',
-                                                             btype='Float64')),
-                                                ('oxygen',
-                                                 dds.VarLine('oxygen',
-                                                             btype='Float64')),
-                                                ('temperature',
-                                                 dds.VarLine('temperature',
-                                                             btype='Float64'))
-                                            ])))
-                          ])))
+             dds.Sequence(
+                 'station',
+                 decl=dict([
+                     ('experimenter', dds.Var('experimenter', btype='String')),
+                     ('time', dds.Var('time', btype='Int32')),
+                     ('location',
+                      dds.Structure('location',
+                                    decl=dict([('latitude',
+                                                dds.Var('latitude',
+                                                        btype='Float64')),
+                                               ('longitude',
+                                                dds.Var('longitude',
+                                                        btype='Float64'))]))),
+                     ('cast',
+                      dds.Sequence('cast',
+                                   decl=dict([('depth',
+                                               dds.Var('depth',
+                                                       btype='Float64')),
+                                              ('salinity',
+                                               dds.Var('salinity',
+                                                       btype='Float64')),
+                                              ('oxygen',
+                                               dds.Var('oxygen',
+                                                       btype='Float64')),
+                                              ('temperature',
+                                               dds.Var('temperature',
+                                                       btype='Float64'))])))
+                 ])))
         ])
 
         res = dds.parse_declarations(text)
@@ -603,10 +629,11 @@ class test_DDS(unittest.TestCase):
                 '} cast;')
         s, rest = dds.pop_struct(text)
         ref = dds.Structure('location',
-                            decl=OrderedDict([
-                                ('latitude', dds.VarLine('latitude', btype='Float64')),
-                                ('longitude', dds.VarLine('longitude', btype='Float64'))
-                            ]))
+                            decl=dict([('latitude',
+                                        dds.Var('latitude', btype='Float64')),
+                                       ('longitude',
+                                        dds.Var('longitude',
+                                                btype='Float64'))]))
         self.assertEqual(ref, s)
         ref = ('Sequence {'
                '  Float64 depth;'
@@ -619,23 +646,19 @@ class test_DDS(unittest.TestCase):
     def test_pop_varline(self):
         text = ('Float64 depth;' 'Float64 salinity;' 'Float64 oxygen;')
         v, rest = dds.pop_varline(text)
-        ref = dds.VarLine('depth', 'Float64')
+        ref = dds.Var('depth', 'Float64')
         self.assertEqual(ref, v)
         ref = 'Float64 salinity;Float64 oxygen;'
         self.assertEqual(ref, rest)
 
     def test_parse_arrdecls(self):
         text = '[time = 8412]'
-        ref = [dds.ArrDecl('time', 8412)]
+        ref = [dds.Arr('time', 8412)]
         res = dds.parse_arrdecls(text=text)
         self.assertEqual(ref, res)
 
         text = '[time = 8412][lat = 160][lon = 320]'
-        ref = [
-            dds.ArrDecl('time', 8412),
-            dds.ArrDecl('lat', 160),
-            dds.ArrDecl('lon', 320)
-        ]
+        ref = [dds.Arr('time', 8412), dds.Arr('lat', 160), dds.Arr('lon', 320)]
         res = dds.parse_arrdecls(text=text)
         self.assertEqual(ref, res)
 

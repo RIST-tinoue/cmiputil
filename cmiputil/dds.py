@@ -35,59 +35,39 @@ Example:
     ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
     ... '''
     >>> sample1_struct = Dataset(
-    ...     'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
-    ...     decl=OrderedDict([
-    ...         ('lat',
-    ...          VarLine('lat',
-    ...                  BType.Float64,
-    ...                  arr=[ArrDecl('lat', val=160)])),
-    ...         ('lat_bnds',
-    ...          VarLine('lat_bnds',
-    ...                  BType.Float64,
-    ...                  arr=[ArrDecl('lat', val=160),
-    ...                       ArrDecl('bnds', val=2)])),
-    ...         ('lon',
-    ...          VarLine('lon',
-    ...                  BType.Float64,
-    ...                  arr=[ArrDecl('lon', val=320)])),
-    ...         ('lon_bnds',
-    ...          VarLine('lon_bnds',
-    ...                  BType.Float64,
-    ...                  arr=[ArrDecl('lon', val=320),
-    ...                       ArrDecl('bnds', val=2)])),
-    ...         ('height', VarLine('height', BType.Float64)),
-    ...         ('time',
-    ...          VarLine('time',
-    ...                  BType.Float64,
-    ...                      arr=[ArrDecl('time', val=8412)])),
-    ...         ('time_bnds',
-    ...          VarLine('time_bnds',
-    ...                  BType.Float64,
-    ...                  arr=[ArrDecl('time', val=8412),
-    ...                       ArrDecl('bnds', val=2)])),
-    ...         ('tas',
-    ...          Grid('tas',
-    ...               array=VarLine('tas',
-    ...                             BType.Float32,
-    ...                             arr=[
-    ...                                 ArrDecl('time', 8412),
-    ...                                 ArrDecl('lat', 160),
-    ...                                 ArrDecl('lon', 320)]),
-    ...               maps=OrderedDict([
-    ...                   ('time',
-    ...                    VarLine('time',
-    ...                            BType.Float64,
-    ...                            arr=[ArrDecl('time', 8412)])),
-    ...                   ('lat',
-    ...                    VarLine('lat',
-    ...                            BType.Float64,
-    ...                            arr=[ArrDecl('lat', 160)])),
-    ...                   ('lon',
-    ...                    VarLine('lon',
-    ...                            BType.Float64,
-    ...                            arr=[ArrDecl('lon', 320)]))
-    ...               ])))
-    ... ]))
+    ...    'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
+    ...    {
+    ...        'lat':
+    ...        Var('lat', 'Float64', arr=[Arr('lat', 160)]),
+    ...        'lat_bnds':
+    ...        Var('lat_bnds', 'Float64', arr=[Arr('lat', 160),
+    ...                                        Arr('bnds', 2)]),
+    ...        'lon':
+    ...        Var('lon', 'Float64', arr=[Arr('lon', 320)]),
+    ...        'lon_bnds':
+    ...        Var('lon_bnds', 'Float64', arr=[Arr('lon', 320),
+    ...                                        Arr('bnds', 2)]),
+    ...        'height':
+    ...        Var('height', 'Float64'),
+    ...        'time':
+    ...        Var('time', 'Float64', arr=[Arr('time', 8412)]),
+    ...        'time_bnds':
+    ...        Var('time_bnds', 'Float64', arr=[Arr('time', 8412),
+    ...                                         Arr('bnds', 2)]),
+    ...        'tas':
+    ...        Grid('tas',
+    ...             array=Var(
+    ...                 'tas',
+    ...                 'Float32',
+    ...                 arr=[Arr('time', 8412),
+    ...                      Arr('lat', 160),
+    ...                      Arr('lon', 320)]),
+    ...             maps={
+    ...                 'time': Var('time', 'Float64', arr=[Arr('time', 8412)]),
+    ...                 'lat': Var('lat', 'Float64', arr=[Arr('lat', 160)]),
+    ...                 'lon': Var('lon', 'Float64', arr=[Arr('lon', 320)])
+    ...             })
+    ...    })
     >>> sample1_struct == parse_dataset(sample1)
     True
 
@@ -111,42 +91,74 @@ Example:
     ...   } station;
     ... } data;
     ... '''
-    >>> res = parse_dataset(text=sample2)
     >>> sample2_struct = Dataset(
-    ...     'data',
-    ...     decl=OrderedDict([
-    ...         ('catalog_number', VarLine('catalog_number', btype='Int32')),
-    ...         ('station',
-    ...          Sequence(
-    ...              'station',
-    ...              decl=OrderedDict([
-    ...                  ('experimenter', VarLine('experimenter', btype='String')),
-    ...                  ('time', VarLine('time', btype='Int32')),
-    ...                  ('location',
-    ...                   Structure('location',
-    ...                             decl=OrderedDict([('latitude',
-    ...                                                VarLine('latitude',
-    ...                                                        btype='Float64')),
-    ...                                               ('longitude',
-    ...                                                VarLine('longitude',
-    ...                                                        btype='Float64'))]))),
-    ...                  ('cast',
-    ...                   Sequence('cast',
-    ...                            decl=OrderedDict([
-    ...                                ('depth', VarLine('depth', btype='Float64')),
-    ...                                ('salinity', VarLine('salinity',
-    ...                                                     btype='Float64')),
-    ...                                ('oxygen', VarLine('oxygen', btype='Float64')),
-    ...                                ('temperature',
-    ...                                 VarLine('temperature', btype='Float64'))
-    ...                            ])))
-    ...              ])))
-    ...     ]))
+    ...     'data', {
+    ...         'catalog_number':
+    ...         Var('catalog_number', 'Int32'),
+    ...         'station':
+    ...         Sequence(
+    ...             'station', {
+    ...                 'experimenter':
+    ...                 Var('experimenter', 'String'),
+    ...                 'time':
+    ...                 Var('time', 'Int32'),
+    ...                 'location':
+    ...                 Structure(
+    ...                     'location', {
+    ...                         'latitude': Var('latitude', 'Float64'),
+    ...                         'longitude': Var('longitude', 'Float64')
+    ...                     }),
+    ...                 'cast':
+    ...                 Sequence(
+    ...                     'cast', {
+    ...                         'depth': Var('depth', 'Float64'),
+    ...                         'salinity': Var('salinity', 'Float64'),
+    ...                         'oxygen': Var('oxygen', 'Float64'),
+    ...                         'temperature': Var('temperature', 'Float64')
+    ...                     })
+    ...             })
+    ...     })
     >>> sample2_struct == parse_dataset(sample2)
+    True
+
+    >>> sample3 = '''
+    ... Dataset {
+    ...     Structure {
+    ...         Float64 lat;
+    ...         Float64 lon;
+    ...     } location;
+    ...     Structure {
+    ...         Int32 minutes;
+    ...         Int32 day;
+    ...         Int32 year;
+    ...     } time;
+    ...     Float64 depth[500];
+    ...     Float64 temperature[500];
+    ... } xbt-station;
+    ... '''
+    >>> sample3_struct = Dataset(
+    ...     'xbt-station', {
+    ...         'location':
+    ...         Structure('location', {
+    ...             'lat': Var('lat', 'Float64'),
+    ...             'lon': Var('lon', 'Float64')
+    ...         }),
+    ...         'time':
+    ...         Structure(
+    ...             'time', {
+    ...                 'minutes': Var('minutes', 'Int32'),
+    ...                 'day': Var('day', 'Int32'),
+    ...                 'year': Var('year', 'Int32')
+    ...             }),
+    ...         'depth':
+    ...         Var('depth', 'Float64', arr=[Arr('', 500)]),
+    ...         'temperature':
+    ...         Var('temperature', 'Float64', arr=[Arr('', 500)])
+    ...     })
+    >>> sample3_struct == parse_dataset(sample3)
     True
 """
 
-from collections import OrderedDict
 import enum
 import re
 import textwrap as tw
@@ -173,7 +185,7 @@ def _debug_write(text):
 
 class BType(enum.Enum):
     """
-    Values for :attr:`.VarLine.btype`.
+    Values for :attr:`.Var.btype`.
     """
     Byte = 'Byte'
     Int16 = 'Int16'
@@ -214,12 +226,22 @@ _pat_arrdecl_valonly = re.compile(r'^s*\[(\d+)]')
 _pat_arrdecl_line = re.compile(r'\[(?:\w+?\s*=)*\s*\d+\]')
 
 
-class Declaration:
+class Decls(dict):
     """
-    Base class for :class:`VarLine` and :class:`Struct`
+    Class for *declarations*, aka :class:`Decl`.
 
     | *declarations* := list(*declaration*)
-    | *declaration* := *VarLine* or *Struct*
+
+    """
+    pass
+
+
+class Decl:
+    """
+    Class for *declaration*, that is, base class for :class:`Var`
+    and :class:`Struct`.
+
+    | *declaration* := *Var* or *Struct*
 
     """
 
@@ -227,7 +249,7 @@ class Declaration:
         self.name = name
 
     def __eq__(self, other):
-        _debug_write(f'Declaration.__eq__():{type(self)},{type(other)}')
+        _debug_write(f'Decl.__eq__():{type(self)},{type(other)}')
         if not isinstance(other, type(self)):
             return False
         res = [getattr(self, a) == getattr(other, a) for a in self.__dict__]
@@ -237,35 +259,34 @@ class Declaration:
         pass
 
 
-class Struct(Declaration):
+class Struct(Decl):
     """
-    Base class for *Struct* type.
+    Class for *struct* that is, base class for :class:`Structure`,
+    :class`Sequence`, :class:`Grid` and :class:`Dataset`.
 
     Do not use this directly.
 
-    | *Struct* := *stype* { *declarations* } *var*
+    | *struct* := *stype* { *declarations* } *var*
     | *stype* := Dataset|Structure|Sequence|Grid
 
     Attributes:
         name(str): *name*
         stype(SType): *stype*
-        decl(OrderedDict(name, Declarations)): *declarations*
+        decl(Decls)): *declarations*
 
     """
 
-    def __init__(self, name='', stype=None, decl=None, text=None):
+    stype = None
+
+    def __init__(self, name='', decl=None, text=None):
         """
         Parameters:
             name(str): *name*
-            stype(str or SType): *stype*
-            decl(str or OrderedDict(Declarations)): *declarations*
+            decl(str or Decls)): *declarations*
             text(str): text to be parsed.
 
-        Raises:
-            TypeError: if `stype` is invalid.
-
-        If `text` is not ``None``, other attributes are overridden by
-        the result of :meth:`.parse`.
+        If `text` is *not* ``None``, other attributes are overridden by
+        the result of :meth:`.parse` or left untouced..
         """
 
         if text:
@@ -274,17 +295,9 @@ class Struct(Declaration):
         else:
             self.name = name
 
-            if isinstance(stype, SType):
-                self.stype = stype
-            elif isinstance(stype, str):
-                self.stype = SType(stype)
-            else:
-                raise TypeError(
-                    f'stype={stype} is invalid type: {type(stype)}')
-
             if decl is None:
                 self.decl = None
-            elif isinstance(decl, OrderedDict):
+            elif isinstance(decl, dict):
                 self.decl = decl
             elif type(decl) is str:
                 self.decl = parse_declarations(decl)
@@ -306,13 +319,33 @@ class Struct(Declaration):
             self.decl = parse_declarations(res.group(2))
             self.name = res.group(3)
 
+    def __getattr__(self, key):
+        # print('__getattr__() called')
+        if key in self.decl:
+            return self.decl[key]
+        else:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{key}'")
+
+    def __getitem__(self, key):
+        # print('__getitem__() called')
+        if key in self.decl:
+            return self.decl[key]
+        else:
+            raise KeyError(f"'{key}'")
+
+    def __contains__(self, item):
+        # print('__contains__() called')
+        return (item in self.__dict__) or (item in self.decl)
+
     def __repr__(self):
         if self.name:
             name = f"'{self.name}'"
         else:
             name = ''
         if self.decl:
-            decl = f'decl={self.decl.__repr__()}'
+            # decl = f'decl={self.decl.__repr__()}'
+            decl = f'{self.decl.__repr__()}'
         else:
             decl = ''
 
@@ -326,10 +359,17 @@ class Struct(Declaration):
         """
         Return formatted text.
         """
+        _debug_write(
+            f'{self.__class__.__name__}.text_formatted:indent={indent},linebreak={linebreak}'
+        )
         if self.name:
             name = self.name + ';'
         else:
             name = ''
+        if self.stype:
+            stype = f'{self.stype.name}'
+        else:
+            stype = ''
         if self.decl:
             if linebreak:
                 lb = '\n'
@@ -344,11 +384,6 @@ class Struct(Declaration):
             decl = f'{lb}'.join(('{', decl, '}'))
         else:
             decl = ''
-        if self.stype:
-            stype = f'{self.stype.name}'
-        else:
-            stype = ''
-
         if name == '' and decl == '':
             res = ''
         else:
@@ -367,8 +402,11 @@ class Dataset(Struct):
     """
     Class for *Dataset*
     """
+
+    stype = SType.Dataset
+
     def __init__(self, name='', decl=None, text=None):
-        super().__init__(name, stype='Dataset', decl=decl)
+        super().__init__(name, decl=decl)
         if text:
             super().__init__(text=text)
 
@@ -377,8 +415,11 @@ class Structure(Struct):
     """
     Class for *Structure*
     """
+
+    stype = SType.Structure
+
     def __init__(self, name='', decl=None, text=None):
-        super().__init__(name, stype='Structure', decl=decl)
+        super().__init__(name, decl=decl)
         if text:
             super().__init__(text=text)
 
@@ -387,8 +428,11 @@ class Sequence(Struct):
     """
     Class for *Sequence*
     """
+
+    stype = SType.Sequence
+
     def __init__(self, name='', decl=None, text=None):
-        super().__init__(name, stype='Sequence', decl=decl)
+        super().__init__(name, decl=decl)
         if text:
             super().__init__(text=text)
 
@@ -402,30 +446,29 @@ class Grid(Struct):
     Attributes:
         name(str): *name*
         stype(SType): *stype*
-        array(ArrDecl): ARRAY *declaration*
-        maps(OrderedDict(ArrDecl): MAPS *declarations*
-        decl(OrderedDict(Declarations): ignored
+        array(Arr): ARRAY *declaration*
+        maps(dict(Arr): MAPS *declarations*
+        decl(Decls): ignored
     """
+
+    stype = SType.Grid
 
     def __init__(self, name='', array=None, maps=None, decl=None, text=None):
         """
         Parameters:
             name(str): *name*
             stype(str or SType): *stype*
-            array(ArrDecl): ARRAY *declaration*
-            maps(OrderedDict(ArrDecl): MAPS *declarations*
-            decl(str or OrderedDict(Declarations): *declarations*
+            array(Arr): ARRAY *declaration*
+            maps(Decls): MAPS *declarations*
+            decl(str or Decls): *declarations*
             text(str): text to be parsed.
-
-        Raises:
-            TypeError: if `stype` is invalid.
 
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-        super().__init__(name, stype='Grid', decl=decl)
-        self.array = array  # Declaration()
-        self.maps = maps  # list(Declaration())
+        super().__init__(name, decl=decl)
+        self.array = array
+        self.maps = maps
         if text:
             self.parse(text)
 
@@ -442,9 +485,32 @@ class Grid(Struct):
             _debug_write(
                 f"{self.__class__.__name__}.parse: maps_line='{res.group(2).strip()}'"
             )
-            self.array = VarLine(text=res.group(1))
+            self.array = Var(text=res.group(1))
             self.maps = parse_declarations(res.group(2))
             self.name = res.group(3)
+
+    def __getattr__(self, key):
+        # print('__getattr__() called')
+        if key == self.array.name:
+            return self.array
+        elif key in self.maps:
+            return self.maps[key]
+        else:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{key}'")
+
+    def __getitem__(self, key):
+        # print('__getitem__() called')
+        if key == self.array.name:
+            return self.array
+        elif key in self.maps:
+            return self.maps[key]
+        else:
+            raise KeyError(f"'{key}'")
+
+    def __contains__(self, item):
+        # print('__contains__() called')
+        return (item in self.__dict__) or (item in self.maps) or (item == self.array.name)
 
     def __repr__(self):
         if self.name:
@@ -471,12 +537,16 @@ class Grid(Struct):
         Return formatted text.
         """
         _debug_write(
-            f'Grid.text_formatted:indent={indent},linebreak={linebreak}')
+            f'{self.__class__.__name__}.text_formatted:indent={indent},linebreak={linebreak}'
+        )
         if self.name:
             name = self.name + ';'
         else:
             name = ''
-        stype = 'Grid'
+        if self.stype:
+            stype = f'{self.stype.name}'
+        else:
+            stype = ''
         if self.array is None or self.maps is None:
             decl = ''
         else:
@@ -492,7 +562,6 @@ class Grid(Struct):
             ])
             maps = f' MAPS:{lb}' + tw.indent(ll, ' ' * indent)
             decl = f'{lb}'.join(('{', array, maps, '}'))
-
         if name == '' and decl == '':
             res = ''
         else:
@@ -501,20 +570,22 @@ class Grid(Struct):
 
     @property
     def text(self):
+        """
+        Text to construct this instance.
+        """
         return self.text_formatted(indent=0, linebreak=False)
 
 
-class VarLine(Declaration):
+class Var(Decl):
     """
-    Class for *VarLine*.
+    Class for *Var*.
 
-    | *VarLine* := *basetype* *var*;
-    | *var* := *name* or *name array-decl*
+    | *Var* := *basetype* (*name*|*name array-decl*)
 
     Attributes:
         name (str): *name*
         btype (BType): *basetype*
-        arr (list(ArrDecl)): *array-decl*
+        arr (list(Arr)): *array-decl*
     """
 
     def __init__(self, name='', btype=None, arr=None, text=None):
@@ -522,7 +593,7 @@ class VarLine(Declaration):
         Parameters:
             name(str): *name*
             btype(str or BType): *basetype*
-            arr(ArrDecl or list(ArrDecl)): *array-decl*
+            arr(Arr or list(Arr)): *array-decl*
             text(str): text to be parsed
 
         Raises:
@@ -531,7 +602,6 @@ class VarLine(Declaration):
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-
         self.name = name
         if btype is None:
             self.btype = btype
@@ -543,9 +613,9 @@ class VarLine(Declaration):
             raise TypeError(f'btype={btype} is invalid type: {type(btype)}')
         if arr is None or arr == []:
             self.arr = None
-        elif isinstance(arr, ArrDecl):
+        elif isinstance(arr, Arr):
             self.arr = arr
-        elif type(arr) is list and isinstance(arr[0], ArrDecl):
+        elif type(arr) is list and isinstance(arr[0], Arr):
             self.arr = arr
         elif isinstance(arr, str):
             self.arr = parse_arrdecls(arr)
@@ -556,10 +626,10 @@ class VarLine(Declaration):
 
     def parse(self, text):
         """
-        Parse `text` to construct :class:`VarLine`.
+        Parse `text` to construct :class:`Var`.
         """
 
-        _debug_write(f'VarLine.parse():text="{text[:60]}"')
+        _debug_write(f'Var.parse():text="{text[:60]}"')
         res = _pat_varline.match(text)
         if res:
             try:
@@ -578,7 +648,7 @@ class VarLine(Declaration):
         if self.btype is None:
             btype = ''
         else:
-            btype = f"btype='{self.btype.name}'"
+            btype = f"'{self.btype.name}'"
 
         if self.arr:
             arr = 'arr=' + str([a for a in self.arr])
@@ -586,9 +656,8 @@ class VarLine(Declaration):
             arr = ''
 
         args = ', '.join([elem for elem in [name, btype, arr] if elem != ''])
-        args = ', '.join([elem for elem in [name, btype, arr] if elem != ''])
 
-        return f'VarLine({args})'
+        return f'Var({args})'
 
     def __str__(self):
         return self.text_formatted()
@@ -616,10 +685,10 @@ class VarLine(Declaration):
         """
         Text to construct this instance.
         """
-        return self.text_formatted(linebreak=False)
+        return self.text_formatted()
 
 
-class ArrDecl():
+class Arr():
     """
     Class for *array-decl*
 
@@ -628,13 +697,13 @@ class ArrDecl():
     """
 
     def __init__(self, name='', val=None, text=None):
-        self.name = name  # "name"
-        self.val = val  # "integer"
+        self.name = name
+        self.val = val
         if text:
             self.parse(text)
 
     def parse(self, text):
-        _debug_write(f"ArrDecl.parse():text='{text}'")
+        _debug_write(f"{self.__class__.__name__}.parse():text='{text}'")
         res = _pat_arrdecl.match(text)
         if res:
             self.name = res.group(1)
@@ -643,10 +712,33 @@ class ArrDecl():
             res = _pat_arrdecl_valonly.match(text)
             if res:
                 self.val = int(res.group(1))
-        _debug_write(f"ArrDecl.parse():name='{self.name}',val='{self.val}'")
+        _debug_write(
+            f"{self.__class__.__name__}.parse():name='{self.name}',val='{self.val}'"
+        )
 
-    @property
-    def text(self):
+    def __eq__(self, other):
+        if type(other) is not type(self):
+            return False
+        res = [getattr(self, a) == getattr(other, a) for a in self.__dict__]
+        return all(res)
+
+    def __repr__(self):
+        if self.name:
+            return f"Arr('{self.name}', {self.val})"
+        elif self.val:
+            return f"Arr('', {self.val})"
+        else:
+            return ''
+
+    def __str__(self):
+        if self.name:
+            return f"Arr(name='{self.name}', val={self.val})"
+        elif self.val:
+            return f"[{self.val}]"
+        else:
+            return ''
+
+    def text_formatted(self, indent=None, linebreak=None):
         if self.name:
             return f"[{self.name} = {self.val}]"
         elif self.val:
@@ -654,27 +746,9 @@ class ArrDecl():
         else:
             return ''
 
-    def __str__(self):
-        if self.name:
-            return f"ArrDecl(name='{self.name}', val={self.val})"
-        elif self.val:
-            return f"[{self.val}]"
-        else:
-            return ''
-
-    def __repr__(self):
-        if self.name:
-            return f"ArrDecl('{self.name}', {self.val})"
-        elif self.val:
-            return f"ArrDecl['', {self.val}]"
-        else:
-            return ''
-
-    def __eq__(self, other):
-        if type(other) is not type(self):
-            return False
-        res = [getattr(self, a) == getattr(other, a) for a in self.__dict__]
-        return all(res)
+    @property
+    def text(self):
+        return self.text_formatted()
 
 
 def check_braces_matching(text):
@@ -688,13 +762,13 @@ def check_braces_matching(text):
         >>> text = 'Dataset{varline} hoge'
         >>> check_braces_matching(text)  # True
 
-        >>> text = 'Struct{ Sequence{VarLine} fuga }} hoge'
+        >>> text = 'Struct{ Sequence{Var} fuga }} hoge'
         >>> check_braces_matching(text)
         Traceback (most recent call last):
             ...
         ValueError: braces do not match: too many right braces: 1 more.
 
-        >>> text = 'Struct{ Sequence{{VarLine} fuga } hoge'
+        >>> text = 'Struct{ Sequence{{Var} fuga } hoge'
         >>> check_braces_matching(text)
         Traceback (most recent call last):
             ...
@@ -741,11 +815,11 @@ def parse_dataset(text):
 
 def parse_declarations(text):
     """
-    Return OrderedDict of {name: *Declaration*} parsed from `text`.
+    Return :class:`Decls`, dict of {`name`: *Decl*} parsed from `text`.
     """
     # _debug_write(f'parse_declarations:text="{text}"')
     # _debug_write('======parse_declarations======')
-    res = OrderedDict()
+    res = Decls()
     while text != '':
         _debug_write('=' * 20)
         _debug_write(f"parse_declarations:text='{text}'")
@@ -815,7 +889,7 @@ def pop_struct(text):
 
 def pop_varline(text):
     """
-    Pop one :class:`VarLine` instance parsed from the first part of
+    Pop one :class:`Var` instance parsed from the first part of
     `text`, return it and rest of the `text`.
     """
     _debug_write(f"pop_varline:text='{text}'")
@@ -830,20 +904,20 @@ def pop_varline(text):
     _debug_write(f"pop_varline:vline='{vline}'")
     _debug_write(f"pop_varline:rest='{rest}'")
 
-    vl = VarLine(text=vline)
+    vl = Var(text=vline)
 
     return vl, rest
 
 
 def parse_arrdecls(text):
     """
-    Parse `text` contains multiple :class:`ArrDecl` definitions and return
+    Parse `text` contains multiple :class:`Arr` definitions and return
     a list of them.
     """
     _debug_write(f"parse_arrdecls:text='{text}'")
     res = _pat_arrdecl_line.findall(text)
     if res:
-        return [ArrDecl(text=l) for l in res]
+        return [Arr(text=l) for l in res]
     else:
         return None
 
@@ -869,52 +943,40 @@ Dataset {
 } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
 '''
 
-_sampl1_struct = Dataset(
+_sample1_struct = Dataset(
     'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
-    decl=OrderedDict([
-        ('lat', VarLine('lat', BType.Float64, arr=[ArrDecl('lat', val=160)])),
-        ('lat_bnds',
-         VarLine('lat_bnds',
-                 BType.Float64,
-                 arr=[ArrDecl('lat', val=160),
-                      ArrDecl('bnds', val=2)])),
-        ('lon', VarLine('lon', BType.Float64, arr=[ArrDecl('lon', val=320)])),
-        ('lon_bnds',
-         VarLine('lon_bnds',
-                 BType.Float64,
-                 arr=[ArrDecl('lon', val=320),
-                      ArrDecl('bnds', val=2)])),
-        ('height', VarLine('height', BType.Float64)),
-        ('time', VarLine('time',
-                         BType.Float64,
-                         arr=[ArrDecl('time', val=8412)])),
-        ('time_bnds',
-         VarLine('time_bnds',
-                 BType.Float64,
-                 arr=[ArrDecl('time', val=8412),
-                      ArrDecl('bnds', val=2)])),
-        ('tas',
-         Grid('tas',
-              array=VarLine('tas',
-                            BType.Float32,
-                            arr=[
-                                ArrDecl('time', 8412),
-                                ArrDecl('lat', 160),
-                                ArrDecl('lon', 320)
-                            ]),
-              maps=OrderedDict([('time',
-                                 VarLine('time',
-                                         BType.Float64,
-                                         arr=[ArrDecl('time', 8412)])),
-                                ('lat',
-                                 VarLine('lat',
-                                         BType.Float64,
-                                         arr=[ArrDecl('lat', 160)])),
-                                ('lon',
-                                 VarLine('lon',
-                                         BType.Float64,
-                                         arr=[ArrDecl('lon', 320)]))])))
-    ]))
+    {
+        'lat':
+        Var('lat', 'Float64', arr=[Arr('lat', 160)]),
+        'lat_bnds':
+        Var('lat_bnds', 'Float64', arr=[Arr('lat', 160),
+                                        Arr('bnds', 2)]),
+        'lon':
+        Var('lon', 'Float64', arr=[Arr('lon', 320)]),
+        'lon_bnds':
+        Var('lon_bnds', 'Float64', arr=[Arr('lon', 320),
+                                        Arr('bnds', 2)]),
+        'height':
+        Var('height', 'Float64'),
+        'time':
+        Var('time', 'Float64', arr=[Arr('time', 8412)]),
+        'time_bnds':
+        Var('time_bnds', 'Float64', arr=[Arr('time', 8412),
+                                         Arr('bnds', 2)]),
+        'tas':
+        Grid('tas',
+             array=Var(
+                 'tas',
+                 'Float32',
+                 arr=[Arr('time', 8412),
+                      Arr('lat', 160),
+                      Arr('lon', 320)]),
+             maps=Decls({
+                 'time': Var('time', 'Float64', arr=[Arr('time', 8412)]),
+                 'lat': Var('lat', 'Float64', arr=[Arr('lat', 160)]),
+                 'lon': Var('lon', 'Float64', arr=[Arr('lon', 320)])
+             }))
+    })
 
 _sample2 = '''
 Dataset {
@@ -937,35 +999,69 @@ Dataset {
 '''
 
 _sample2_struct = Dataset(
-    'data',
-    decl=OrderedDict([
-        ('catalog_number', VarLine('catalog_number', btype='Int32')),
-        ('station',
-         Sequence(
-             'station',
-             decl=OrderedDict([
-                 ('experimenter', VarLine('experimenter', btype='String')),
-                 ('time', VarLine('time', btype='Int32')),
-                 ('location',
-                  Structure('location',
-                            decl=OrderedDict([('latitude',
-                                               VarLine('latitude',
-                                                       btype='Float64')),
-                                              ('longitude',
-                                               VarLine('longitude',
-                                                       btype='Float64'))]))),
-                 ('cast',
-                  Sequence('cast',
-                           decl=OrderedDict([
-                               ('depth', VarLine('depth', btype='Float64')),
-                               ('salinity', VarLine('salinity',
-                                                    btype='Float64')),
-                               ('oxygen', VarLine('oxygen', btype='Float64')),
-                               ('temperature',
-                                VarLine('temperature', btype='Float64'))
-                           ])))
-             ])))
-    ]))
+    'data', {
+        'catalog_number':
+        Var('catalog_number', 'Int32'),
+        'station':
+        Sequence(
+            'station', {
+                'experimenter':
+                Var('experimenter', 'String'),
+                'time':
+                Var('time', 'Int32'),
+                'location':
+                Structure(
+                    'location', {
+                        'latitude': Var('latitude', 'Float64'),
+                        'longitude': Var('longitude', 'Float64')
+                    }),
+                'cast':
+                Sequence(
+                    'cast', {
+                        'depth': Var('depth', 'Float64'),
+                        'salinity': Var('salinity', 'Float64'),
+                        'oxygen': Var('oxygen', 'Float64'),
+                        'temperature': Var('temperature', 'Float64')
+                    })
+            })
+    })
+
+_sample3 = '''\
+Dataset {
+    Structure {
+        Float64 lat;
+        Float64 lon;
+    } location;
+    Structure {
+        Int32 minutes;
+        Int32 day;
+        Int32 year;
+    } time;
+    Float64 depth[500];
+    Float64 temperature[500];
+} xbt-station;
+'''
+
+
+_sample3_struct = Dataset(
+    'xbt-station', {
+        'location':
+        Structure('location', {
+            'lat': Var('lat', 'Float64'),
+            'lon': Var('lon', 'Float64')
+        }),
+        'time':
+        Structure(
+            'time', {
+                'minutes': Var('minutes', 'Int32'),
+                'day': Var('day', 'Int32'),
+                'year': Var('year', 'Int32')
+            }),
+        'depth':
+        Var('depth', 'Float64', arr=[Arr('', 500)]),
+        'temperature':
+        Var('temperature', 'Float64', arr=[Arr('', 500)])
+    })
 
 # _enable_debug()
 #_disable_debug()
