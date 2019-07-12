@@ -1,15 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Module to parse DDS.
+Module to parse DDS (Dataset Descriptor Structure) used in OPeNDAP.
 
-Text form of DDS will be obtained by :meth:`.ESGFDataInfo.getDDS`. Use
-:func:`parse_dataset` to parse it and return the tree structure of
-DDS.
-
-You can get any attributes by :func:`hogehoge`.
+DDS
+---
 
 For the definition of DDS, see `OpenDAP UserGuide`_.
+In this module, we change the notation in the DDS syntax as follows:
+
+    | *declarations* := list(*declaration*)
+    | *declaration* := *Var* | *Struct*
+    | *Struct* := *stype* { *declarations* } (*name* | *name* *arr*)
+    | *stype* := Dataset|Structure|Sequence|Grid
+    | *Grid* := Grid { ARRAY: *declaration* MAPS: *declarations* } (*name* | *name* *arr*)
+    | *Var* := *btype* (*name* | *name* *arr*)
+    | *btype* := Byte|Int32|UInt32|Float64|String|Url| ...
+    | *arr* := [integer] | [*name* = integer]
+
+As you can see from above syntax, one *Struct* can contain other *Struct* recursively, and consists
+the tree structure. The root of the tree must be one "Dataset".
+
+In this module, each elements of the syntax are implemented as classes. Given text form of DDS is parsed and replaced by corresponding class instances.
+
+Basic Usage
+-----------
+
+Text form of DDS will be obtained by :meth:`.ESGFDataInfo.getDDS`. Use
+:func:`parse_dataset` to parse it to get the tree structure. It's root
+is a :class:`Dataset` instance, and you can access nodes and leafs of
+the tree by dot notation (see also 'Example' section below)::
+
+    ds = parse_dataset(text=sample1)
+    ds.tas  # Grid('tas, arrary=Var(tas, ...), maps={'time':..., 'lat':..., 'lon':...})
+    ds.tas.array.arr[0]  # Arr('time', 8412)
+
 
 .. _OpenDAP UserGuide: https://opendap.github.io/documentation/UserGuideComprehensive.html#DDS
 
@@ -32,8 +57,7 @@ Example:
     ...         Float64 lat[lat = 160];
     ...         Float64 lon[lon = 320];
     ...     } tas;
-    ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
-    ... '''
+    ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;'''
     >>> sample1_struct = Dataset(
     ...    'CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1',
     ...    {
@@ -228,9 +252,12 @@ _pat_arrdecl_line = re.compile(r'\[(?:\w+?\s*=)*\s*\d+\]')
 
 class Decls(dict):
     """
-    Class for *declarations*, aka :class:`Decl`.
+    Class for *declarations*.
 
     | *declarations* := list(*declaration*)
+
+    In this module, *declarations* are expressed as `dict`, not
+    `list`. At this point, this class is just an alias for `dict`.
 
     """
     pass
@@ -239,9 +266,9 @@ class Decls(dict):
 class Decl:
     """
     Class for *declaration*, that is, base class for :class:`Var`
-    and :class:`Struct`.
+    and :class:`Struct`. No need to use this class explicitly.
 
-    | *declaration* := *Var* or *Struct*
+    | *declaration* := *Var* | *Struct*
 
     """
 
@@ -261,13 +288,44 @@ class Decl:
 
 class Struct(Decl):
     """
-    Class for *struct* that is, base class for :class:`Structure`,
-    :class`Sequence`, :class:`Grid` and :class:`Dataset`.
-
+    Class for *struct*, that is, base class for :class:`Structure`,
+    :class:`Sequence`, :class:`Grid` and :class:`Dataset`.
     Do not use this directly.
 
     | *struct* := *stype* { *declarations* } *var*
     | *stype* := Dataset|Structure|Sequence|Grid
+
+    You can access items of ``self.decl`` as if they are the attribute
+    of this class, via dot notation.
+
+    Examples:
+
+        >>> text = '''
+        ... Sequence {
+        ...   Float64 depth;
+        ...     Float64 salinity;
+        ...     Float64 oxygen;
+        ...     Float64 temperature;
+        ...   } cast;'''
+        >>> s = Sequence(text=text)
+        >>> s.salinity
+        Var('salinity', 'Float64')
+
+        >>> text = '''
+        ... Dataset {
+        ...   Int32 catalog_number;
+        ...   Sequence {
+        ...     String experimenter;
+        ...     Int32 time;
+        ...     Structure {
+        ...       Float64 latitude;
+        ...       Float64 longitude;
+        ...     } location;
+        ...   } station;
+        ... } data;'''
+        >>> d = parse_dataset(text)
+        >>> d.station.location.latitude
+        Var('latitude', 'Float64')
 
     Attributes:
         name(str): *name*
@@ -307,6 +365,9 @@ class Struct(Decl):
     def parse(self, text):
         """
         Parse `text` to construct :class:`Struct`.
+
+        If given `text` is not valid for each subclass, the instance
+        is left as 'null' instance.
         """
         _debug_write(f'{self.__class__.__name__}.parse: text="{text}"')
         res = _pat_struct.match(text)
@@ -400,7 +461,9 @@ class Struct(Decl):
 
 class Dataset(Struct):
     """
-    Class for *Dataset*
+    Class for *Dataset*.
+
+    See :class:`Struct`.
     """
 
     stype = SType.Dataset
@@ -413,7 +476,9 @@ class Dataset(Struct):
 
 class Structure(Struct):
     """
-    Class for *Structure*
+    Class for *Structure*.
+
+    See :class:`Struct`.
     """
 
     stype = SType.Structure
@@ -426,7 +491,22 @@ class Structure(Struct):
 
 class Sequence(Struct):
     """
-    Class for *Sequence*
+    Class for *Sequence*.
+
+    See :class:`Struct`.
+
+
+    Examples:
+
+        >>> text = '''
+        ...     Sequence {
+        ...       Float64 depth;
+        ...       Float64 salinity;
+        ...       Float64 oxygen;
+        ...       Float64 temperature;
+        ...     } cast;'''
+        >>> Sequence(text=text)
+        Sequence('cast', {'depth': Var('depth', 'Float64'), 'salinity': Var('salinity', 'Float64'), 'oxygen': Var('oxygen', 'Float64'), 'temperature': Var('temperature', 'Float64')})
     """
 
     stype = SType.Sequence
@@ -441,32 +521,47 @@ class Grid(Struct):
     """
     Class for *Grid*.
 
-    | *Grid* := Grid { ARRAY: *declaration* MAPS: *declarations* } *var*
+    | *Grid* := Grid { ARRAY: *declaration* MAPS: *declarations* } (*name* | *name* *arr*)
 
     Attributes:
+
         name(str): *name*
         stype(SType): *stype*
-        array(Arr): ARRAY *declaration*
-        maps(dict(Arr): MAPS *declarations*
-        decl(Decls): ignored
+        array(Decl): ARRAY *declaration*
+        maps(Decls): MAPS *declarations*
+
+
+    Examples:
+
+        >>> text = '''
+        ...     Grid {
+        ...      ARRAY:
+        ...         Float32 tas[time = 8412][lat = 160][lon = 320];
+        ...      MAPS:
+        ...         Float64 time[time = 8412];
+        ...         Float64 lat[lat = 160];
+        ...         Float64 lon[lon = 320];
+        ...     } tas;'''
+        >>> Grid(text=text)
+        Grid('tas', array=Var('tas', 'Float32', arr=[Arr('time', 8412), Arr('lat', 160), Arr('lon', 320)]), maps={'time': Var('time', 'Float64', arr=[Arr('time', 8412)]), 'lat': Var('lat', 'Float64', arr=[Arr('lat', 160)]), 'lon': Var('lon', 'Float64', arr=[Arr('lon', 320)])})
+
     """
 
     stype = SType.Grid
 
-    def __init__(self, name='', array=None, maps=None, decl=None, text=None):
+    def __init__(self, name='', array=None, maps=None, text=None):
         """
         Parameters:
             name(str): *name*
             stype(str or SType): *stype*
-            array(Arr): ARRAY *declaration*
+            array(Decl): ARRAY *declaration*
             maps(Decls): MAPS *declarations*
-            decl(str or Decls): *declarations*
             text(str): text to be parsed.
 
         If `text` is not ``None``, other attributes are overridden by
         the result of :meth:`.parse`.
         """
-        super().__init__(name, decl=decl)
+        super().__init__(name, decl=None)
         self.array = array
         self.maps = maps
         if text:
@@ -510,7 +605,8 @@ class Grid(Struct):
 
     def __contains__(self, item):
         # print('__contains__() called')
-        return (item in self.__dict__) or (item in self.maps) or (item == self.array.name)
+        return (item in self.__dict__) or (item in self.maps) or (
+            item == self.array.name)
 
     def __repr__(self):
         if self.name:
@@ -580,7 +676,7 @@ class Var(Decl):
     """
     Class for *Var*.
 
-    | *Var* := *basetype* (*name*|*name array-decl*)
+    | *Var* := *basetype* (*name*|*name* *arr*)
 
     Attributes:
         name (str): *name*
@@ -690,9 +786,28 @@ class Var(Decl):
 
 class Arr():
     """
-    Class for *array-decl*
+    Class for *arr*.
 
-    | *array-decl* := [integer] or [*name* = integer]
+    | *arr* := [integer] | [*name* = integer]
+
+    As a text form::
+
+        text = '[time = 8412]'
+        text = '[500]'
+
+    Example:
+
+        >>> text = '[lat = 160];'
+        >>> Arr(text=text)
+        Arr('lat', 160)
+
+        >>> text = '[500];'
+        >>> Arr(text=text)
+        Arr('', 500)
+
+    Attributes:
+        name (str) : *name*
+        val (int) : integer
 
     """
 
@@ -739,6 +854,11 @@ class Arr():
             return ''
 
     def text_formatted(self, indent=None, linebreak=None):
+        """
+        Text form of *arr*.
+
+        `indent` and `linebreak` are dummy here.
+        """
         if self.name:
             return f"[{self.name} = {self.val}]"
         elif self.val:
@@ -1041,7 +1161,6 @@ Dataset {
     Float64 temperature[500];
 } xbt-station;
 '''
-
 
 _sample3_struct = Dataset(
     'xbt-station', {
