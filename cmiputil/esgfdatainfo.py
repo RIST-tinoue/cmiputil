@@ -42,17 +42,21 @@ Actually, doing search as above is done by
 :class:`esgfsearch.ESGFSearch`.  A list of instances of this class
 is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
 """
-from cmiputil import drs
-from siphon.catalog import TDSCatalog
-from collections.abc import MutableMapping
 import re
+from collections.abc import MutableMapping
 from pprint import pprint
 
+import urllib3
+from siphon.catalog import TDSCatalog
+
+from cmiputil import drs, dds
 
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190619'
 __date__ = '2019/06/19'
+
+_http = None
 
 
 class ESGFDataInfo(MutableMapping):
@@ -85,7 +89,6 @@ class ESGFDataInfo(MutableMapping):
     # @property
     # def debug(cls):
     #     return cls._debug
-
 
     def __init__(self, attribs={}):
         """
@@ -127,9 +130,9 @@ class ESGFDataInfo(MutableMapping):
         if hasattr(self, 'version'):
             pat = re.compile(r'\d{8}')
             if pat.fullmatch(self.version):
-                self.version = 'v'+self.version
-        if self._debug:
-            print('dbg:ESGFDataInfo.set():modified version:', self.version)
+                self.version = 'v' + self.version
+                if self._debug:
+                    print('dbg:ESGFDataInfo.set():modified version:', self.version)
 
     @property
     def managedAttribs(self):
@@ -160,9 +163,7 @@ class ESGFDataInfo(MutableMapping):
             'sub_experiment_id'
         ]
 
-        return {a: self[a]
-                for a in attributes
-                if a in self}
+        return {a: self[a] for a in attributes if a in self}
 
     def getDataURL(self, aggregate):
         """
@@ -179,13 +180,13 @@ class ESGFDataInfo(MutableMapping):
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
-        self.agg_data_url = (cat.base_tds_url + 
-                             _getServiceBase(cat.services) +
+        self.agg_data_url = (cat.base_tds_url + _getServiceBase(cat.services) +
                              cat.datasets[-1].url_path)  # Is this universal ?
 
-        self.mf_data_url = [x.access_urls['OpenDAPServer']
-                    for x in cat.datasets.values()
-                    if 'OpenDAPServer' in x.access_urls]
+        self.mf_data_url = [
+            x.access_urls['OpenDAPServer'] for x in cat.datasets.values()
+            if 'OpenDAPServer' in x.access_urls
+        ]
         self.mf_data_url.sort()
 
         if aggregate:
@@ -224,7 +225,6 @@ class ESGFDataInfo(MutableMapping):
 
         self.mf_dds = [_getDDS(url) for url in self.mf_data_url]
 
-
     def findLocalFile(self, base_dir):
         """
         Find local (pre-downloaded) files corresponds to the search
@@ -249,7 +249,7 @@ class ESGFDataInfo(MutableMapping):
         if type(key) == str:
             setattr(self, key, value)
         else:
-            raise TypeError(key,type(key))
+            raise TypeError(key, type(key))
 
     def __delitem__(self, key):
         if hasattr(self, key):
@@ -264,12 +264,12 @@ class ESGFDataInfo(MutableMapping):
         return self.__dict__.__iter__()
 
     def __str__(self):
-        res = {k: getattr(self, k)
-               for k in self.__dict__}
+        res = {k: getattr(self, k) for k in self.__dict__}
         return str(res)
 
     def __len__(self):
         return len(self.__dict__)
+
 
 def _getServiceBase(services):
     # `services` must be a list of SimpleService or CompoundService
@@ -284,10 +284,6 @@ def _getServiceBase(services):
             return _getServiceBase(s.services)
 
 
-import urllib3
-_http = None
-
-
 def _getDDS(url):
     global _http
 
@@ -296,12 +292,12 @@ def _getDDS(url):
 
     r = _http.request('GET', url + '.dds')
     if (r.status == 200):
-        result = r.data.decode()
+        text = r.data.decode()
+        result = dds.parse_dataset(text)
     else:
         result = None
 
     return result
-
 
 
 if (__name__ == '__main__'):

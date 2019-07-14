@@ -36,19 +36,22 @@ Example:
     ...           'variant_label': 'r1i1p1f1'}
     >>> es = esgfsearch.ESGFSearch()
     >>> es.doSearch(params)
-    >>> es.getCatURLs()
     >>> es.getDataURLs()
-    >>> ds = []
-    >>> for url in es.data_urls:
-    ...     if type(url) is list:
-    ...         ds.append(xr.open_mfdataset(url, decode_times=False))
-    ...     else:
-    ...         ds.append(xr.open_dataset(url, decode_times=False))
 
     In above, `es.cat_urls` and `es.data_urls` are set as below::
 
          'cat_urls': ['http://esgf-data2.diasjp.net/thredds/catalog/esgcet/1/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212.xml#CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212'],
          'data_urls': ['http://esgf-data2.diasjp.net/thredds/dodsC/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.tas.20181212.aggregation.1']}
+
+    Aftre :meth:`.getDataURLs()`, you can open in any kind of datasets, for example::
+
+        ds = []
+        for url in es.data_urls:
+           if type(url) is list:
+               ds.append(xr.open_mfdataset(url, decode_times=False, combine='by_coords'))
+           else:
+               ds.append(xr.open_dataset(url, decode_times=False))
+
 
 Config File
 ===========
@@ -100,15 +103,17 @@ Example:
     >>> es = ESGFSearch()
     >>> es.getLocalDirs(params, base_dir='/data')
     >>> es.getDataFiles()
-    >>> ds = []
-    >>> for files in es.data_files:
-    ...     ds.append(xr.open_mfdataset(files, decode_cf=False))
-
 
     In above, ``es.local_dirs`` is set as below if they are exists::
 
         ['/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212',
          '/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212']
+
+    Aftre :meth:`.getDataFiless()`, you can open in any kind of datasets, for example::
+
+        ds = []
+        for files in es.data_files:
+            ds.append(xr.open_mfdataset(files, decode_cf=False, combine='by_coords'))
 
 
 .. _ESGF RESTful API:
@@ -119,8 +124,8 @@ Example:
 """
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
-__version__ = 'v20190612'
-__date__ = '2019/06/12'
+__version__ = 'v20190714'
+__date__ = '2019/07/14'
 
 import json
 from pprint import pprint
@@ -403,6 +408,10 @@ class ESGFSearch():
         return list(directory.iterdir())
 
 
+    def getDDS(self):
+        for d in self.datainfo:
+            d.getDDS() 
+
 ########################################################################
 # defaults
 
@@ -422,7 +431,6 @@ keywords_default = {
     'latest': 'true',
     'limit': 10000,
     'type': 'Dataset',  # must be to get catalog
-    'fields': 'url',
 }
 
 #: Default fasets for RESTful API.
