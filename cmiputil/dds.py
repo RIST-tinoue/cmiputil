@@ -21,15 +21,16 @@ In this module, we change the notation in the DDS syntax as follows:
 As you can see from above syntax, one *Struct* can contain other *Struct* recursively, and consists
 the tree structure. The root of the tree must be one "Dataset".
 
-In this module, each elements of the syntax are implemented as classes. Given text form of DDS is parsed and replaced by corresponding class instances.
+In this module, each element of above syntax is implemented as one class.
 
 Basic Usage
 -----------
 
-Text form of DDS will be obtained by :meth:`.ESGFDataInfo.getDDS`. Use
-:func:`parse_dataset` to parse it to get the tree structure. It's root
-is a :class:`Dataset` instance, and you can access nodes and leafs of
-the tree by dot notation (see also 'Example' section below)::
+Text form of DDS will be obtained by, for example,
+:meth:`.ESGFDataInfo.getDDS`. Use :func:`parse_dataset` to parse it to
+get the tree structure. The root of the tree is a :class:`Dataset`
+instance, and you can access nodes and leafs of the tree by dot
+notation (see also 'Example' section below)::
 
     ds = parse_dataset(text=sample1)
     ds.tas  # Grid('tas, arrary=Var(tas, ...), maps={'time':..., 'lat':..., 'lon':...})
@@ -965,7 +966,7 @@ def parse_declarations(text):
 def pop_struct(text):
     """
     Pop one :class:`Struct`-derived instance parsed from the
-    first part of `text, return it and the rest of `text`.
+    first part of `text`, return it and the rest of `text`.
     """
 
     leftpos = text.find('{')
