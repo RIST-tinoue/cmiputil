@@ -25,6 +25,7 @@ Modules
    drs
    convoc
    config
+   dds
    timer
    braceexpand
 

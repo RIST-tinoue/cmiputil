@@ -2,12 +2,13 @@
 """
 Supporting module for :mod:`esgfsearch`.
 
-Class :class:`ESGFDataInfo` holds and manages search result
-of ESGF RESTful API, issued by :meth:`esgfsearch.ESGFSearch.doSearch`.
+This class holds and maintains search result of ESGF dataset obtained
+via RESTful API issued by :meth:`esgfsearch.ESGFSearch.doSearch`
+method.
 
 One instance of this class corresponds to one search result, and a
-list of instances is set as the attribute of
-:attr:`esgfsearch.ESGFSearch.datainfo`.
+list of instances is set as the :attr:`esgfsearch.ESGFSearch.datainfo`
+attribute.
 
 This class also have some methods to access OPeNDAP catalog and
 retrieve additional information, search local (pre-downloaded) files
@@ -39,37 +40,40 @@ Example:
     'CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn'
 
 Actually, doing search as above is done by
-:class:`esgfsearch.ESGFSearch`.  A list of instances of this class
-is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
+:class:`esgfsearch.ESGFSearch`.
+
 """
-from cmiputil import drs
-from siphon.catalog import TDSCatalog
-from collections.abc import MutableMapping
 import re
+from collections.abc import MutableMapping
 from pprint import pprint
 
+import urllib3
+from siphon.catalog import TDSCatalog
+
+from cmiputil import drs, dds
 
 __author__ = 'T.Inoue'
 __credits__ = 'Copyright (c) 2019 RIST'
 __version__ = 'v20190619'
 __date__ = '2019/06/19'
 
+_http = None
+
 
 class ESGFDataInfo(MutableMapping):
     """
-    Holds and maintains search result of ESGF dataset.
+    Holds and maintains search result of ESGF dataset obtained via
+    RESTful API.
 
     Among attributes obtained from one search result, you can access
     several useful ones via :attr:`managedAttribs`.
 
-    As this class inherits MutableMapping ABC, you can access an
+    Since this class inherits MutableMapping ABC, you can access an
     instance of this class as *mapping*, such as ``datainfo['source_id']``.
 
     Attributes:
         cat_url: URL of OPeNDAP catalog
         data_url: URL of dataset
-        agg_data_url: URL of aggregated dataset
-        mf_data_url: URL of multi-files dataset
         local_files: Paths of local file corresponding to the search result.
     """
     _debug = False
@@ -85,7 +89,6 @@ class ESGFDataInfo(MutableMapping):
     # @property
     # def debug(cls):
     #     return cls._debug
-
 
     def __init__(self, attribs={}):
         """
@@ -127,9 +130,9 @@ class ESGFDataInfo(MutableMapping):
         if hasattr(self, 'version'):
             pat = re.compile(r'\d{8}')
             if pat.fullmatch(self.version):
-                self.version = 'v'+self.version
-        if self._debug:
-            print('dbg:ESGFDataInfo.set():modified version:', self.version)
+                self.version = 'v' + self.version
+                if self._debug:
+                    print('dbg:ESGFDataInfo.set():modified version:', self.version)
 
     @property
     def managedAttribs(self):
@@ -160,13 +163,11 @@ class ESGFDataInfo(MutableMapping):
             'sub_experiment_id'
         ]
 
-        return {a: self[a]
-                for a in attributes
-                if a in self}
+        return {a: self[a] for a in attributes if a in self}
 
     def getDataURL(self, aggregate):
         """
-        Get URL(s) of dataset from the OPeNDAP Catalog.
+        Get URL(s) of dataset by accessing the OPeNDAP Catalog.
 
         Results are set as :attr:`.data_url`
 
@@ -179,19 +180,51 @@ class ESGFDataInfo(MutableMapping):
             print('Error in siphon.TDSCatalog():', e.args)
             raise
 
-        self.agg_data_url = (cat.base_tds_url + 
-                             _getServiceBase(cat.services) +
+        self.agg_data_url = (cat.base_tds_url + _getServiceBase(cat.services) +
                              cat.datasets[-1].url_path)  # Is this universal ?
 
-        self.mf_data_url = [x.access_urls['OpenDAPServer']
-                    for x in cat.datasets.values()
-                    if 'OpenDAPServer' in x.access_urls]
+        self.mf_data_url = [
+            x.access_urls['OpenDAPServer'] for x in cat.datasets.values()
+            if 'OpenDAPServer' in x.access_urls
+        ]
         self.mf_data_url.sort()
 
         if aggregate:
             self.data_url = self.agg_data_url
         else:
             self.data_url = self.mf_data_url
+
+    def getDDS(self):
+        """
+        Get OPeNDAP DDS (Dataset Descriptor Structure).
+
+        Must be called after :meth:`.getDataURL`.
+
+        Example of DDS::
+
+            Dataset {
+                Float64 lat[lat = 160];
+                Float64 lat_bnds[lat = 160][bnds = 2];
+                Float64 lon[lon = 320];
+                Float64 lon_bnds[lon = 320][bnds = 2];
+                Float64 height;
+                Float64 time[time = 8412];
+                Float64 time_bnds[time = 8412][bnds = 2];
+                Grid {
+                 ARRAY:
+                    Float32 tas[time = 8412][lat = 160][lon = 320];
+                 MAPS:
+                    Float64 time[time = 8412];
+                    Float64 lat[lat = 160];
+                    Float64 lon[lon = 320];
+                } tas;
+            } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
+
+
+        """
+        self.agg_dds = _getDDS(self.agg_data_url)
+
+        self.mf_dds = [_getDDS(url) for url in self.mf_data_url]
 
     def findLocalFile(self, base_dir):
         """
@@ -217,7 +250,7 @@ class ESGFDataInfo(MutableMapping):
         if type(key) == str:
             setattr(self, key, value)
         else:
-            raise TypeError(key,type(key))
+            raise TypeError(key, type(key))
 
     def __delitem__(self, key):
         if hasattr(self, key):
@@ -232,12 +265,12 @@ class ESGFDataInfo(MutableMapping):
         return self.__dict__.__iter__()
 
     def __str__(self):
-        res = {k: getattr(self, k)
-               for k in self.__dict__}
+        res = {k: getattr(self, k) for k in self.__dict__}
         return str(res)
 
     def __len__(self):
         return len(self.__dict__)
+
 
 def _getServiceBase(services):
     # `services` must be a list of SimpleService or CompoundService
@@ -250,6 +283,22 @@ def _getServiceBase(services):
         # if service_type is compound, do recursive call.
         elif (s.service_type.lower() == 'compound'):
             return _getServiceBase(s.services)
+
+
+def _getDDS(url):
+    global _http
+
+    if not _http:
+        _http = urllib3.PoolManager()
+
+    r = _http.request('GET', url + '.dds')
+    if (r.status == 200):
+        text = r.data.decode()
+        result = dds.parse_dataset(text)
+    else:
+        result = None
+
+    return result
 
 
 if (__name__ == '__main__'):
