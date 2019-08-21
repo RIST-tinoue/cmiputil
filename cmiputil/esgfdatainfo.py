@@ -2,12 +2,13 @@
 """
 Supporting module for :mod:`esgfsearch`.
 
-Class :class:`ESGFDataInfo` holds and manages search result
-of ESGF RESTful API, issued by :meth:`esgfsearch.ESGFSearch.doSearch`.
+This class holds and maintains search result of ESGF dataset obtained
+via RESTful API issued by :meth:`esgfsearch.ESGFSearch.doSearch`
+method.
 
 One instance of this class corresponds to one search result, and a
-list of instances is set as the attribute of
-:attr:`esgfsearch.ESGFSearch.datainfo`.
+list of instances is set as the :attr:`esgfsearch.ESGFSearch.datainfo`
+attribute.
 
 This class also have some methods to access OPeNDAP catalog and
 retrieve additional information, search local (pre-downloaded) files
@@ -39,8 +40,8 @@ Example:
     'CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn'
 
 Actually, doing search as above is done by
-:class:`esgfsearch.ESGFSearch`.  A list of instances of this class
-is set as the attribute :attr:`esgfsearch.ESGFSearch.datainfo`.
+:class:`esgfsearch.ESGFSearch`.
+
 """
 import re
 from collections.abc import MutableMapping
@@ -61,19 +62,18 @@ _http = None
 
 class ESGFDataInfo(MutableMapping):
     """
-    Holds and maintains search result of ESGF dataset.
+    Holds and maintains search result of ESGF dataset obtained via
+    RESTful API.
 
     Among attributes obtained from one search result, you can access
     several useful ones via :attr:`managedAttribs`.
 
-    As this class inherits MutableMapping ABC, you can access an
+    Since this class inherits MutableMapping ABC, you can access an
     instance of this class as *mapping*, such as ``datainfo['source_id']``.
 
     Attributes:
         cat_url: URL of OPeNDAP catalog
         data_url: URL of dataset
-        agg_data_url: URL of aggregated dataset
-        mf_data_url: URL of multi-files dataset
         local_files: Paths of local file corresponding to the search result.
     """
     _debug = False
@@ -167,7 +167,7 @@ class ESGFDataInfo(MutableMapping):
 
     def getDataURL(self, aggregate):
         """
-        Get URL(s) of dataset from the OPeNDAP Catalog.
+        Get URL(s) of dataset by accessing the OPeNDAP Catalog.
 
         Results are set as :attr:`.data_url`
 
@@ -198,6 +198,8 @@ class ESGFDataInfo(MutableMapping):
         """
         Get OPeNDAP DDS (Dataset Descriptor Structure).
 
+        Must be called after :meth:`.getDataURL`.
+
         Example of DDS::
 
             Dataset {
@@ -217,7 +219,6 @@ class ESGFDataInfo(MutableMapping):
                     Float64 lon[lon = 320];
                 } tas;
             } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;
-
 
 
         """
