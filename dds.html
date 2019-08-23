@@ -1,0 +1,863 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>cmiputil.dds module &#8212; cmiputil  documentation</title>
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cmiputil.timer module" href="timer.html" />
+    <link rel="prev" title="cmiputil.config module" href="config.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="timer.html" title="cmiputil.timer module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="config.html" title="cmiputil.config module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-dds">
+<span id="cmiputil-dds-module"></span><h1>cmiputil.dds module<a class="headerlink" href="#module-dds" title="Permalink to this headline">¶</a></h1>
+<p>Module to parse DDS (Dataset Descriptor Structure) used in OPeNDAP.</p>
+<div class="section" id="dds">
+<h2>DDS<a class="headerlink" href="#dds" title="Permalink to this headline">¶</a></h2>
+<p>For the definition of DDS, see <a class="reference external" href="https://opendap.github.io/documentation/UserGuideComprehensive.html#DDS">OpenDAP UserGuide</a>.
+In this module, we change the notation in the DDS syntax as follows:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><em>declarations</em> := list(<em>declaration</em>)</div>
+<div class="line"><em>declaration</em> := <em>Var</em> | <em>Struct</em></div>
+<div class="line"><em>Struct</em> := <em>stype</em> { <em>declarations</em> } (<em>name</em> | <em>name</em> <em>arr</em>)</div>
+<div class="line"><em>stype</em> := Dataset|Structure|Sequence|Grid</div>
+<div class="line"><em>Grid</em> := Grid { ARRAY: <em>declaration</em> MAPS: <em>declarations</em> } (<em>name</em> | <em>name</em> <em>arr</em>)</div>
+<div class="line"><em>Var</em> := <em>btype</em> (<em>name</em> | <em>name</em> <em>arr</em>)</div>
+<div class="line"><em>btype</em> := Byte|Int32|UInt32|Float64|String|Url| …</div>
+<div class="line"><em>arr</em> := [integer] | [<em>name</em> = integer]</div>
+</div>
+</div></blockquote>
+<p>As you can see from above syntax, one <em>Struct</em> can contain other <em>Struct</em> recursively, and consists
+the tree structure. The root of the tree must be one “Dataset”.</p>
+<p>In this module, each element of above syntax is implemented as one class.</p>
+</div>
+<div class="section" id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
+<p>Text form of DDS will be obtained by, for example,
+<a class="reference internal" href="esgfdatainfo.html#esgfdatainfo.ESGFDataInfo.getDDS" title="esgfdatainfo.ESGFDataInfo.getDDS"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ESGFDataInfo.getDDS()</span></code></a>. Use <a class="reference internal" href="#dds.parse_dataset" title="dds.parse_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">parse_dataset()</span></code></a> to parse it to
+get the tree structure. The root of the tree is a <a class="reference internal" href="#dds.Dataset" title="dds.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a>
+instance, and you can access nodes and leafs of the tree by dot
+notation (see also ‘Example’ section below):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">parse_dataset</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">sample1</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">tas</span>  <span class="c1"># Grid(&#39;tas, arrary=Var(tas, ...), maps={&#39;time&#39;:..., &#39;lat&#39;:..., &#39;lon&#39;:...})</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">tas</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Arr(&#39;time&#39;, 8412)</span>
+</pre></div>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sample1</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">Dataset {</span>
+<span class="gp">... </span><span class="s1">    Float64 lat[lat = 160];</span>
+<span class="gp">... </span><span class="s1">    Float64 lat_bnds[lat = 160][bnds = 2];</span>
+<span class="gp">... </span><span class="s1">    Float64 lon[lon = 320];</span>
+<span class="gp">... </span><span class="s1">    Float64 lon_bnds[lon = 320][bnds = 2];</span>
+<span class="gp">... </span><span class="s1">    Float64 height;</span>
+<span class="gp">... </span><span class="s1">    Float64 time[time = 8412];</span>
+<span class="gp">... </span><span class="s1">    Float64 time_bnds[time = 8412][bnds = 2];</span>
+<span class="gp">... </span><span class="s1">    Grid {</span>
+<span class="gp">... </span><span class="s1">     ARRAY:</span>
+<span class="gp">... </span><span class="s1">        Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="gp">... </span><span class="s1">     MAPS:</span>
+<span class="gp">... </span><span class="s1">        Float64 time[time = 8412];</span>
+<span class="gp">... </span><span class="s1">        Float64 lat[lat = 160];</span>
+<span class="gp">... </span><span class="s1">        Float64 lon[lon = 320];</span>
+<span class="gp">... </span><span class="s1">    } tas;</span>
+<span class="gp">... </span><span class="s1">} CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample1_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="s1">&#39;CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>   <span class="p">{</span>
+<span class="gp">... </span>       <span class="s1">&#39;lat&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;lat_bnds&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span>
+<span class="gp">... </span>                                       <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;lon&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;lon_bnds&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">),</span>
+<span class="gp">... </span>                                       <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;height&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>       <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;time_bnds&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">),</span>
+<span class="gp">... </span>                                        <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+<span class="gp">... </span>       <span class="s1">&#39;tas&#39;</span><span class="p">:</span>
+<span class="gp">... </span>       <span class="n">Grid</span><span class="p">(</span><span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+<span class="gp">... </span>            <span class="n">array</span><span class="o">=</span><span class="n">Var</span><span class="p">(</span>
+<span class="gp">... </span>                <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="s1">&#39;Float32&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">),</span>
+<span class="gp">... </span>                     <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span>
+<span class="gp">... </span>                     <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)]),</span>
+<span class="gp">... </span>            <span class="n">maps</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>                <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">)]),</span>
+<span class="gp">... </span>                <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">)]),</span>
+<span class="gp">... </span>                <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)])</span>
+<span class="gp">... </span>            <span class="p">})</span>
+<span class="gp">... </span>   <span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample1_struct</span> <span class="o">==</span> <span class="n">parse_dataset</span><span class="p">(</span><span class="n">sample1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">dds</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample2</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">Dataset {</span>
+<span class="gp">... </span><span class="s1">  Int32 catalog_number;</span>
+<span class="gp">... </span><span class="s1">  Sequence {</span>
+<span class="gp">... </span><span class="s1">    String experimenter;</span>
+<span class="gp">... </span><span class="s1">    Int32 time;</span>
+<span class="gp">... </span><span class="s1">    Structure {</span>
+<span class="gp">... </span><span class="s1">      Float64 latitude;</span>
+<span class="gp">... </span><span class="s1">      Float64 longitude;</span>
+<span class="gp">... </span><span class="s1">    } location;</span>
+<span class="gp">... </span><span class="s1">    Sequence {</span>
+<span class="gp">... </span><span class="s1">      Float64 depth;</span>
+<span class="gp">... </span><span class="s1">      Float64 salinity;</span>
+<span class="gp">... </span><span class="s1">      Float64 oxygen;</span>
+<span class="gp">... </span><span class="s1">      Float64 temperature;</span>
+<span class="gp">... </span><span class="s1">    } cast;</span>
+<span class="gp">... </span><span class="s1">  } station;</span>
+<span class="gp">... </span><span class="s1">} data;</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample2_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">&#39;catalog_number&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;catalog_number&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="s1">&#39;station&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Sequence</span><span class="p">(</span>
+<span class="gp">... </span>            <span class="s1">&#39;station&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>                <span class="s1">&#39;experimenter&#39;</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;experimenter&#39;</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="s1">&#39;location&#39;</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="n">Structure</span><span class="p">(</span>
+<span class="gp">... </span>                    <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>                        <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                        <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                    <span class="p">}),</span>
+<span class="gp">... </span>                <span class="s1">&#39;cast&#39;</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="n">Sequence</span><span class="p">(</span>
+<span class="gp">... </span>                    <span class="s1">&#39;cast&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>                        <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                        <span class="s1">&#39;salinity&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;salinity&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                        <span class="s1">&#39;oxygen&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;oxygen&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                        <span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                    <span class="p">})</span>
+<span class="gp">... </span>            <span class="p">})</span>
+<span class="gp">... </span>    <span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample2_struct</span> <span class="o">==</span> <span class="n">parse_dataset</span><span class="p">(</span><span class="n">sample2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sample3</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">Dataset {</span>
+<span class="gp">... </span><span class="s1">    Structure {</span>
+<span class="gp">... </span><span class="s1">        Float64 lat;</span>
+<span class="gp">... </span><span class="s1">        Float64 lon;</span>
+<span class="gp">... </span><span class="s1">    } location;</span>
+<span class="gp">... </span><span class="s1">    Structure {</span>
+<span class="gp">... </span><span class="s1">        Int32 minutes;</span>
+<span class="gp">... </span><span class="s1">        Int32 day;</span>
+<span class="gp">... </span><span class="s1">        Int32 year;</span>
+<span class="gp">... </span><span class="s1">    } time;</span>
+<span class="gp">... </span><span class="s1">    Float64 depth[500];</span>
+<span class="gp">... </span><span class="s1">    Float64 temperature[500];</span>
+<span class="gp">... </span><span class="s1">} xbt-station;</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample3_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;xbt-station&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">&#39;location&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Structure</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>            <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+<span class="gp">... </span>            <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="p">}),</span>
+<span class="gp">... </span>        <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Structure</span><span class="p">(</span>
+<span class="gp">... </span>            <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">{</span>
+<span class="gp">... </span>                <span class="s1">&#39;minutes&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="s1">&#39;day&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                <span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">)</span>
+<span class="gp">... </span>            <span class="p">}),</span>
+<span class="gp">... </span>        <span class="s1">&#39;depth&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)]),</span>
+<span class="gp">... </span>        <span class="s1">&#39;temperature&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)])</span>
+<span class="gp">... </span>    <span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample3_struct</span> <span class="o">==</span> <span class="n">parse_dataset</span><span class="p">(</span><span class="n">sample3</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="dds.Arr">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Arr</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">val=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Arr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Arr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for <em>arr</em>.</p>
+<div class="line-block">
+<div class="line"><em>arr</em> := [integer] | [<em>name</em> = integer]</div>
+</div>
+<p>As a text form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[time = 8412]&#39;</span>
+<span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[500]&#39;</span>
+</pre></div>
+</div>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[lat = 160];&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Arr</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+<span class="go">Arr(&#39;lat&#39;, 160)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[500];&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Arr</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+<span class="go">Arr(&#39;&#39;, 500)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dds.Arr.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#dds.Arr.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>name</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Arr.val">
+<code class="sig-name descname">val</code><a class="headerlink" href="#dds.Arr.val" title="Permalink to this definition">¶</a></dt>
+<dd><p>integer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Arr.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Arr.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Arr.parse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dds.Arr.text_formatted">
+<code class="sig-name descname">text_formatted</code><span class="sig-paren">(</span><em class="sig-param">indent=None</em>, <em class="sig-param">linebreak=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Arr.text_formatted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Arr.text_formatted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text form of <em>arr</em>.</p>
+<p><cite>indent</cite> and <cite>linebreak</cite> are dummy here.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Arr.text">
+<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#dds.Arr.text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.BType">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">BType</code><a class="reference internal" href="_modules/dds.html#BType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.BType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Values for <a class="reference internal" href="#dds.Var.btype" title="dds.Var.btype"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Var.btype</span></code></a>.</p>
+<dl class="attribute">
+<dt id="dds.BType.Byte">
+<code class="sig-name descname">Byte</code><em class="property"> = 'Byte'</em><a class="headerlink" href="#dds.BType.Byte" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.Float32">
+<code class="sig-name descname">Float32</code><em class="property"> = 'Float32'</em><a class="headerlink" href="#dds.BType.Float32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.Float64">
+<code class="sig-name descname">Float64</code><em class="property"> = 'Float64'</em><a class="headerlink" href="#dds.BType.Float64" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.Int16">
+<code class="sig-name descname">Int16</code><em class="property"> = 'Int16'</em><a class="headerlink" href="#dds.BType.Int16" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.Int32">
+<code class="sig-name descname">Int32</code><em class="property"> = 'Int32'</em><a class="headerlink" href="#dds.BType.Int32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.String">
+<code class="sig-name descname">String</code><em class="property"> = 'String'</em><a class="headerlink" href="#dds.BType.String" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.UInt32">
+<code class="sig-name descname">UInt32</code><em class="property"> = 'UInt32'</em><a class="headerlink" href="#dds.BType.UInt32" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.BType.Url">
+<code class="sig-name descname">Url</code><em class="property"> = 'Url'</em><a class="headerlink" href="#dds.BType.Url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Dataset">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Dataset</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">decl=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Struct</span></code></a></p>
+<p>Class for <em>Dataset</em>.</p>
+<p>See <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>.</p>
+<dl class="attribute">
+<dt id="dds.Dataset.stype">
+<code class="sig-name descname">stype</code><em class="property"> = 'Dataset'</em><a class="headerlink" href="#dds.Dataset.stype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Decl">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Decl</code><span class="sig-paren">(</span><em class="sig-param">name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Decl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Decl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for <em>declaration</em>, that is, base class for <a class="reference internal" href="#dds.Var" title="dds.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">Var</span></code></a>
+and <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>. No need to use this class explicitly.</p>
+<div class="line-block">
+<div class="line"><em>declaration</em> := <em>Var</em> | <em>Struct</em></div>
+</div>
+<dl class="method">
+<dt id="dds.Decl.text_formatted">
+<code class="sig-name descname">text_formatted</code><span class="sig-paren">(</span><em class="sig-param">indent=None</em>, <em class="sig-param">linebreak=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Decl.text_formatted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Decl.text_formatted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Decls">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Decls</code><a class="reference internal" href="_modules/dds.html#Decls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Decls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+<p>Class for <em>declarations</em>.</p>
+<div class="line-block">
+<div class="line"><em>declarations</em> := list(<em>declaration</em>)</div>
+</div>
+<p>In this module, <em>declarations</em> are expressed as <cite>dict</cite>, not
+<cite>list</cite>. At this point, this class is just an alias for <cite>dict</cite>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Grid">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Grid</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">array=None</em>, <em class="sig-param">maps=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Struct</span></code></a></p>
+<p>Class for <em>Grid</em>.</p>
+<div class="line-block">
+<div class="line"><em>Grid</em> := Grid { ARRAY: <em>declaration</em> MAPS: <em>declarations</em> } (<em>name</em> | <em>name</em> <em>arr</em>)</div>
+</div>
+<dl class="attribute">
+<dt id="dds.Grid.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#dds.Grid.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>name</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Grid.stype">
+<code class="sig-name descname">stype</code><a class="headerlink" href="#dds.Grid.stype" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>stype</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.SType" title="dds.SType">SType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Grid.array">
+<code class="sig-name descname">array</code><a class="headerlink" href="#dds.Grid.array" title="Permalink to this definition">¶</a></dt>
+<dd><p>ARRAY <em>declaration</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.Decl" title="dds.Decl">Decl</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Grid.maps">
+<code class="sig-name descname">maps</code><a class="headerlink" href="#dds.Grid.maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>MAPS <em>declarations</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.Decls" title="dds.Decls">Decls</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">    Grid {</span>
+<span class="gp">... </span><span class="s1">     ARRAY:</span>
+<span class="gp">... </span><span class="s1">        Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="gp">... </span><span class="s1">     MAPS:</span>
+<span class="gp">... </span><span class="s1">        Float64 time[time = 8412];</span>
+<span class="gp">... </span><span class="s1">        Float64 lat[lat = 160];</span>
+<span class="gp">... </span><span class="s1">        Float64 lon[lon = 320];</span>
+<span class="gp">... </span><span class="s1">    } tas;&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Grid</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+<span class="go">Grid(&#39;tas&#39;, array=Var(&#39;tas&#39;, &#39;Float32&#39;, arr=[Arr(&#39;time&#39;, 8412), Arr(&#39;lat&#39;, 160), Arr(&#39;lon&#39;, 320)]), maps={&#39;time&#39;: Var(&#39;time&#39;, &#39;Float64&#39;, arr=[Arr(&#39;time&#39;, 8412)]), &#39;lat&#39;: Var(&#39;lat&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lat&#39;, 160)]), &#39;lon&#39;: Var(&#39;lon&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lon&#39;, 320)])})</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <em>name</em></p></li>
+<li><p><strong>stype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><a class="reference internal" href="#dds.SType" title="dds.SType"><em>SType</em></a>) – <em>stype</em></p></li>
+<li><p><strong>array</strong> (<a class="reference internal" href="#dds.Decl" title="dds.Decl"><em>Decl</em></a>) – ARRAY <em>declaration</em></p></li>
+<li><p><strong>maps</strong> (<a class="reference internal" href="#dds.Decls" title="dds.Decls"><em>Decls</em></a>) – MAPS <em>declarations</em></p></li>
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – text to be parsed.</p></li>
+</ul>
+</dd>
+</dl>
+<p>If <cite>text</cite> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, other attributes are overridden by
+the result of <a class="reference internal" href="#dds.Grid.parse" title="dds.Grid.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse()</span></code></a>.</p>
+<dl class="method">
+<dt id="dds.Grid.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Grid.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Grid.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse <cite>text</cite> to construct <a class="reference internal" href="#dds.Grid" title="dds.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Grid.text_formatted">
+<code class="sig-name descname">text_formatted</code><span class="sig-paren">(</span><em class="sig-param">indent=4</em>, <em class="sig-param">linebreak=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Grid.text_formatted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Grid.text_formatted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return formatted text.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">stype</code><em class="property"> = 'Grid'</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dds.Grid.text">
+<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#dds.Grid.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text to construct this instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.SType">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">SType</code><a class="reference internal" href="_modules/dds.html#SType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.SType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Values for <a class="reference internal" href="#dds.Struct.stype" title="dds.Struct.stype"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Struct.stype</span></code></a></p>
+<dl class="attribute">
+<dt id="dds.SType.Dataset">
+<code class="sig-name descname">Dataset</code><em class="property"> = 'Dataset'</em><a class="headerlink" href="#dds.SType.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.SType.Grid">
+<code class="sig-name descname">Grid</code><em class="property"> = 'Grid'</em><a class="headerlink" href="#dds.SType.Grid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.SType.Sequence">
+<code class="sig-name descname">Sequence</code><em class="property"> = 'Sequence'</em><a class="headerlink" href="#dds.SType.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dds.SType.Structure">
+<code class="sig-name descname">Structure</code><em class="property"> = 'Structure'</em><a class="headerlink" href="#dds.SType.Structure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Sequence">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Sequence</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">decl=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Struct</span></code></a></p>
+<p>Class for <em>Sequence</em>.</p>
+<p>See <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">    Sequence {</span>
+<span class="gp">... </span><span class="s1">      Float64 depth;</span>
+<span class="gp">... </span><span class="s1">      Float64 salinity;</span>
+<span class="gp">... </span><span class="s1">      Float64 oxygen;</span>
+<span class="gp">... </span><span class="s1">      Float64 temperature;</span>
+<span class="gp">... </span><span class="s1">    } cast;&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sequence</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+<span class="go">Sequence(&#39;cast&#39;, {&#39;depth&#39;: Var(&#39;depth&#39;, &#39;Float64&#39;), &#39;salinity&#39;: Var(&#39;salinity&#39;, &#39;Float64&#39;), &#39;oxygen&#39;: Var(&#39;oxygen&#39;, &#39;Float64&#39;), &#39;temperature&#39;: Var(&#39;temperature&#39;, &#39;Float64&#39;)})</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dds.Sequence.stype">
+<code class="sig-name descname">stype</code><em class="property"> = 'Sequence'</em><a class="headerlink" href="#dds.Sequence.stype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Struct">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Struct</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">decl=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Struct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Decl" title="dds.Decl"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Decl</span></code></a></p>
+<p>Class for <em>struct</em>, that is, base class for <a class="reference internal" href="#dds.Structure" title="dds.Structure"><code class="xref py py-class docutils literal notranslate"><span class="pre">Structure</span></code></a>,
+<a class="reference internal" href="#dds.Sequence" title="dds.Sequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>, <a class="reference internal" href="#dds.Grid" title="dds.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a> and <a class="reference internal" href="#dds.Dataset" title="dds.Dataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></a>.
+Do not use this directly.</p>
+<div class="line-block">
+<div class="line"><em>struct</em> := <em>stype</em> { <em>declarations</em> } <em>var</em></div>
+<div class="line"><em>stype</em> := Dataset|Structure|Sequence|Grid</div>
+</div>
+<p>You can access items of <code class="docutils literal notranslate"><span class="pre">self.decl</span></code> as if they are the attribute
+of this class, via dot notation.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">Sequence {</span>
+<span class="gp">... </span><span class="s1">  Float64 depth;</span>
+<span class="gp">... </span><span class="s1">    Float64 salinity;</span>
+<span class="gp">... </span><span class="s1">    Float64 oxygen;</span>
+<span class="gp">... </span><span class="s1">    Float64 temperature;</span>
+<span class="gp">... </span><span class="s1">  } cast;&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">salinity</span>
+<span class="go">Var(&#39;salinity&#39;, &#39;Float64&#39;)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">Dataset {</span>
+<span class="gp">... </span><span class="s1">  Int32 catalog_number;</span>
+<span class="gp">... </span><span class="s1">  Sequence {</span>
+<span class="gp">... </span><span class="s1">    String experimenter;</span>
+<span class="gp">... </span><span class="s1">    Int32 time;</span>
+<span class="gp">... </span><span class="s1">    Structure {</span>
+<span class="gp">... </span><span class="s1">      Float64 latitude;</span>
+<span class="gp">... </span><span class="s1">      Float64 longitude;</span>
+<span class="gp">... </span><span class="s1">    } location;</span>
+<span class="gp">... </span><span class="s1">  } station;</span>
+<span class="gp">... </span><span class="s1">} data;&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">parse_dataset</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">station</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">latitude</span>
+<span class="go">Var(&#39;latitude&#39;, &#39;Float64&#39;)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="dds.Struct.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#dds.Struct.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>name</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Struct.stype">
+<code class="sig-name descname">stype</code><a class="headerlink" href="#dds.Struct.stype" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>stype</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.SType" title="dds.SType">SType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Struct.decl">
+<code class="sig-name descname">decl</code><a class="headerlink" href="#dds.Struct.decl" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>declarations</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.Decls" title="dds.Decls">Decls</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <em>name</em></p></li>
+<li><p><strong>decl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><a class="reference internal" href="#dds.Decls" title="dds.Decls"><em>Decls</em></a><em>)</em>) – <em>declarations</em></p></li>
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – text to be parsed.</p></li>
+</ul>
+</dd>
+</dl>
+<p>If <cite>text</cite> is <em>not</em> <code class="docutils literal notranslate"><span class="pre">None</span></code>, other attributes are overridden by
+the result of <a class="reference internal" href="#dds.Struct.parse" title="dds.Struct.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse()</span></code></a> or left untouced..</p>
+<dl class="method">
+<dt id="dds.Struct.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Struct.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Struct.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse <cite>text</cite> to construct <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>.</p>
+<p>If given <cite>text</cite> is not valid for each subclass, the instance
+is left as ‘null’ instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Struct.text_formatted">
+<code class="sig-name descname">text_formatted</code><span class="sig-paren">(</span><em class="sig-param">indent=4</em>, <em class="sig-param">linebreak=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Struct.text_formatted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Struct.text_formatted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return formatted text.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">stype</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="dds.Struct.text">
+<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#dds.Struct.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text to construct this instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Structure">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Structure</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">decl=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Struct</span></code></a></p>
+<p>Class for <em>Structure</em>.</p>
+<p>See <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>.</p>
+<dl class="attribute">
+<dt id="dds.Structure.stype">
+<code class="sig-name descname">stype</code><em class="property"> = 'Structure'</em><a class="headerlink" href="#dds.Structure.stype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dds.Var">
+<em class="property">class </em><code class="sig-prename descclassname">dds.</code><code class="sig-name descname">Var</code><span class="sig-paren">(</span><em class="sig-param">name=''</em>, <em class="sig-param">btype=None</em>, <em class="sig-param">arr=None</em>, <em class="sig-param">text=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Var"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds.Decl" title="dds.Decl"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds.Decl</span></code></a></p>
+<p>Class for <em>Var</em>.</p>
+<div class="line-block">
+<div class="line"><em>Var</em> := <em>basetype</em> (<em>name*|*name</em> <em>arr</em>)</div>
+</div>
+<dl class="attribute">
+<dt id="dds.Var.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#dds.Var.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>name</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Var.btype">
+<code class="sig-name descname">btype</code><a class="headerlink" href="#dds.Var.btype" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>basetype</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dds.BType" title="dds.BType">BType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dds.Var.arr">
+<code class="sig-name descname">arr</code><a class="headerlink" href="#dds.Var.arr" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>array-decl</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference internal" href="#dds.Arr" title="dds.Arr">Arr</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <em>name</em></p></li>
+<li><p><strong>btype</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><a class="reference internal" href="#dds.BType" title="dds.BType"><em>BType</em></a>) – <em>basetype</em></p></li>
+<li><p><strong>arr</strong> (<a class="reference internal" href="#dds.Arr" title="dds.Arr"><em>Arr</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a><em>(</em><a class="reference internal" href="#dds.Arr" title="dds.Arr"><em>Arr</em></a><em>)</em>) – <em>array-decl</em></p></li>
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – text to be parsed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.7)"><strong>TypeError</strong></a> – if <cite>btype</cite> or <cite>arr</cite> is invalid</p>
+</dd>
+</dl>
+<p>If <cite>text</cite> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, other attributes are overridden by
+the result of <a class="reference internal" href="#dds.Var.parse" title="dds.Var.parse"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse()</span></code></a>.</p>
+<dl class="method">
+<dt id="dds.Var.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Var.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Var.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse <cite>text</cite> to construct <a class="reference internal" href="#dds.Var" title="dds.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">Var</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Var.text_formatted">
+<code class="sig-name descname">text_formatted</code><span class="sig-paren">(</span><em class="sig-param">indent=None</em>, <em class="sig-param">linebreak=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#Var.text_formatted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.Var.text_formatted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formatted text expression of this instance.</p>
+<p><cite>indent</cite> and <cite>linebreak</cite> are dummy arguments here.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dds.Var.text">
+<em class="property">property </em><code class="sig-name descname">text</code><a class="headerlink" href="#dds.Var.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Text to construct this instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.check_braces_matching">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">check_braces_matching</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#check_braces_matching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.check_braces_matching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if braces(<code class="docutils literal notranslate"><span class="pre">{</span></code> and <code class="docutils literal notranslate"><span class="pre">}</span></code>) in given <cite>text</cite> match.</p>
+<p>Raises <cite>ValueError</cite> unless match.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;Dataset</span><span class="si">{varline}</span><span class="s1"> hoge&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_braces_matching</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>  <span class="c1"># True</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;Struct{ Sequence</span><span class="si">{Var}</span><span class="s1"> fuga }} hoge&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_braces_matching</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">braces do not match: too many right braces: 1 more.</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;Struct{ Sequence{{Var} fuga } hoge&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">check_braces_matching</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">braces do not match: too many left braces: 1 more.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.parse_arrdecls">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">parse_arrdecls</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#parse_arrdecls"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.parse_arrdecls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse <cite>text</cite> contains multiple <a class="reference internal" href="#dds.Arr" title="dds.Arr"><code class="xref py py-class docutils literal notranslate"><span class="pre">Arr</span></code></a> definitions and return
+a list of them.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.parse_dataset">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">parse_dataset</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#parse_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.parse_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse toplevel <em>dataset</em>.</p>
+<p><em>dataset</em> := Dataset { <em>declarations</em> } <em>name</em>;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.parse_declarations">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">parse_declarations</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#parse_declarations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.parse_declarations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <a class="reference internal" href="#dds.Decls" title="dds.Decls"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decls</span></code></a>, dict of {<cite>name</cite>: <em>Decl</em>} parsed from <cite>text</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.pop_struct">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">pop_struct</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#pop_struct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.pop_struct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop one <a class="reference internal" href="#dds.Struct" title="dds.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>-derived instance parsed from the
+first part of <cite>text</cite>, return it and the rest of <cite>text</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="dds.pop_varline">
+<code class="sig-prename descclassname">dds.</code><code class="sig-name descname">pop_varline</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dds.html#pop_varline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dds.pop_varline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop one <a class="reference internal" href="#dds.Var" title="dds.Var"><code class="xref py py-class docutils literal notranslate"><span class="pre">Var</span></code></a> instance parsed from the first part of
+<cite>text</cite>, return it and rest of the <cite>text</cite>.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.dds module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dds">DDS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+      <li>Previous: <a href="config.html" title="previous chapter">cmiputil.config module</a></li>
+      <li>Next: <a href="timer.html" title="next chapter">cmiputil.timer module</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
+  </body>
+</html>

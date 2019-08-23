@@ -1,28 +1,29 @@
 
-
-<!doctype html>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
     <title>cmiputil &#8212; cmiputil  documentation</title>
-    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="cmiputil.convoc module" href="convoc.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <!--[if lt IE 9]>
-    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
+    <link rel="next" title="cmiputil.esgfsearch module" href="esgfsearch.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head><body>
+  
+  
+  <div class="indexwrapper">
+  
+
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -33,55 +34,11 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="convoc.html" title="cmiputil.convoc module"
+          <a href="esgfsearch.html" title="cmiputil.esgfsearch module"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">cmiputil  documentation</a> &#187;</li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#"><cite>cmiputil</cite></a><ul>
-<li><a class="reference internal" href="#readme">README</a><ul>
-<li><a class="reference internal" href="#what-is-this">What is this ?</a><ul>
-<li><a class="reference internal" href="#braceexpand-py">braceexpand.py</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#you-may-want">You may want</a></li>
-<li><a class="reference internal" href="#requirement">Requirement</a></li>
-<li><a class="reference internal" href="#install">Install</a></li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
-<li><a class="reference internal" href="#document">Document</a></li>
-<li><a class="reference internal" href="#plan">Plan</a></li>
-<li><a class="reference internal" href="#author">Author</a></li>
-<li><a class="reference internal" href="#licence">Licence</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#modules">Modules</a></li>
-<li><a class="reference internal" href="#commands">Commands</a></li>
-<li><a class="reference internal" href="#sample-apps">Sample Apps</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-<li><a class="reference internal" href="#todo-list">TODO list</a></li>
-</ul>
-</li>
-</ul>
-
-  <h4>Next topic</h4>
-  <p class="topless"><a href="convoc.html"
-                        title="next chapter">cmiputil.convoc module</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -124,16 +81,21 @@ useful and reliable.</p>
 <h3>Requirement<a class="headerlink" href="#requirement" title="Permalink to this headline">¶</a></h3>
 <p>This package has been developed under this environment only:</p>
 <ul class="simple">
-<li><p>python 3.6.7</p></li>
+<li><p>python 3.7.3</p></li>
 <li><p>siphon 0.8.0</p></li>
-<li><p>xarray 0.11.3</p></li>
-<li><p>netCDF4 1.3.1</p></li>
+<li><p>netCDF4 1.5.1.2</p></li>
 <li><p>urllib3 1.24.1</p></li>
+</ul>
+<p>For tests and examples:</p>
+<ul class="simple">
+<li><p>xarray 0.11.3</p></li>
 </ul>
 <p>For creating documents:</p>
 <ul class="simple">
-<li><p>sphinx 2.0.1</p></li>
-<li><p>sphinx-rtd-theme 0.4.3</p></li>
+<li><p>sphinx 2.1.2</p></li>
+<li><p>sphinx-readable-theme 1.3.0</p></li>
+<li><p>sphinxcontrib-fulltoc 1.2.0</p></li>
+<li><p>sphinxcontrib-autoprogram 0.1.5</p></li>
 </ul>
 </div>
 <div class="section" id="install">
@@ -185,24 +147,33 @@ License</a></p>
 <h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="convoc.html#controlled-vocabularies">Controlled Vocabularies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convoc.html#cvs-search-path">CVs search path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esgfsearch.html#aggregated">“Aggregated”</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#config-file">Config File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#local-files">Local files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="drs.html#file-name-template">File name template:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="drs.html#directory-structure-template">Directory structure template:</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#basic-usage">Basic Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#config-file">Config File</a></li>
-<li class="toctree-l2"><a class="reference internal" href="esgfsearch.html#local-data-store">Local data store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="convoc.html#controlled-vocabularies">Controlled Vocabularies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convoc.html#cvs-search-path">CVs search path</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dds.html#dds">DDS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dds.html#basic-usage">Basic Usage</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="README.braceexpand.html">Bash-style brace expansion for Python</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="README.braceexpand.html#installation">Installation</a></li>
@@ -222,8 +193,7 @@ License</a></p>
 <li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="createSampleConf.html#module-createSampleConf">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="createSampleConf.html#usage">Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="createSampleConf.html#Positional Arguments">Positional Arguments</a></li>
-<li class="toctree-l3"><a class="reference internal" href="createSampleConf.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="createSampleConf.html#createsampleconf-py">createSampleConf.py</a></li>
 </ul>
 </li>
 </ul>
@@ -231,8 +201,7 @@ License</a></p>
 <li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="checkDRSname.html#module-checkDRSname">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="checkDRSname.html#usage">Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="checkDRSname.html#Positional Arguments">Positional Arguments</a></li>
-<li class="toctree-l3"><a class="reference internal" href="checkDRSname.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="checkDRSname.html#checkdrsname-py">checkDRSname.py</a></li>
 </ul>
 </li>
 </ul>
@@ -240,8 +209,7 @@ License</a></p>
 <li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="relocateFilesAsDRS.html#module-relocateFilesAsDRS">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="relocateFilesAsDRS.html#usage">Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="relocateFilesAsDRS.html#Positional Arguments">Positional Arguments</a></li>
-<li class="toctree-l3"><a class="reference internal" href="relocateFilesAsDRS.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="relocateFilesAsDRS.html#relocatefilesasdrs-py">relocateFilesAsDRS.py</a></li>
 </ul>
 </li>
 </ul>
@@ -256,8 +224,7 @@ License</a></p>
 <li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="draw-timeseries.html#description">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="draw-timeseries.html#usage">Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="draw-timeseries.html#Positional Arguments">Positional Arguments</a></li>
-<li class="toctree-l3"><a class="reference internal" href="draw-timeseries.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="draw-timeseries.html#draw-timeseries-py">draw-timeseries.py</a></li>
 </ul>
 </li>
 </ul>
@@ -277,32 +244,32 @@ License</a></p>
 <h2>TODO list<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
 <div class="admonition-todo admonition">
 <p class="admonition-title">Todo</p>
-<ul class="simple">
-<li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
-</ul>
-</div>
-<p class="todo-source">(The <a class="reference internal" href="esgfsearch.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/esgfsearch.py:docstring of esgfsearch.ESGFSearch.getCatURLs, line 19.)</p>
-<div class="admonition-todo admonition">
-<p class="admonition-title">Todo</p>
 <p>Completely re-implment that</p>
 <ul class="simple">
 <li><p>get list use glob (asterisk expansion) only</p></li>
 <li><p>filter out using regex by brace list</p></li>
 </ul>
 </div>
-<p class="todo-source">(The <a class="reference internal" href="drs.html#index-0"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.dirNameList, line 28.)</p>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#id1"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.dirNameList, line 28.)</p>
 <div class="admonition-todo admonition">
 <p class="admonition-title">Todo</p>
 <p>Since non-existent files are omitted, this method seems
 useless. Implement pathNameList() to obtain a list of
 path(dir/file)</p>
 </div>
-<p class="todo-source">(The <a class="reference internal" href="drs.html#index-1"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.fileNameList, line 7.)</p>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#id2"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.fileNameList, line 7.)</p>
 <div class="admonition-todo admonition">
 <p class="admonition-title">Todo</p>
 <p>Should this be the member of this class ??</p>
 </div>
-<p class="todo-source">(The <a class="reference internal" href="drs.html#index-2"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.getAttrsFromGA, line 9.)</p>
+<p class="todo-source">(The <a class="reference internal" href="drs.html#id3"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/drs.py:docstring of drs.DRS.getAttrsFromGA, line 9.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<ul class="simple">
+<li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
+</ul>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="esgfsearch.html#id1"><em>original entry</em></a> is located in /home/tinoue/2019Tougou/cmiputil/cmiputil/esgfsearch.py:docstring of esgfsearch.ESGFSearch.doSearch, line 26.)</p>
 </div>
 </div>
 
@@ -310,26 +277,53 @@ path(dir/file)</p>
           </div>
         </div>
       </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation index</a><ul>
+      <li>Next: <a href="esgfsearch.html" title="next chapter">cmiputil.esgfsearch module</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="convoc.html" title="cmiputil.convoc module"
-             >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">cmiputil  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, RIST.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
+  </div>
+  
   </body>
 </html>

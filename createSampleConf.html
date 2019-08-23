@@ -1,29 +1,28 @@
 
-
-<!doctype html>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
     <title>createSampleConf program &#8212; cmiputil  documentation</title>
-    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="checkDRSname program" href="checkDRSname.html" />
     <link rel="prev" title="Bash-style brace expansion for Python" href="README.braceexpand.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <!--[if lt IE 9]>
-    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head><body>
+  
+  
+
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -41,40 +40,7 @@
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">createSampleConf program</a><ul>
-<li><a class="reference internal" href="#module-createSampleConf">Description</a></li>
-<li><a class="reference internal" href="#usage">Usage</a><ul>
-<li><a class="reference internal" href="#Positional Arguments">Positional Arguments</a></li>
-<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="README.braceexpand.html"
-                        title="previous chapter">Bash-style brace expansion for Python</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="checkDRSname.html"
-                        title="next chapter">checkDRSname program</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -89,26 +55,28 @@
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<p><p>Create config file for cmiputil.</p>
-</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">createSampleConf</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">O</span><span class="p">]</span> <span class="p">[</span><span class="n">conf_file</span><span class="p">]</span>
+<div class="section" id="createsampleconf-py">
+<h3>createSampleConf.py<a class="headerlink" href="#createsampleconf-py" title="Permalink to this headline">¶</a></h3>
+<p>Create config file for cmiputil.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: createSampleConf.py [-h] [-O] [conf_file]</span>
 </pre></div>
 </div>
-<div class="section" id="Positional Arguments">
-<h3>Positional Arguments<a class="headerlink" href="#Positional Arguments" title="Permalink to this headline">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>conf_file</kbd></dt>
-<dd><p>Default: “cmiputil.conf”</p>
-</dd>
-</dl>
-</div>
-<div class="section" id="Named Arguments">
-<h3>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h3>
-<dl class="option-list">
-<dt><kbd>-O, --overwrite</kbd></dt>
-<dd><p>Default: False</p>
-</dd>
-</dl>
+<dl class="option">
+<dt id="cmdoption-createsampleconf-py-arg-conf-file">
+<code class="sig-name descname">conf_file</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-createsampleconf-py-arg-conf-file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-createsampleconf-py-h">
+<code class="sig-name descname">-h</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--help</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-createsampleconf-py-h" title="Permalink to this definition">¶</a></dt>
+<dd><p>show this help message and exit</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-createsampleconf-py-o">
+<code class="sig-name descname">-O</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--overwrite</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-createsampleconf-py-o" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 </div>
 </div>
@@ -117,29 +85,59 @@
           </div>
         </div>
       </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">createSampleConf program</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-createSampleConf">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#createsampleconf-py">createSampleConf.py</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+      <li>Previous: <a href="README.braceexpand.html" title="previous chapter">Bash-style brace expansion for Python</a></li>
+      <li>Next: <a href="checkDRSname.html" title="next chapter">checkDRSname program</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="checkDRSname.html" title="checkDRSname program"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="README.braceexpand.html" title="Bash-style brace expansion for Python"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, RIST.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
   </body>
 </html>

@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>esgfdatainfo &#8212; cmiputil  documentation</title>
+    <link rel="stylesheet" href="../_static/readable.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cmiputil  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for esgfdatainfo</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Supporting module for :mod:`esgfsearch`.</span>
+
+<span class="sd">This class holds and maintains search result of ESGF dataset obtained</span>
+<span class="sd">via RESTful API issued by :meth:`esgfsearch.ESGFSearch.doSearch`</span>
+<span class="sd">method.</span>
+
+<span class="sd">One instance of this class corresponds to one search result, and a</span>
+<span class="sd">list of instances is set as the :attr:`esgfsearch.ESGFSearch.datainfo`</span>
+<span class="sd">attribute.</span>
+
+<span class="sd">This class also have some methods to access OPeNDAP catalog and</span>
+<span class="sd">retrieve additional information, search local (pre-downloaded) files</span>
+<span class="sd">to match the search result, etc.</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from cmiputil import esgfdatainfo</span>
+<span class="sd">    &gt;&gt;&gt; import urllib3, json</span>
+<span class="sd">    &gt;&gt;&gt; keywords = {</span>
+<span class="sd">    ... &#39;distrib&#39;:&#39;true&#39;,</span>
+<span class="sd">    ... &#39;type&#39;:&#39;Dataset&#39;,</span>
+<span class="sd">    ... &#39;format&#39;:r&#39;application/solr+json&#39;,</span>
+<span class="sd">    ... &#39;offset&#39;:0,</span>
+<span class="sd">    ... &#39;replica&#39;:&#39;False&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; params = {</span>
+<span class="sd">    ... &#39;experiment_id&#39;:&#39;piControl&#39;,</span>
+<span class="sd">    ... &#39;variable_id&#39;:&#39;tas&#39;,</span>
+<span class="sd">    ... &#39;table_id&#39;:&#39;Amon&#39;,</span>
+<span class="sd">    ... &#39;source_id&#39;:&#39;BCC-CSM2-MR&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; base_url = &#39;http://esgf-node.llnl.gov/esg-search/&#39; &#39;search&#39;</span>
+<span class="sd">    &gt;&gt;&gt; params.update(keywords)</span>
+<span class="sd">    &gt;&gt;&gt; http = urllib3.PoolManager()</span>
+<span class="sd">    &gt;&gt;&gt; r = http.request(&#39;GET&#39;, base_url, fields=params)</span>
+<span class="sd">    &gt;&gt;&gt; result = json.loads(r.data.decode())</span>
+<span class="sd">    &gt;&gt;&gt; attrs = result[&#39;response&#39;][&#39;docs&#39;][0]</span>
+<span class="sd">    &gt;&gt;&gt; dinfo = esgfdatainfo.ESGFDataInfo(attrs)</span>
+<span class="sd">    &gt;&gt;&gt; dinfo.id</span>
+<span class="sd">    &#39;CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn&#39;</span>
+
+<span class="sd">Actually, doing search as above is done by</span>
+<span class="sd">:class:`esgfsearch.ESGFSearch`.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="k">import</span> <span class="n">MutableMapping</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+
+<span class="kn">import</span> <span class="nn">urllib3</span>
+<span class="kn">from</span> <span class="nn">siphon.catalog</span> <span class="k">import</span> <span class="n">TDSCatalog</span>
+
+<span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">drs</span><span class="p">,</span> <span class="n">dds</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;T.Inoue&#39;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="s1">&#39;Copyright (c) 2019 RIST&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;v20190619&#39;</span>
+<span class="n">__date__</span> <span class="o">=</span> <span class="s1">&#39;2019/06/19&#39;</span>
+
+<span class="n">_http</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="ESGFDataInfo"><a class="viewcode-back" href="../esgfdatainfo.html#esgfdatainfo.ESGFDataInfo">[docs]</a><span class="k">class</span> <span class="nc">ESGFDataInfo</span><span class="p">(</span><span class="n">MutableMapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds and maintains search result of ESGF dataset obtained via</span>
+<span class="sd">    RESTful API.</span>
+
+<span class="sd">    Among attributes obtained from one search result, you can access</span>
+<span class="sd">    several useful ones via :attr:`managedAttribs`.</span>
+
+<span class="sd">    Since this class inherits MutableMapping ABC, you can access an</span>
+<span class="sd">    instance of this class as *mapping*, such as ``datainfo[&#39;source_id&#39;]``.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        cat_url: URL of OPeNDAP catalog</span>
+<span class="sd">        data_url: URL of dataset</span>
+<span class="sd">        local_files: Paths of local file corresponding to the search result.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># @property</span>
+    <span class="c1"># def debug(cls):</span>
+    <span class="c1">#     return cls._debug</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribs</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            attribs (dict): attributes to be set, see :meth:`.setFrom`:.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setFrom</span><span class="p">(</span><span class="n">attribs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:ESGFDataInfo.__init__():&#39;</span><span class="p">)</span>
+            <span class="n">pprint</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ESGFDataInfo.setFrom"><a class="viewcode-back" href="../esgfdatainfo.html#esgfdatainfo.ESGFDataInfo.setFrom">[docs]</a>    <span class="k">def</span> <span class="nf">setFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set attributes from one ESGF RESTful API search result.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            attribs (dict): attributes to be set.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># flatten list, except `url`</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">attribs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">!=</span> <span class="s1">&#39;url&#39;</span><span class="p">):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># extract THREDDS URL</span>
+        <span class="c1"># if hasattr(self, &#39;url&#39;):</span>
+        <span class="k">if</span> <span class="s1">&#39;url&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">mime</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+                <span class="c1"># select TDS catalog</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">service</span> <span class="o">==</span> <span class="s1">&#39;THREDDS&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cat_url</span> <span class="o">=</span> <span class="n">url</span>
+
+        <span class="c1">#  in drs &lt;version&gt; must be &#39;vYYYYMMDD&#39;.</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;version&#39;</span><span class="p">):</span>
+            <span class="n">pat</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{8}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pat</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;dbg:ESGFDataInfo.set():modified version:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">managedAttribs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;dict of useful global attributes.&quot;&quot;&quot;</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;data_node&#39;</span><span class="p">,</span>
+            <span class="c1"># &#39;dataset_id&#39;,</span>
+            <span class="s1">&#39;id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;instance_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;master_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_aggregations&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;number_of_files&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;url&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;version&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;mip_era&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;activity_drs&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;activity_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;institution_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;source_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;experiment_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;member_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;table_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;variable_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;variant_label&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;grid_label&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;sub_experiment_id&#39;</span>
+        <span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attributes</span> <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">}</span>
+
+<div class="viewcode-block" id="ESGFDataInfo.getDataURL"><a class="viewcode-back" href="../esgfdatainfo.html#esgfdatainfo.ESGFDataInfo.getDataURL">[docs]</a>    <span class="k">def</span> <span class="nf">getDataURL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get URL(s) of dataset by accessing the OPeNDAP Catalog.</span>
+
+<span class="sd">        Results are set as :attr:`.data_url`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            aggregate (bool): retrieve aggregated dataset, or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cat</span> <span class="o">=</span> <span class="n">TDSCatalog</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_url</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error in siphon.TDSCatalog():&#39;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">agg_data_url</span> <span class="o">=</span> <span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">base_tds_url</span> <span class="o">+</span> <span class="n">_getServiceBase</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">services</span><span class="p">)</span> <span class="o">+</span>
+                             <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">url_path</span><span class="p">)</span>  <span class="c1"># Is this universal ?</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mf_data_url</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">access_urls</span><span class="p">[</span><span class="s1">&#39;OpenDAPServer&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cat</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;OpenDAPServer&#39;</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">access_urls</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mf_data_url</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">aggregate</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_data_url</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mf_data_url</span></div>
+
+<div class="viewcode-block" id="ESGFDataInfo.getDDS"><a class="viewcode-back" href="../esgfdatainfo.html#esgfdatainfo.ESGFDataInfo.getDDS">[docs]</a>    <span class="k">def</span> <span class="nf">getDDS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get OPeNDAP DDS (Dataset Descriptor Structure).</span>
+
+<span class="sd">        Must be called after :meth:`.getDataURL`.</span>
+
+<span class="sd">        Example of DDS::</span>
+
+<span class="sd">            Dataset {</span>
+<span class="sd">                Float64 lat[lat = 160];</span>
+<span class="sd">                Float64 lat_bnds[lat = 160][bnds = 2];</span>
+<span class="sd">                Float64 lon[lon = 320];</span>
+<span class="sd">                Float64 lon_bnds[lon = 320][bnds = 2];</span>
+<span class="sd">                Float64 height;</span>
+<span class="sd">                Float64 time[time = 8412];</span>
+<span class="sd">                Float64 time_bnds[time = 8412][bnds = 2];</span>
+<span class="sd">                Grid {</span>
+<span class="sd">                 ARRAY:</span>
+<span class="sd">                    Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="sd">                 MAPS:</span>
+<span class="sd">                    Float64 time[time = 8412];</span>
+<span class="sd">                    Float64 lat[lat = 160];</span>
+<span class="sd">                    Float64 lon[lon = 320];</span>
+<span class="sd">                } tas;</span>
+<span class="sd">            } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agg_dds</span> <span class="o">=</span> <span class="n">_getDDS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_data_url</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mf_dds</span> <span class="o">=</span> <span class="p">[</span><span class="n">_getDDS</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mf_data_url</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ESGFDataInfo.findLocalFile"><a class="viewcode-back" href="../esgfdatainfo.html#esgfdatainfo.ESGFDataInfo.findLocalFile">[docs]</a>    <span class="k">def</span> <span class="nf">findLocalFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find local (pre-downloaded) files corresponds to the search</span>
+<span class="sd">        result.</span>
+
+<span class="sd">        See **Local data store** section in :mod:`esgfsearch`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">drs</span><span class="o">.</span><span class="n">DRS</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">managedAttribs</span><span class="p">)</span>
+        <span class="n">dname</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">dirName</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">base_dir</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">fileName</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">local_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dname</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">fname</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__missing__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">}</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_getServiceBase</span><span class="p">(</span><span class="n">services</span><span class="p">):</span>
+    <span class="c1"># `services` must be a list of SimpleService or CompoundService</span>
+    <span class="c1"># class, attribute of TDSCatalog instance.</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">services</span><span class="p">:</span>
+        <span class="c1"># search &#39;OpenDAP&#39; service.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">service_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;opendap&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">base</span>
+        <span class="c1"># if service_type is compound, do recursive call.</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">service_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;compound&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_getServiceBase</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">services</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_getDDS</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">_http</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_http</span><span class="p">:</span>
+        <span class="n">_http</span> <span class="o">=</span> <span class="n">urllib3</span><span class="o">.</span><span class="n">PoolManager</span><span class="p">()</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">_http</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="n">url</span> <span class="o">+</span> <span class="s1">&#39;.dds&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">200</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">dds</span><span class="o">.</span><span class="n">parse_dataset</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">if</span> <span class="p">(</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation index</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
+  </body>
+</html>

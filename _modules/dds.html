@@ -1,0 +1,1293 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dds &#8212; cmiputil  documentation</title>
+    <link rel="stylesheet" href="../_static/readable.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">cmiputil  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dds</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module to parse DDS (Dataset Descriptor Structure) used in OPeNDAP.</span>
+
+<span class="sd">DDS</span>
+<span class="sd">---</span>
+
+<span class="sd">For the definition of DDS, see `OpenDAP UserGuide`_.</span>
+<span class="sd">In this module, we change the notation in the DDS syntax as follows:</span>
+
+<span class="sd">    | *declarations* := list(*declaration*)</span>
+<span class="sd">    | *declaration* := *Var* | *Struct*</span>
+<span class="sd">    | *Struct* := *stype* { *declarations* } (*name* | *name* *arr*)</span>
+<span class="sd">    | *stype* := Dataset|Structure|Sequence|Grid</span>
+<span class="sd">    | *Grid* := Grid { ARRAY: *declaration* MAPS: *declarations* } (*name* | *name* *arr*)</span>
+<span class="sd">    | *Var* := *btype* (*name* | *name* *arr*)</span>
+<span class="sd">    | *btype* := Byte|Int32|UInt32|Float64|String|Url| ...</span>
+<span class="sd">    | *arr* := [integer] | [*name* = integer]</span>
+
+<span class="sd">As you can see from above syntax, one *Struct* can contain other *Struct* recursively, and consists</span>
+<span class="sd">the tree structure. The root of the tree must be one &quot;Dataset&quot;.</span>
+
+<span class="sd">In this module, each element of above syntax is implemented as one class.</span>
+
+<span class="sd">Basic Usage</span>
+<span class="sd">-----------</span>
+
+<span class="sd">Text form of DDS will be obtained by, for example,</span>
+<span class="sd">:meth:`.ESGFDataInfo.getDDS`. Use :func:`parse_dataset` to parse it to</span>
+<span class="sd">get the tree structure. The root of the tree is a :class:`Dataset`</span>
+<span class="sd">instance, and you can access nodes and leafs of the tree by dot</span>
+<span class="sd">notation (see also &#39;Example&#39; section below)::</span>
+
+<span class="sd">    ds = parse_dataset(text=sample1)</span>
+<span class="sd">    ds.tas  # Grid(&#39;tas, arrary=Var(tas, ...), maps={&#39;time&#39;:..., &#39;lat&#39;:..., &#39;lon&#39;:...})</span>
+<span class="sd">    ds.tas.array.arr[0]  # Arr(&#39;time&#39;, 8412)</span>
+
+
+<span class="sd">.. _OpenDAP UserGuide: https://opendap.github.io/documentation/UserGuideComprehensive.html#DDS</span>
+
+<span class="sd">Example:</span>
+
+<span class="sd">    &gt;&gt;&gt; sample1 = &#39;&#39;&#39;</span>
+<span class="sd">    ... Dataset {</span>
+<span class="sd">    ...     Float64 lat[lat = 160];</span>
+<span class="sd">    ...     Float64 lat_bnds[lat = 160][bnds = 2];</span>
+<span class="sd">    ...     Float64 lon[lon = 320];</span>
+<span class="sd">    ...     Float64 lon_bnds[lon = 320][bnds = 2];</span>
+<span class="sd">    ...     Float64 height;</span>
+<span class="sd">    ...     Float64 time[time = 8412];</span>
+<span class="sd">    ...     Float64 time_bnds[time = 8412][bnds = 2];</span>
+<span class="sd">    ...     Grid {</span>
+<span class="sd">    ...      ARRAY:</span>
+<span class="sd">    ...         Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="sd">    ...      MAPS:</span>
+<span class="sd">    ...         Float64 time[time = 8412];</span>
+<span class="sd">    ...         Float64 lat[lat = 160];</span>
+<span class="sd">    ...         Float64 lon[lon = 320];</span>
+<span class="sd">    ...     } tas;</span>
+<span class="sd">    ... } CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;&#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sample1_struct = Dataset(</span>
+<span class="sd">    ...    &#39;CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1&#39;,</span>
+<span class="sd">    ...    {</span>
+<span class="sd">    ...        &#39;lat&#39;:</span>
+<span class="sd">    ...        Var(&#39;lat&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lat&#39;, 160)]),</span>
+<span class="sd">    ...        &#39;lat_bnds&#39;:</span>
+<span class="sd">    ...        Var(&#39;lat_bnds&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lat&#39;, 160),</span>
+<span class="sd">    ...                                        Arr(&#39;bnds&#39;, 2)]),</span>
+<span class="sd">    ...        &#39;lon&#39;:</span>
+<span class="sd">    ...        Var(&#39;lon&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lon&#39;, 320)]),</span>
+<span class="sd">    ...        &#39;lon_bnds&#39;:</span>
+<span class="sd">    ...        Var(&#39;lon_bnds&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lon&#39;, 320),</span>
+<span class="sd">    ...                                        Arr(&#39;bnds&#39;, 2)]),</span>
+<span class="sd">    ...        &#39;height&#39;:</span>
+<span class="sd">    ...        Var(&#39;height&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...        &#39;time&#39;:</span>
+<span class="sd">    ...        Var(&#39;time&#39;, &#39;Float64&#39;, arr=[Arr(&#39;time&#39;, 8412)]),</span>
+<span class="sd">    ...        &#39;time_bnds&#39;:</span>
+<span class="sd">    ...        Var(&#39;time_bnds&#39;, &#39;Float64&#39;, arr=[Arr(&#39;time&#39;, 8412),</span>
+<span class="sd">    ...                                         Arr(&#39;bnds&#39;, 2)]),</span>
+<span class="sd">    ...        &#39;tas&#39;:</span>
+<span class="sd">    ...        Grid(&#39;tas&#39;,</span>
+<span class="sd">    ...             array=Var(</span>
+<span class="sd">    ...                 &#39;tas&#39;,</span>
+<span class="sd">    ...                 &#39;Float32&#39;,</span>
+<span class="sd">    ...                 arr=[Arr(&#39;time&#39;, 8412),</span>
+<span class="sd">    ...                      Arr(&#39;lat&#39;, 160),</span>
+<span class="sd">    ...                      Arr(&#39;lon&#39;, 320)]),</span>
+<span class="sd">    ...             maps={</span>
+<span class="sd">    ...                 &#39;time&#39;: Var(&#39;time&#39;, &#39;Float64&#39;, arr=[Arr(&#39;time&#39;, 8412)]),</span>
+<span class="sd">    ...                 &#39;lat&#39;: Var(&#39;lat&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lat&#39;, 160)]),</span>
+<span class="sd">    ...                 &#39;lon&#39;: Var(&#39;lon&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lon&#39;, 320)])</span>
+<span class="sd">    ...             })</span>
+<span class="sd">    ...    })</span>
+<span class="sd">    &gt;&gt;&gt; sample1_struct == parse_dataset(sample1)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &gt;&gt;&gt; from cmiputil import dds</span>
+<span class="sd">    &gt;&gt;&gt; sample2 = &#39;&#39;&#39;</span>
+<span class="sd">    ... Dataset {</span>
+<span class="sd">    ...   Int32 catalog_number;</span>
+<span class="sd">    ...   Sequence {</span>
+<span class="sd">    ...     String experimenter;</span>
+<span class="sd">    ...     Int32 time;</span>
+<span class="sd">    ...     Structure {</span>
+<span class="sd">    ...       Float64 latitude;</span>
+<span class="sd">    ...       Float64 longitude;</span>
+<span class="sd">    ...     } location;</span>
+<span class="sd">    ...     Sequence {</span>
+<span class="sd">    ...       Float64 depth;</span>
+<span class="sd">    ...       Float64 salinity;</span>
+<span class="sd">    ...       Float64 oxygen;</span>
+<span class="sd">    ...       Float64 temperature;</span>
+<span class="sd">    ...     } cast;</span>
+<span class="sd">    ...   } station;</span>
+<span class="sd">    ... } data;</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sample2_struct = Dataset(</span>
+<span class="sd">    ...     &#39;data&#39;, {</span>
+<span class="sd">    ...         &#39;catalog_number&#39;:</span>
+<span class="sd">    ...         Var(&#39;catalog_number&#39;, &#39;Int32&#39;),</span>
+<span class="sd">    ...         &#39;station&#39;:</span>
+<span class="sd">    ...         Sequence(</span>
+<span class="sd">    ...             &#39;station&#39;, {</span>
+<span class="sd">    ...                 &#39;experimenter&#39;:</span>
+<span class="sd">    ...                 Var(&#39;experimenter&#39;, &#39;String&#39;),</span>
+<span class="sd">    ...                 &#39;time&#39;:</span>
+<span class="sd">    ...                 Var(&#39;time&#39;, &#39;Int32&#39;),</span>
+<span class="sd">    ...                 &#39;location&#39;:</span>
+<span class="sd">    ...                 Structure(</span>
+<span class="sd">    ...                     &#39;location&#39;, {</span>
+<span class="sd">    ...                         &#39;latitude&#39;: Var(&#39;latitude&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...                         &#39;longitude&#39;: Var(&#39;longitude&#39;, &#39;Float64&#39;)</span>
+<span class="sd">    ...                     }),</span>
+<span class="sd">    ...                 &#39;cast&#39;:</span>
+<span class="sd">    ...                 Sequence(</span>
+<span class="sd">    ...                     &#39;cast&#39;, {</span>
+<span class="sd">    ...                         &#39;depth&#39;: Var(&#39;depth&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...                         &#39;salinity&#39;: Var(&#39;salinity&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...                         &#39;oxygen&#39;: Var(&#39;oxygen&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...                         &#39;temperature&#39;: Var(&#39;temperature&#39;, &#39;Float64&#39;)</span>
+<span class="sd">    ...                     })</span>
+<span class="sd">    ...             })</span>
+<span class="sd">    ...     })</span>
+<span class="sd">    &gt;&gt;&gt; sample2_struct == parse_dataset(sample2)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &gt;&gt;&gt; sample3 = &#39;&#39;&#39;</span>
+<span class="sd">    ... Dataset {</span>
+<span class="sd">    ...     Structure {</span>
+<span class="sd">    ...         Float64 lat;</span>
+<span class="sd">    ...         Float64 lon;</span>
+<span class="sd">    ...     } location;</span>
+<span class="sd">    ...     Structure {</span>
+<span class="sd">    ...         Int32 minutes;</span>
+<span class="sd">    ...         Int32 day;</span>
+<span class="sd">    ...         Int32 year;</span>
+<span class="sd">    ...     } time;</span>
+<span class="sd">    ...     Float64 depth[500];</span>
+<span class="sd">    ...     Float64 temperature[500];</span>
+<span class="sd">    ... } xbt-station;</span>
+<span class="sd">    ... &#39;&#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sample3_struct = Dataset(</span>
+<span class="sd">    ...     &#39;xbt-station&#39;, {</span>
+<span class="sd">    ...         &#39;location&#39;:</span>
+<span class="sd">    ...         Structure(&#39;location&#39;, {</span>
+<span class="sd">    ...             &#39;lat&#39;: Var(&#39;lat&#39;, &#39;Float64&#39;),</span>
+<span class="sd">    ...             &#39;lon&#39;: Var(&#39;lon&#39;, &#39;Float64&#39;)</span>
+<span class="sd">    ...         }),</span>
+<span class="sd">    ...         &#39;time&#39;:</span>
+<span class="sd">    ...         Structure(</span>
+<span class="sd">    ...             &#39;time&#39;, {</span>
+<span class="sd">    ...                 &#39;minutes&#39;: Var(&#39;minutes&#39;, &#39;Int32&#39;),</span>
+<span class="sd">    ...                 &#39;day&#39;: Var(&#39;day&#39;, &#39;Int32&#39;),</span>
+<span class="sd">    ...                 &#39;year&#39;: Var(&#39;year&#39;, &#39;Int32&#39;)</span>
+<span class="sd">    ...             }),</span>
+<span class="sd">    ...         &#39;depth&#39;:</span>
+<span class="sd">    ...         Var(&#39;depth&#39;, &#39;Float64&#39;, arr=[Arr(&#39;&#39;, 500)]),</span>
+<span class="sd">    ...         &#39;temperature&#39;:</span>
+<span class="sd">    ...         Var(&#39;temperature&#39;, &#39;Float64&#39;, arr=[Arr(&#39;&#39;, 500)])</span>
+<span class="sd">    ...     })</span>
+<span class="sd">    &gt;&gt;&gt; sample3_struct == parse_dataset(sample3)</span>
+<span class="sd">    True</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">enum</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">textwrap</span> <span class="k">as</span> <span class="nn">tw</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
+
+<span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_enable_debug</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">_debug</span>
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">_disable_debug</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">_debug</span>
+    <span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_debug_write</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">_debug</span>
+    <span class="k">if</span> <span class="n">_debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BType"><a class="viewcode-back" href="../dds.html#dds.BType">[docs]</a><span class="k">class</span> <span class="nc">BType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Values for :attr:`.Var.btype`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Byte</span> <span class="o">=</span> <span class="s1">&#39;Byte&#39;</span>
+    <span class="n">Int16</span> <span class="o">=</span> <span class="s1">&#39;Int16&#39;</span>
+    <span class="n">Int32</span> <span class="o">=</span> <span class="s1">&#39;Int32&#39;</span>
+    <span class="n">UInt32</span> <span class="o">=</span> <span class="s1">&#39;UInt32&#39;</span>
+    <span class="n">Float32</span> <span class="o">=</span> <span class="s1">&#39;Float32&#39;</span>
+    <span class="n">Float64</span> <span class="o">=</span> <span class="s1">&#39;Float64&#39;</span>
+    <span class="n">String</span> <span class="o">=</span> <span class="s1">&#39;String&#39;</span>
+    <span class="n">Url</span> <span class="o">=</span> <span class="s1">&#39;Url&#39;</span></div>
+
+
+<div class="viewcode-block" id="SType"><a class="viewcode-back" href="../dds.html#dds.SType">[docs]</a><span class="k">class</span> <span class="nc">SType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Values for :attr:`Struct.stype`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Dataset</span> <span class="o">=</span> <span class="s1">&#39;Dataset&#39;</span>
+    <span class="n">Structure</span> <span class="o">=</span> <span class="s1">&#39;Structure&#39;</span>
+    <span class="n">Sequence</span> <span class="o">=</span> <span class="s1">&#39;Sequence&#39;</span>
+    <span class="n">Grid</span> <span class="o">=</span> <span class="s1">&#39;Grid&#39;</span></div>
+
+
+<span class="n">_idents_btype</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">BType</span><span class="p">]</span>
+<span class="n">_idents_stype</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">SType</span><span class="p">]</span>
+<span class="n">_idents</span> <span class="o">=</span> <span class="n">_idents_btype</span> <span class="o">+</span> <span class="n">_idents_stype</span>
+<span class="n">_pat_idents_stype</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\s*(&#39;</span> <span class="o">+</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_idents_stype</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+<span class="n">_pat_ident</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\s*(&#39;</span> <span class="o">+</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_idents</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">)</span>
+<span class="n">_pat_struct</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^\s*(&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_idents_stype</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;)\s*\{(.*)\}\s*(\S+);\s*&#39;</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+<span class="n">_pat_dataset</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\s*Dataset\s+&#39;</span>
+                          <span class="sa">r</span><span class="s1">&#39;\{(.+)\}\s*(\S+);\s*$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+<span class="n">_pat_grid</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^\s*Grid\s*\{\s*Array:(.+)Maps:&#39;</span>
+    <span class="sa">r</span><span class="s1">&#39;\s*(.+)\s*\}\s*(\w+);&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+<span class="n">_pat_varline</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\s*(\w+)\s*(\w+)(\[.+\])*;\s*$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+<span class="n">_pat_arrdecl</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[(\w+?)\s*=\s*(\d+)\]&#39;</span><span class="p">)</span>
+<span class="n">_pat_arrdecl_valonly</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^s*\[(\d+)]&#39;</span><span class="p">)</span>
+<span class="n">_pat_arrdecl_line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\[(?:\w+?\s*=)*\s*\d+\]&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Decls"><a class="viewcode-back" href="../dds.html#dds.Decls">[docs]</a><span class="k">class</span> <span class="nc">Decls</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *declarations*.</span>
+
+<span class="sd">    | *declarations* := list(*declaration*)</span>
+
+<span class="sd">    In this module, *declarations* are expressed as `dict`, not</span>
+<span class="sd">    `list`. At this point, this class is just an alias for `dict`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Decl"><a class="viewcode-back" href="../dds.html#dds.Decl">[docs]</a><span class="k">class</span> <span class="nc">Decl</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *declaration*, that is, base class for :class:`Var`</span>
+<span class="sd">    and :class:`Struct`. No need to use this class explicitly.</span>
+
+<span class="sd">    | *declaration* := *Var* | *Struct*</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Decl.__eq__():{type(self)},{type(other)}&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Decl.text_formatted"><a class="viewcode-back" href="../dds.html#dds.Decl.text_formatted">[docs]</a>    <span class="k">def</span> <span class="nf">text_formatted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Struct"><a class="viewcode-back" href="../dds.html#dds.Struct">[docs]</a><span class="k">class</span> <span class="nc">Struct</span><span class="p">(</span><span class="n">Decl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *struct*, that is, base class for :class:`Structure`,</span>
+<span class="sd">    :class:`Sequence`, :class:`Grid` and :class:`Dataset`.</span>
+<span class="sd">    Do not use this directly.</span>
+
+<span class="sd">    | *struct* := *stype* { *declarations* } *var*</span>
+<span class="sd">    | *stype* := Dataset|Structure|Sequence|Grid</span>
+
+<span class="sd">    You can access items of ``self.decl`` as if they are the attribute</span>
+<span class="sd">    of this class, via dot notation.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;&#39;&#39;</span>
+<span class="sd">        ... Sequence {</span>
+<span class="sd">        ...   Float64 depth;</span>
+<span class="sd">        ...     Float64 salinity;</span>
+<span class="sd">        ...     Float64 oxygen;</span>
+<span class="sd">        ...     Float64 temperature;</span>
+<span class="sd">        ...   } cast;&#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; s = Sequence(text=text)</span>
+<span class="sd">        &gt;&gt;&gt; s.salinity</span>
+<span class="sd">        Var(&#39;salinity&#39;, &#39;Float64&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;&#39;&#39;</span>
+<span class="sd">        ... Dataset {</span>
+<span class="sd">        ...   Int32 catalog_number;</span>
+<span class="sd">        ...   Sequence {</span>
+<span class="sd">        ...     String experimenter;</span>
+<span class="sd">        ...     Int32 time;</span>
+<span class="sd">        ...     Structure {</span>
+<span class="sd">        ...       Float64 latitude;</span>
+<span class="sd">        ...       Float64 longitude;</span>
+<span class="sd">        ...     } location;</span>
+<span class="sd">        ...   } station;</span>
+<span class="sd">        ... } data;&#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; d = parse_dataset(text)</span>
+<span class="sd">        &gt;&gt;&gt; d.station.location.latitude</span>
+<span class="sd">        Var(&#39;latitude&#39;, &#39;Float64&#39;)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name(str): *name*</span>
+<span class="sd">        stype(SType): *stype*</span>
+<span class="sd">        decl(Decls)): *declarations*</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stype</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            name(str): *name*</span>
+<span class="sd">            decl(str or Decls)): *declarations*</span>
+<span class="sd">            text(str): text to be parsed.</span>
+
+<span class="sd">        If `text` is *not* ``None``, other attributes are overridden by</span>
+<span class="sd">        the result of :meth:`.parse` or left untouced..</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">&#39;</span> <span class="n">f</span><span class="s2">&quot;text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+            <span class="k">if</span> <span class="n">decl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decl</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decl</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decl</span> <span class="o">=</span> <span class="n">decl</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">decl</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decl</span> <span class="o">=</span> <span class="n">parse_declarations</span><span class="p">(</span><span class="n">decl</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;decl=</span><span class="si">{decl}</span><span class="s1"> is invalid type: {type(decl)}&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Struct.parse"><a class="viewcode-back" href="../dds.html#dds.Struct.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse `text` to construct :class:`Struct`.</span>
+
+<span class="sd">        If given `text` is not valid for each subclass, the instance</span>
+<span class="sd">        is left as &#39;null&#39; instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">.parse: text=&quot;</span><span class="si">{text}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_struct</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">.parse:name=&quot;{res.group(3)}&quot;&#39;</span><span class="p">)</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">.parse:decl=&quot;{res.group(2)}&quot;&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span> <span class="o">==</span> <span class="n">SType</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decl</span> <span class="o">=</span> <span class="n">parse_declarations</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__getattr__() called&#39;)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{key}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__getitem__() called&#39;)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{key}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__contains__() called&#39;)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">:</span>
+            <span class="c1"># decl = f&#39;decl={self.decl.__repr__()}&#39;</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{self.decl.__repr__()}&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">decl</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">(</span><span class="si">{res}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Struct.text_formatted"><a class="viewcode-back" href="../dds.html#dds.Struct.text_formatted">[docs]</a>    <span class="k">def</span> <span class="nf">text_formatted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return formatted text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_debug_write</span><span class="p">(</span>
+            <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">.text_formatted:indent=</span><span class="si">{indent}</span><span class="s1">,linebreak=</span><span class="si">{linebreak}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span><span class="p">:</span>
+            <span class="n">stype</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.stype.name}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stype</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">linebreak</span><span class="p">:</span>
+                <span class="n">lb</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lb</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="n">decl</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{lb}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">decl</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">(</span><span class="n">indent</span><span class="p">,</span> <span class="n">linebreak</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">decl</span> <span class="k">if</span> <span class="n">d</span>
+            <span class="p">])</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">decl</span><span class="p">,</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="n">indent</span><span class="p">)</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{lb}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="n">decl</span><span class="p">,</span> <span class="s1">&#39;}&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">decl</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">[</span><span class="n">stype</span><span class="p">,</span> <span class="n">decl</span><span class="p">,</span> <span class="n">name</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Text to construct this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../dds.html#dds.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">(</span><span class="n">Struct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *Dataset*.</span>
+
+<span class="sd">    See :class:`Struct`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stype</span> <span class="o">=</span> <span class="n">SType</span><span class="o">.</span><span class="n">Dataset</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="n">decl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structure"><a class="viewcode-back" href="../dds.html#dds.Structure">[docs]</a><span class="k">class</span> <span class="nc">Structure</span><span class="p">(</span><span class="n">Struct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *Structure*.</span>
+
+<span class="sd">    See :class:`Struct`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stype</span> <span class="o">=</span> <span class="n">SType</span><span class="o">.</span><span class="n">Structure</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="n">decl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Sequence"><a class="viewcode-back" href="../dds.html#dds.Sequence">[docs]</a><span class="k">class</span> <span class="nc">Sequence</span><span class="p">(</span><span class="n">Struct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *Sequence*.</span>
+
+<span class="sd">    See :class:`Struct`.</span>
+
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;&#39;&#39;</span>
+<span class="sd">        ...     Sequence {</span>
+<span class="sd">        ...       Float64 depth;</span>
+<span class="sd">        ...       Float64 salinity;</span>
+<span class="sd">        ...       Float64 oxygen;</span>
+<span class="sd">        ...       Float64 temperature;</span>
+<span class="sd">        ...     } cast;&#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Sequence(text=text)</span>
+<span class="sd">        Sequence(&#39;cast&#39;, {&#39;depth&#39;: Var(&#39;depth&#39;, &#39;Float64&#39;), &#39;salinity&#39;: Var(&#39;salinity&#39;, &#39;Float64&#39;), &#39;oxygen&#39;: Var(&#39;oxygen&#39;, &#39;Float64&#39;), &#39;temperature&#39;: Var(&#39;temperature&#39;, &#39;Float64&#39;)})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stype</span> <span class="o">=</span> <span class="n">SType</span><span class="o">.</span><span class="n">Sequence</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="n">decl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Grid"><a class="viewcode-back" href="../dds.html#dds.Grid">[docs]</a><span class="k">class</span> <span class="nc">Grid</span><span class="p">(</span><span class="n">Struct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *Grid*.</span>
+
+<span class="sd">    | *Grid* := Grid { ARRAY: *declaration* MAPS: *declarations* } (*name* | *name* *arr*)</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">        name(str): *name*</span>
+<span class="sd">        stype(SType): *stype*</span>
+<span class="sd">        array(Decl): ARRAY *declaration*</span>
+<span class="sd">        maps(Decls): MAPS *declarations*</span>
+
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;&#39;&#39;</span>
+<span class="sd">        ...     Grid {</span>
+<span class="sd">        ...      ARRAY:</span>
+<span class="sd">        ...         Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="sd">        ...      MAPS:</span>
+<span class="sd">        ...         Float64 time[time = 8412];</span>
+<span class="sd">        ...         Float64 lat[lat = 160];</span>
+<span class="sd">        ...         Float64 lon[lon = 320];</span>
+<span class="sd">        ...     } tas;&#39;&#39;&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Grid(text=text)</span>
+<span class="sd">        Grid(&#39;tas&#39;, array=Var(&#39;tas&#39;, &#39;Float32&#39;, arr=[Arr(&#39;time&#39;, 8412), Arr(&#39;lat&#39;, 160), Arr(&#39;lon&#39;, 320)]), maps={&#39;time&#39;: Var(&#39;time&#39;, &#39;Float64&#39;, arr=[Arr(&#39;time&#39;, 8412)]), &#39;lat&#39;: Var(&#39;lat&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lat&#39;, 160)]), &#39;lon&#39;: Var(&#39;lon&#39;, &#39;Float64&#39;, arr=[Arr(&#39;lon&#39;, 320)])})</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">stype</span> <span class="o">=</span> <span class="n">SType</span><span class="o">.</span><span class="n">Grid</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maps</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            name(str): *name*</span>
+<span class="sd">            stype(str or SType): *stype*</span>
+<span class="sd">            array(Decl): ARRAY *declaration*</span>
+<span class="sd">            maps(Decls): MAPS *declarations*</span>
+<span class="sd">            text(str): text to be parsed.</span>
+
+<span class="sd">        If `text` is not ``None``, other attributes are overridden by</span>
+<span class="sd">        the result of :meth:`.parse`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">decl</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="o">=</span> <span class="n">maps</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Grid.parse"><a class="viewcode-back" href="../dds.html#dds.Grid.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse `text` to construct :class:`Grid`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">.parse: text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_grid</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">_debug_write</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">.parse: array_line=&#39;{res.group(1).strip()}&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="n">_debug_write</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">.parse: maps_line=&#39;{res.group(2).strip()}&#39;&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="o">=</span> <span class="n">parse_declarations</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__getattr__() called&#39;)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{key}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__getitem__() called&#39;)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span>
+        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{key}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="c1"># print(&#39;__contains__() called&#39;)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="n">item</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;array={self.array.__repr__()}&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">:</span>
+            <span class="n">maps</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;maps={self.maps.__repr__()}&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">maps</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">maps</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">(</span><span class="si">{res}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Grid.text_formatted"><a class="viewcode-back" href="../dds.html#dds.Grid.text_formatted">[docs]</a>    <span class="k">def</span> <span class="nf">text_formatted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return formatted text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_debug_write</span><span class="p">(</span>
+            <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.__class__.__name__}</span><span class="s1">.text_formatted:indent=</span><span class="si">{indent}</span><span class="s1">,linebreak=</span><span class="si">{linebreak}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stype</span><span class="p">:</span>
+            <span class="n">stype</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.stype.name}</span><span class="s1">&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stype</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">linebreak</span><span class="p">:</span>
+                <span class="n">lb</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lb</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39; ARRAY:</span><span class="si">{lb}</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">tw</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="n">indent</span><span class="p">)</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{lb}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">maps</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">(</span><span class="n">indent</span><span class="p">,</span> <span class="n">linebreak</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">maps</span> <span class="k">if</span> <span class="n">d</span>
+            <span class="p">])</span>
+            <span class="n">maps</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39; MAPS:</span><span class="si">{lb}</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">tw</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">ll</span><span class="p">,</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="n">indent</span><span class="p">)</span>
+            <span class="n">decl</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{lb}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">maps</span><span class="p">,</span> <span class="s1">&#39;}&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">decl</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">[</span><span class="n">stype</span><span class="p">,</span> <span class="n">decl</span><span class="p">,</span> <span class="n">name</span><span class="p">]</span> <span class="k">if</span> <span class="n">l</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Text to construct this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Var"><a class="viewcode-back" href="../dds.html#dds.Var">[docs]</a><span class="k">class</span> <span class="nc">Var</span><span class="p">(</span><span class="n">Decl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *Var*.</span>
+
+<span class="sd">    | *Var* := *basetype* (*name*|*name* *arr*)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str): *name*</span>
+<span class="sd">        btype (BType): *basetype*</span>
+<span class="sd">        arr (list(Arr)): *array-decl*</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">btype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            name(str): *name*</span>
+<span class="sd">            btype(str or BType): *basetype*</span>
+<span class="sd">            arr(Arr or list(Arr)): *array-decl*</span>
+<span class="sd">            text(str): text to be parsed</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: if `btype` or `arr` is invalid</span>
+
+<span class="sd">        If `text` is not ``None``, other attributes are overridden by</span>
+<span class="sd">        the result of :meth:`.parse`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">btype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="o">=</span> <span class="n">btype</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">btype</span><span class="p">,</span> <span class="n">BType</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="o">=</span> <span class="n">btype</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="o">=</span> <span class="n">BType</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;btype=</span><span class="si">{btype}</span><span class="s1"> is invalid type: {type(btype)}&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">arr</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">Arr</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Arr</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arr</span> <span class="o">=</span> <span class="n">arr</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arr</span> <span class="o">=</span> <span class="n">parse_arrdecls</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;arr=</span><span class="si">{arr}</span><span class="s1"> is invalid type: {type(arr)}&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Var.parse"><a class="viewcode-back" href="../dds.html#dds.Var.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse `text` to construct :class:`Var`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Var.parse():text=&quot;</span><span class="si">{text[:60]}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_varline</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="o">=</span> <span class="n">BType</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">arr</span> <span class="o">=</span> <span class="n">parse_arrdecls</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">btype</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">btype</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;&#39;</span><span class="si">{self.btype.name}</span><span class="s2">&#39;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">arr</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="s1">&#39;arr=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arr</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="p">[</span><span class="n">name</span><span class="p">,</span> <span class="n">btype</span><span class="p">,</span> <span class="n">arr</span><span class="p">]</span> <span class="k">if</span> <span class="n">elem</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;Var(</span><span class="si">{args}</span><span class="s1">)&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Var.text_formatted"><a class="viewcode-back" href="../dds.html#dds.Var.text_formatted">[docs]</a>    <span class="k">def</span> <span class="nf">text_formatted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Formatted text expression of this instance.</span>
+
+<span class="sd">        `indent` and `linebreak` are dummy arguments here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">btype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self.btype.name}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39; </span><span class="si">{self.name}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">arr</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arr</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;;&#39;</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Text to construct this instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Arr"><a class="viewcode-back" href="../dds.html#dds.Arr">[docs]</a><span class="k">class</span> <span class="nc">Arr</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for *arr*.</span>
+
+<span class="sd">    | *arr* := [integer] | [*name* = integer]</span>
+
+<span class="sd">    As a text form::</span>
+
+<span class="sd">        text = &#39;[time = 8412]&#39;</span>
+<span class="sd">        text = &#39;[500]&#39;</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;[lat = 160];&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Arr(text=text)</span>
+<span class="sd">        Arr(&#39;lat&#39;, 160)</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;[500];&#39;</span>
+<span class="sd">        &gt;&gt;&gt; Arr(text=text)</span>
+<span class="sd">        Arr(&#39;&#39;, 500)</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        name (str) : *name*</span>
+<span class="sd">        val (int) : integer</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Arr.parse"><a class="viewcode-back" href="../dds.html#dds.Arr.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">.parse():text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_arrdecl</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_arrdecl_valonly</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">_debug_write</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__.__name__}</span><span class="s2">.parse():name=&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;,val=&#39;</span><span class="si">{self.val}</span><span class="s2">&#39;&quot;</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;Arr(&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;, </span><span class="si">{self.val}</span><span class="s2">)&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;Arr(&#39;&#39;, </span><span class="si">{self.val}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;Arr(name=&#39;</span><span class="si">{self.name}</span><span class="s2">&#39;, val=</span><span class="si">{self.val}</span><span class="s2">)&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;[</span><span class="si">{self.val}</span><span class="s2">]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+<div class="viewcode-block" id="Arr.text_formatted"><a class="viewcode-back" href="../dds.html#dds.Arr.text_formatted">[docs]</a>    <span class="k">def</span> <span class="nf">text_formatted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">linebreak</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Text form of *arr*.</span>
+
+<span class="sd">        `indent` and `linebreak` are dummy here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;[</span><span class="si">{self.name}</span><span class="s2"> = </span><span class="si">{self.val}</span><span class="s2">]&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;[</span><span class="si">{self.val}</span><span class="s2">]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">text_formatted</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="check_braces_matching"><a class="viewcode-back" href="../dds.html#dds.check_braces_matching">[docs]</a><span class="k">def</span> <span class="nf">check_braces_matching</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if braces(``{`` and ``}``) in given `text` match.</span>
+
+<span class="sd">    Raises `ValueError` unless match.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;Dataset{varline} hoge&#39;</span>
+<span class="sd">        &gt;&gt;&gt; check_braces_matching(text)  # True</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;Struct{ Sequence{Var} fuga }} hoge&#39;</span>
+<span class="sd">        &gt;&gt;&gt; check_braces_matching(text)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        ValueError: braces do not match: too many right braces: 1 more.</span>
+
+<span class="sd">        &gt;&gt;&gt; text = &#39;Struct{ Sequence{{Var} fuga } hoge&#39;</span>
+<span class="sd">        &gt;&gt;&gt; check_braces_matching(text)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        ValueError: braces do not match: too many left braces: 1 more.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">maxcount</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="s1">&#39;check_braces_matching:&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;{&#39;</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">maxcount</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxcount</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;n=</span><span class="si">{n}</span><span class="s1">, count=</span><span class="si">{count}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;n=</span><span class="si">{n}</span><span class="s1">, count=</span><span class="si">{count}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;braces do not match: &#39;</span>
+                             <span class="n">f</span><span class="s1">&#39;too many right braces: {abs(count)} more.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;braces do not match: &#39;</span>
+                         <span class="n">f</span><span class="s1">&#39;too many left braces: </span><span class="si">{count}</span><span class="s1"> more.&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_dataset"><a class="viewcode-back" href="../dds.html#dds.parse_dataset">[docs]</a><span class="k">def</span> <span class="nf">parse_dataset</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse toplevel *dataset*.</span>
+
+<span class="sd">    *dataset* := Dataset { *declarations* } *name*;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_braces_matching</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># Dataset is the toplevel, *greedy* is preferable.</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_dataset</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Given text is not the Dataset definition.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dataset</span></div>
+
+
+<div class="viewcode-block" id="parse_declarations"><a class="viewcode-back" href="../dds.html#dds.parse_declarations">[docs]</a><span class="k">def</span> <span class="nf">parse_declarations</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return :class:`Decls`, dict of {`name`: *Decl*} parsed from `text`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># _debug_write(f&#39;parse_declarations:text=&quot;{text}&quot;&#39;)</span>
+    <span class="c1"># _debug_write(&#39;======parse_declarations======&#39;)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">Decls</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">text</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_declarations:text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">res_ident</span> <span class="o">=</span> <span class="n">_pat_ident</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res_ident</span><span class="p">:</span>
+            <span class="n">ident</span> <span class="o">=</span> <span class="n">res_ident</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_declarations:ident:&#39;</span><span class="si">{ident}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ident</span> <span class="ow">in</span> <span class="n">_idents_stype</span><span class="p">:</span>
+                <span class="n">ss</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">pop_struct</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+                <span class="c1"># res.append(ss)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">ss</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">ss</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">ident</span> <span class="ow">in</span> <span class="n">_idents_btype</span><span class="p">:</span>
+                <span class="n">vl</span><span class="p">,</span> <span class="n">rest</span> <span class="o">=</span> <span class="n">pop_varline</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+                <span class="c1"># res.append(vl)</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">vl</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">vl</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="pop_struct"><a class="viewcode-back" href="../dds.html#dds.pop_struct">[docs]</a><span class="k">def</span> <span class="nf">pop_struct</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pop one :class:`Struct`-derived instance parsed from the</span>
+<span class="sd">    first part of `text`, return it and the rest of `text`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">leftpos</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">leftpos</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>  <span class="c1"># no braces, no Struct instance.</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">nestlevel</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">text</span><span class="p">[</span><span class="n">leftpos</span><span class="p">:]):</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;{&#39;</span><span class="p">:</span>
+            <span class="n">nestlevel</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">&#39;}&#39;</span><span class="p">:</span>
+            <span class="n">nestlevel</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">nestlevel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">rightpos</span> <span class="o">=</span> <span class="n">leftpos</span> <span class="o">+</span> <span class="n">n</span>
+            <span class="k">break</span>
+
+    <span class="n">lastdelim</span> <span class="o">=</span> <span class="n">rightpos</span> <span class="o">+</span> <span class="n">text</span><span class="p">[</span><span class="n">rightpos</span><span class="p">:]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_struct:lastdelim=&#39;</span><span class="si">{lastdelim}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">sline</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span><span class="n">lastdelim</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">lastdelim</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_idents_stype</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_struct:ident=&#39;</span><span class="si">{ident}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_struct:sline=&#39;</span><span class="si">{sline}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ident</span> <span class="o">==</span> <span class="s1">&#39;Grid&#39;</span><span class="p">:</span>
+            <span class="n">ss</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">sline</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ident</span> <span class="o">==</span> <span class="s1">&#39;Dataset&#39;</span><span class="p">:</span>
+            <span class="n">ss</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">sline</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ident</span> <span class="o">==</span> <span class="s1">&#39;Structure&#39;</span><span class="p">:</span>
+            <span class="n">ss</span> <span class="o">=</span> <span class="n">Structure</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">sline</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ident</span> <span class="o">==</span> <span class="s1">&#39;Sequence&#39;</span><span class="p">:</span>
+            <span class="n">ss</span> <span class="o">=</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">sline</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid text&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ss</span><span class="p">,</span> <span class="n">rest</span></div>
+
+
+<div class="viewcode-block" id="pop_varline"><a class="viewcode-back" href="../dds.html#dds.pop_varline">[docs]</a><span class="k">def</span> <span class="nf">pop_varline</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pop one :class:`Var` instance parsed from the first part of</span>
+<span class="sd">    `text`, return it and rest of the `text`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;pop_varline:text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">pat_split</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39; *(.+?;) *(.*)&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">pat_split</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">vline</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">rest</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;pop_varline:vline=&#39;</span><span class="si">{vline}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;pop_varline:rest=&#39;</span><span class="si">{rest}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">vl</span> <span class="o">=</span> <span class="n">Var</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">vline</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">vl</span><span class="p">,</span> <span class="n">rest</span></div>
+
+
+<div class="viewcode-block" id="parse_arrdecls"><a class="viewcode-back" href="../dds.html#dds.parse_arrdecls">[docs]</a><span class="k">def</span> <span class="nf">parse_arrdecls</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse `text` contains multiple :class:`Arr` definitions and return</span>
+<span class="sd">    a list of them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_debug_write</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;parse_arrdecls:text=&#39;</span><span class="si">{text}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_pat_arrdecl_line</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="c1"># for debug use...</span>
+<span class="n">_sample1</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">Dataset {</span>
+<span class="s1">    Float64 lat[lat = 160];</span>
+<span class="s1">    Float64 lat_bnds[lat = 160][bnds = 2];</span>
+<span class="s1">    Float64 lon[lon = 320];</span>
+<span class="s1">    Float64 lon_bnds[lon = 320][bnds = 2];</span>
+<span class="s1">    Float64 height;</span>
+<span class="s1">    Float64 time[time = 8412];</span>
+<span class="s1">    Float64 time_bnds[time = 8412][bnds = 2];</span>
+<span class="s1">    Grid {</span>
+<span class="s1">     ARRAY:</span>
+<span class="s1">        Float32 tas[time = 8412][lat = 160][lon = 320];</span>
+<span class="s1">     MAPS:</span>
+<span class="s1">        Float64 time[time = 8412];</span>
+<span class="s1">        Float64 lat[lat = 160];</span>
+<span class="s1">        Float64 lon[lon = 320];</span>
+<span class="s1">    } tas;</span>
+<span class="s1">} CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1;</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">_sample1_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+    <span class="s1">&#39;CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.tas.20190222.aggregation.1&#39;</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="s1">&#39;lat&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">)]),</span>
+        <span class="s1">&#39;lat_bnds&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span>
+                                        <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+        <span class="s1">&#39;lon&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)]),</span>
+        <span class="s1">&#39;lon_bnds&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">),</span>
+                                        <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+        <span class="s1">&#39;height&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">)]),</span>
+        <span class="s1">&#39;time_bnds&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time_bnds&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">),</span>
+                                         <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;bnds&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+        <span class="s1">&#39;tas&#39;</span><span class="p">:</span>
+        <span class="n">Grid</span><span class="p">(</span><span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+             <span class="n">array</span><span class="o">=</span><span class="n">Var</span><span class="p">(</span>
+                 <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Float32&#39;</span><span class="p">,</span>
+                 <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">),</span>
+                      <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">),</span>
+                      <span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)]),</span>
+             <span class="n">maps</span><span class="o">=</span><span class="n">Decls</span><span class="p">({</span>
+                 <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">8412</span><span class="p">)]),</span>
+                 <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="mi">160</span><span class="p">)]),</span>
+                 <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="mi">320</span><span class="p">)])</span>
+             <span class="p">}))</span>
+    <span class="p">})</span>
+
+<span class="n">_sample2</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">Dataset {</span>
+<span class="s1">  Int32 catalog_number;</span>
+<span class="s1">  Sequence {</span>
+<span class="s1">    String experimenter;</span>
+<span class="s1">    Int32 time;</span>
+<span class="s1">    Structure {</span>
+<span class="s1">      Float64 latitude;</span>
+<span class="s1">      Float64 longitude;</span>
+<span class="s1">    } location;</span>
+<span class="s1">    Sequence {</span>
+<span class="s1">      Float64 depth;</span>
+<span class="s1">      Float64 salinity;</span>
+<span class="s1">      Float64 oxygen;</span>
+<span class="s1">      Float64 temperature;</span>
+<span class="s1">    } cast;</span>
+<span class="s1">  } station;</span>
+<span class="s1">} data;</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">_sample2_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+    <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;catalog_number&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;catalog_number&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;station&#39;</span><span class="p">:</span>
+        <span class="n">Sequence</span><span class="p">(</span>
+            <span class="s1">&#39;station&#39;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s1">&#39;experimenter&#39;</span><span class="p">:</span>
+                <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;experimenter&#39;</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+                <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;location&#39;</span><span class="p">:</span>
+                <span class="n">Structure</span><span class="p">(</span>
+                    <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+                        <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+                    <span class="p">}),</span>
+                <span class="s1">&#39;cast&#39;</span><span class="p">:</span>
+                <span class="n">Sequence</span><span class="p">(</span>
+                    <span class="s1">&#39;cast&#39;</span><span class="p">,</span> <span class="p">{</span>
+                        <span class="s1">&#39;depth&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+                        <span class="s1">&#39;salinity&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;salinity&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+                        <span class="s1">&#39;oxygen&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;oxygen&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+                        <span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+                    <span class="p">})</span>
+            <span class="p">})</span>
+    <span class="p">})</span>
+
+<span class="n">_sample3</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s1">Dataset {</span>
+<span class="s1">    Structure {</span>
+<span class="s1">        Float64 lat;</span>
+<span class="s1">        Float64 lon;</span>
+<span class="s1">    } location;</span>
+<span class="s1">    Structure {</span>
+<span class="s1">        Int32 minutes;</span>
+<span class="s1">        Int32 day;</span>
+<span class="s1">        Int32 year;</span>
+<span class="s1">    } time;</span>
+<span class="s1">    Float64 depth[500];</span>
+<span class="s1">    Float64 temperature[500];</span>
+<span class="s1">} xbt-station;</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">_sample3_struct</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span>
+    <span class="s1">&#39;xbt-station&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;location&#39;</span><span class="p">:</span>
+        <span class="n">Structure</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;lat&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lat&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;lon&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">)</span>
+        <span class="p">}),</span>
+        <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+        <span class="n">Structure</span><span class="p">(</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s1">&#39;minutes&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;minutes&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;day&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;Int32&#39;</span><span class="p">)</span>
+            <span class="p">}),</span>
+        <span class="s1">&#39;depth&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)]),</span>
+        <span class="s1">&#39;temperature&#39;</span><span class="p">:</span>
+        <span class="n">Var</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Float64&#39;</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="n">Arr</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">)])</span>
+    <span class="p">})</span>
+
+<span class="c1"># _enable_debug()</span>
+<span class="c1">#_disable_debug()</span>
+
+
+<span class="k">def</span> <span class="nf">_test_mod</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">_test_mod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation index</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
+  </body>
+</html>

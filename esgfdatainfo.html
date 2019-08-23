@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>cmiputil.esgfdatainfo module &#8212; cmiputil  documentation</title>
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cmiputil.drs module" href="drs.html" />
+    <link rel="prev" title="cmiputil.esgfsearch module" href="esgfsearch.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="drs.html" title="cmiputil.drs module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="esgfsearch.html" title="cmiputil.esgfsearch module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-esgfdatainfo">
+<span id="cmiputil-esgfdatainfo-module"></span><h1>cmiputil.esgfdatainfo module<a class="headerlink" href="#module-esgfdatainfo" title="Permalink to this headline">¶</a></h1>
+<p>Supporting module for <a class="reference internal" href="esgfsearch.html#module-esgfsearch" title="esgfsearch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">esgfsearch</span></code></a>.</p>
+<p>This class holds and maintains search result of ESGF dataset obtained
+via RESTful API issued by <a class="reference internal" href="esgfsearch.html#esgfsearch.ESGFSearch.doSearch" title="esgfsearch.ESGFSearch.doSearch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">esgfsearch.ESGFSearch.doSearch()</span></code></a>
+method.</p>
+<p>One instance of this class corresponds to one search result, and a
+list of instances is set as the <a class="reference internal" href="esgfsearch.html#esgfsearch.ESGFSearch.datainfo" title="esgfsearch.ESGFSearch.datainfo"><code class="xref py py-attr docutils literal notranslate"><span class="pre">esgfsearch.ESGFSearch.datainfo</span></code></a>
+attribute.</p>
+<p>This class also have some methods to access OPeNDAP catalog and
+retrieve additional information, search local (pre-downloaded) files
+to match the search result, etc.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">esgfdatainfo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">urllib3</span><span class="o">,</span> <span class="nn">json</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">keywords</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span><span class="s1">&#39;distrib&#39;</span><span class="p">:</span><span class="s1">&#39;true&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;type&#39;</span><span class="p">:</span><span class="s1">&#39;Dataset&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;format&#39;</span><span class="p">:</span><span class="sa">r</span><span class="s1">&#39;application/solr+json&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;offset&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;replica&#39;</span><span class="p">:</span><span class="s1">&#39;False&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span><span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span><span class="s1">&#39;piControl&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;variable_id&#39;</span><span class="p">:</span><span class="s1">&#39;tas&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;table_id&#39;</span><span class="p">:</span><span class="s1">&#39;Amon&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span><span class="s1">&#39;BCC-CSM2-MR&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">base_url</span> <span class="o">=</span> <span class="s1">&#39;http://esgf-node.llnl.gov/esg-search/&#39;</span> <span class="s1">&#39;search&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">keywords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">http</span> <span class="o">=</span> <span class="n">urllib3</span><span class="o">.</span><span class="n">PoolManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">http</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s1">&#39;GET&#39;</span><span class="p">,</span> <span class="n">base_url</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attrs</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;response&#39;</span><span class="p">][</span><span class="s1">&#39;docs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dinfo</span> <span class="o">=</span> <span class="n">esgfdatainfo</span><span class="o">.</span><span class="n">ESGFDataInfo</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dinfo</span><span class="o">.</span><span class="n">id</span>
+<span class="go">&#39;CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016|cmip.bcc.cma.cn&#39;</span>
+</pre></div>
+</div>
+<p>Actually, doing search as above is done by
+<a class="reference internal" href="esgfsearch.html#esgfsearch.ESGFSearch" title="esgfsearch.ESGFSearch"><code class="xref py py-class docutils literal notranslate"><span class="pre">esgfsearch.ESGFSearch</span></code></a>.</p>
+<dl class="class">
+<dt id="esgfdatainfo.ESGFDataInfo">
+<em class="property">class </em><code class="sig-prename descclassname">esgfdatainfo.</code><code class="sig-name descname">ESGFDataInfo</code><span class="sig-paren">(</span><em class="sig-param">attribs={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfdatainfo.html#ESGFDataInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.MutableMapping</span></code></a></p>
+<p>Holds and maintains search result of ESGF dataset obtained via
+RESTful API.</p>
+<p>Among attributes obtained from one search result, you can access
+several useful ones via <a class="reference internal" href="#esgfdatainfo.ESGFDataInfo.managedAttribs" title="esgfdatainfo.ESGFDataInfo.managedAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">managedAttribs</span></code></a>.</p>
+<p>Since this class inherits MutableMapping ABC, you can access an
+instance of this class as <em>mapping</em>, such as <code class="docutils literal notranslate"><span class="pre">datainfo['source_id']</span></code>.</p>
+<dl class="attribute">
+<dt id="esgfdatainfo.ESGFDataInfo.cat_url">
+<code class="sig-name descname">cat_url</code><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.cat_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>URL of OPeNDAP catalog</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="esgfdatainfo.ESGFDataInfo.data_url">
+<code class="sig-name descname">data_url</code><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.data_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>URL of dataset</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="esgfdatainfo.ESGFDataInfo.local_files">
+<code class="sig-name descname">local_files</code><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.local_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Paths of local file corresponding to the search result.</p>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>attribs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – attributes to be set, see <a class="reference internal" href="#esgfdatainfo.ESGFDataInfo.setFrom" title="esgfdatainfo.ESGFDataInfo.setFrom"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setFrom()</span></code></a>:.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="esgfdatainfo.ESGFDataInfo.findLocalFile">
+<code class="sig-name descname">findLocalFile</code><span class="sig-paren">(</span><em class="sig-param">base_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfdatainfo.html#ESGFDataInfo.findLocalFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.findLocalFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find local (pre-downloaded) files corresponds to the search
+result.</p>
+<p>See <strong>Local data store</strong> section in <a class="reference internal" href="esgfsearch.html#module-esgfsearch" title="esgfsearch"><code class="xref py py-mod docutils literal notranslate"><span class="pre">esgfsearch</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfdatainfo.ESGFDataInfo.getDDS">
+<code class="sig-name descname">getDDS</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfdatainfo.html#ESGFDataInfo.getDDS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.getDDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get OPeNDAP DDS (Dataset Descriptor Structure).</p>
+<p>Must be called after <a class="reference internal" href="#esgfdatainfo.ESGFDataInfo.getDataURL" title="esgfdatainfo.ESGFDataInfo.getDataURL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getDataURL()</span></code></a>.</p>
+<p>Example of DDS:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Dataset</span> <span class="p">{</span>
+    <span class="n">Float64</span> <span class="n">lat</span><span class="p">[</span><span class="n">lat</span> <span class="o">=</span> <span class="mi">160</span><span class="p">];</span>
+    <span class="n">Float64</span> <span class="n">lat_bnds</span><span class="p">[</span><span class="n">lat</span> <span class="o">=</span> <span class="mi">160</span><span class="p">][</span><span class="n">bnds</span> <span class="o">=</span> <span class="mi">2</span><span class="p">];</span>
+    <span class="n">Float64</span> <span class="n">lon</span><span class="p">[</span><span class="n">lon</span> <span class="o">=</span> <span class="mi">320</span><span class="p">];</span>
+    <span class="n">Float64</span> <span class="n">lon_bnds</span><span class="p">[</span><span class="n">lon</span> <span class="o">=</span> <span class="mi">320</span><span class="p">][</span><span class="n">bnds</span> <span class="o">=</span> <span class="mi">2</span><span class="p">];</span>
+    <span class="n">Float64</span> <span class="n">height</span><span class="p">;</span>
+    <span class="n">Float64</span> <span class="n">time</span><span class="p">[</span><span class="n">time</span> <span class="o">=</span> <span class="mi">8412</span><span class="p">];</span>
+    <span class="n">Float64</span> <span class="n">time_bnds</span><span class="p">[</span><span class="n">time</span> <span class="o">=</span> <span class="mi">8412</span><span class="p">][</span><span class="n">bnds</span> <span class="o">=</span> <span class="mi">2</span><span class="p">];</span>
+    <span class="n">Grid</span> <span class="p">{</span>
+     <span class="n">ARRAY</span><span class="p">:</span>
+        <span class="n">Float32</span> <span class="n">tas</span><span class="p">[</span><span class="n">time</span> <span class="o">=</span> <span class="mi">8412</span><span class="p">][</span><span class="n">lat</span> <span class="o">=</span> <span class="mi">160</span><span class="p">][</span><span class="n">lon</span> <span class="o">=</span> <span class="mi">320</span><span class="p">];</span>
+     <span class="n">MAPS</span><span class="p">:</span>
+        <span class="n">Float64</span> <span class="n">time</span><span class="p">[</span><span class="n">time</span> <span class="o">=</span> <span class="mi">8412</span><span class="p">];</span>
+        <span class="n">Float64</span> <span class="n">lat</span><span class="p">[</span><span class="n">lat</span> <span class="o">=</span> <span class="mi">160</span><span class="p">];</span>
+        <span class="n">Float64</span> <span class="n">lon</span><span class="p">[</span><span class="n">lon</span> <span class="o">=</span> <span class="mi">320</span><span class="p">];</span>
+    <span class="p">}</span> <span class="n">tas</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">CMIP6</span><span class="o">.</span><span class="n">CMIP</span><span class="o">.</span><span class="n">MRI</span><span class="o">.</span><span class="n">MRI</span><span class="o">-</span><span class="n">ESM2</span><span class="o">-</span><span class="mf">0.</span><span class="n">piControl</span><span class="o">.</span><span class="n">r1i1p1f1</span><span class="o">.</span><span class="n">Amon</span><span class="o">.</span><span class="n">tas</span><span class="o">.</span><span class="n">gn</span><span class="o">.</span><span class="n">tas</span><span class="o">.</span><span class="mf">20190222.</span><span class="n">aggregation</span><span class="o">.</span><span class="mi">1</span><span class="p">;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfdatainfo.ESGFDataInfo.getDataURL">
+<code class="sig-name descname">getDataURL</code><span class="sig-paren">(</span><em class="sig-param">aggregate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfdatainfo.html#ESGFDataInfo.getDataURL"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.getDataURL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get URL(s) of dataset by accessing the OPeNDAP Catalog.</p>
+<p>Results are set as <a class="reference internal" href="#esgfdatainfo.ESGFDataInfo.data_url" title="esgfdatainfo.ESGFDataInfo.data_url"><code class="xref py py-attr docutils literal notranslate"><span class="pre">data_url</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>aggregate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – retrieve aggregated dataset, or not.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfdatainfo.ESGFDataInfo.setFrom">
+<code class="sig-name descname">setFrom</code><span class="sig-paren">(</span><em class="sig-param">attribs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfdatainfo.html#ESGFDataInfo.setFrom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.setFrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set attributes from one ESGF RESTful API search result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>attribs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – attributes to be set.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfdatainfo.ESGFDataInfo.managedAttribs">
+<em class="property">property </em><code class="sig-name descname">managedAttribs</code><a class="headerlink" href="#esgfdatainfo.ESGFDataInfo.managedAttribs" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict of useful global attributes.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+      <li>Previous: <a href="esgfsearch.html" title="previous chapter">cmiputil.esgfsearch module</a></li>
+      <li>Next: <a href="drs.html" title="next chapter">cmiputil.drs module</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
+  </body>
+</html>

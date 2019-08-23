@@ -1,29 +1,28 @@
 
-
-<!doctype html>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
     <title>cmiputil.config module &#8212; cmiputil  documentation</title>
-    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="cmiputil.braceexpand module" href="braceexpand.html" />
-    <link rel="prev" title="cmiputil.timer module" href="timer.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <!--[if lt IE 9]>
-    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
+    <link rel="next" title="cmiputil.dds module" href="dds.html" />
+    <link rel="prev" title="cmiputil.convoc module" href="convoc.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head><body>
+  
+  
+
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -34,34 +33,14 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="braceexpand.html" title="cmiputil.braceexpand module"
+          <a href="dds.html" title="cmiputil.dds module"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="timer.html" title="cmiputil.timer module"
+          <a href="convoc.html" title="cmiputil.convoc module"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="timer.html"
-                        title="previous chapter">cmiputil.timer module</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="braceexpand.html"
-                        title="next chapter">cmiputil.braceexpand module</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -87,14 +66,14 @@ program, that collects default configuration of each module by
 <cite>Conf.read_dict()</cite> and <a class="reference internal" href="#config.Conf.writeConf" title="config.Conf.writeConf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Conf.writeConf()</span></code></a>.</p>
 <dl class="class">
 <dt id="config.Conf">
-<em class="property">class </em><code class="descclassname">config.</code><code class="descname">Conf</code><span class="sig-paren">(</span><em>file=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></p>
+<em class="property">class </em><code class="sig-prename descclassname">config.</code><code class="sig-name descname">Conf</code><span class="sig-paren">(</span><em class="sig-param">file=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">configparser.ConfigParser</span></code></a></p>
 <p>Config parser for this package.</p>
 <p>See <a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser-objects">configparser.ConfigParser</a> for other methods and details.
 This module uses only ‘Mapping Protocol Access’ only.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>file</strong> (<em>str</em><em> or </em><em>path-like</em>) – config file</p>
+<dd class="field-odd"><p><strong>file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><em>path-like</em>) – config file</p>
 </dd>
 </dl>
 <div class="admonition note">
@@ -105,7 +84,7 @@ set <code class="docutils literal notranslate"><span class="pre">file=&quot;&quo
 </div>
 <dl class="attribute">
 <dt id="config.Conf.files">
-<code class="descname">files</code><a class="headerlink" href="#config.Conf.files" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">files</code><a class="headerlink" href="#config.Conf.files" title="Permalink to this definition">¶</a></dt>
 <dd><p>config files read in.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -116,7 +95,7 @@ set <code class="docutils literal notranslate"><span class="pre">file=&quot;&quo
 
 <dl class="attribute">
 <dt id="config.Conf.commonSection">
-<code class="descname">commonSection</code><a class="headerlink" href="#config.Conf.commonSection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">commonSection</code><a class="headerlink" href="#config.Conf.commonSection" title="Permalink to this definition">¶</a></dt>
 <dd><p>“Common” section for this package.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -127,14 +106,14 @@ set <code class="docutils literal notranslate"><span class="pre">file=&quot;&quo
 
 <dl class="method">
 <dt id="config.Conf.setCommonSection">
-<code class="descname">setCommonSection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.setCommonSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.setCommonSection" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setCommonSection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.setCommonSection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.setCommonSection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set default “common” section.</p>
 <p>Do not call this after reading in real config files.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="config.Conf.writeConf">
-<code class="descname">writeConf</code><span class="sig-paren">(</span><em>fname</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.writeConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.writeConf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeConf</code><span class="sig-paren">(</span><em class="sig-param">fname</em>, <em class="sig-param">overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/config.html#Conf.writeConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#config.Conf.writeConf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write current attributes to the <cite>fname</cite>.</p>
 <p>You have to set configurations for each module via, for example,
 <a class="reference external" href="https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read_dict">Conf.read_dict()</a>.</p>
@@ -143,8 +122,8 @@ common section to write.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>fname</strong> (<em>str</em><em> or </em><em>path-like</em>) – file to be written</p></li>
-<li><p><strong>overwrite</strong> (<em>bool</em>) – force overwrite</p></li>
+<li><p><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><em>path-like</em>) – file to be written</p></li>
+<li><p><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – force overwrite</p></li>
 </ul>
 </dd>
 </dl>
@@ -185,26 +164,26 @@ common section to write.</p>
 
 <dl class="data">
 <dt id="config.common_config">
-<code class="descclassname">config.</code><code class="descname">common_config</code><em class="property"> = {'cmip6_data_dir': '/data'}</em><a class="headerlink" href="#config.common_config" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">config.</code><code class="sig-name descname">common_config</code><em class="property"> = {'cmip6_data_dir': '/data'}</em><a class="headerlink" href="#config.common_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>configuration of ‘common’ section.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="config.common_sect_name">
-<code class="descclassname">config.</code><code class="descname">common_sect_name</code><em class="property"> = 'cmiputil'</em><a class="headerlink" href="#config.common_sect_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">config.</code><code class="sig-name descname">common_sect_name</code><em class="property"> = 'cmiputil'</em><a class="headerlink" href="#config.common_sect_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>name of the ‘common’ section</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="config.conf_dir">
-<code class="descclassname">config.</code><code class="descname">conf_dir</code><em class="property"> = ['~/', './']</em><a class="headerlink" href="#config.conf_dir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">config.</code><code class="sig-name descname">conf_dir</code><em class="property"> = ['~/', './']</em><a class="headerlink" href="#config.conf_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>directory list of the config file, order is important since the latter
 override the former.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="config.conf_name">
-<code class="descclassname">config.</code><code class="descname">conf_name</code><em class="property"> = 'cmiputil.conf'</em><a class="headerlink" href="#config.conf_name" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">config.</code><code class="sig-name descname">conf_name</code><em class="property"> = 'cmiputil.conf'</em><a class="headerlink" href="#config.conf_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>name of the config file</p>
 </dd></dl>
 
@@ -214,29 +193,52 @@ override the former.</p>
           </div>
         </div>
       </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="esgfsearch.html">cmiputil.esgfsearch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+      <li>Previous: <a href="convoc.html" title="previous chapter">cmiputil.convoc module</a></li>
+      <li>Next: <a href="dds.html" title="next chapter">cmiputil.dds module</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="braceexpand.html" title="cmiputil.braceexpand module"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="timer.html" title="cmiputil.timer module"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, RIST.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
   </body>
 </html>

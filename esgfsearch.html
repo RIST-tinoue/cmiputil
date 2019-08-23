@@ -1,29 +1,28 @@
 
-
-<!doctype html>
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
     <meta charset="utf-8" />
     <title>cmiputil.esgfsearch module &#8212; cmiputil  documentation</title>
-    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/readable.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
-    <script type="text/javascript" src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="cmiputil.timer module" href="timer.html" />
-    <link rel="prev" title="cmiputil.drs module" href="drs.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <!--[if lt IE 9]>
-    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
+    <link rel="next" title="cmiputil.esgfdatainfo module" href="esgfdatainfo.html" />
+    <link rel="prev" title="cmiputil" href="index.html" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
   </head><body>
+  
+  
+
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -34,44 +33,14 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="timer.html" title="cmiputil.timer module"
+          <a href="esgfdatainfo.html" title="cmiputil.esgfdatainfo module"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="drs.html" title="cmiputil.drs module"
+          <a href="index.html" title="cmiputil"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">cmiputil.esgfsearch module</a><ul>
-<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
-<li><a class="reference internal" href="#config-file">Config File</a></li>
-<li><a class="reference internal" href="#local-data-store">Local data store</a></li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="drs.html"
-                        title="previous chapter">cmiputil.drs module</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="timer.html"
-                        title="next chapter">cmiputil.timer module</a></p>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -80,27 +49,22 @@
             
   <div class="section" id="module-esgfsearch">
 <span id="cmiputil-esgfsearch-module"></span><h1>cmiputil.esgfsearch module<a class="headerlink" href="#module-esgfsearch" title="Permalink to this headline">¶</a></h1>
-<p>Search by <a class="reference external" href="https://earthsystemcog.org/projects/cog/esgf_search_restful_api">ESGF RESTful API</a>, get via <a class="reference external" href="https://www.earthsystemcog.org/projects/cog/doc/opendap">OPeNDAP</a>.</p>
-<p>This version uses
-<a class="reference external" href="https://www.unidata.ucar.edu/software/siphon/">siphon</a> and
-<a class="reference external" href="http://xarray.pydata.org/">xarray</a>.</p>
+<p>Search CMIP6 datasets via <a class="reference external" href="https://earthsystemcog.org/projects/cog/esgf_search_restful_api">ESGF RESTful API</a>, get <a class="reference external" href="https://www.earthsystemcog.org/projects/cog/doc/opendap">OPeNDAP</a> URLs and
+other information of found dataset.</p>
 <div class="section" id="basic-usage">
 <h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>From ver.0.8, opening dataset, such as xarray or netCDF4, is dropped.
-You have to open them by yourself with your favorit datatype.</p>
-</div>
-<p>Typical flow of searching and downloading CMIP6 data from ESGF is as
+<p>Typical flow of searching and downloading CMIP6 dataset from ESGF is as
 follows;</p>
 <ol class="arabic simple">
-<li><p>instantiate <a class="reference internal" href="#esgfsearch.ESGFSearch" title="esgfsearch.ESGFSearch"><code class="xref py py-class docutils literal notranslate"><span class="pre">esgfsearch.ESGFSearch</span></code></a> instance,</p></li>
-<li><p>get catalog URLs via <a class="reference internal" href="#esgfsearch.ESGFSearch.getCatURLs" title="esgfsearch.ESGFSearch.getCatURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getCatURLs()</span></code></a> method,</p></li>
-<li><p>get dataset URLs via <a class="reference internal" href="#esgfsearch.ESGFSearch.getDataURLs" title="esgfsearch.ESGFSearch.getDataURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getDataURLs()</span></code></a> method,</p></li>
-<li><p>get and open dataset URLs via your favorit datatype, such as xarray
-or netCDF4.</p></li>
+<li><p>create a <a class="reference internal" href="#esgfsearch.ESGFSearch" title="esgfsearch.ESGFSearch"><code class="xref py py-class docutils literal notranslate"><span class="pre">esgfsearch.ESGFSearch</span></code></a> instance,</p></li>
+<li><p>do search via the <a class="reference internal" href="#esgfsearch.ESGFSearch.doSearch" title="esgfsearch.ESGFSearch.doSearch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">doSearch()</span></code></a> method,</p></li>
+<li><p>seach results are set as a <a class="reference internal" href="#esgfsearch.ESGFSearch.datainfo" title="esgfsearch.ESGFSearch.datainfo"><code class="xref py py-attr docutils literal notranslate"><span class="pre">datainfo</span></code></a> attribute, which is a
+list of <code class="xref py py-class docutils literal notranslate"><span class="pre">esgfdatainfo.DataInfo</span></code> instances.
+One element corresponds to the one search result.</p></li>
+<li><p>open dataset URLs as your favorit datatype, such as <a class="reference external" href="http://xarray.pydata.org/">xarray</a>, <a class="reference external" href="https://www.unidata.ucar.edu/software/siphon/">siphon</a>
+or <a class="reference external" href="https:hogehoge">netCDF4</a>, etc.</p></li>
 </ol>
-<p>Catalog URLs and dataset URLs are stored as instance attributes.</p>
+<p>All dataset URLs found are stored as the <code class="xref py py-attr docutils literal notranslate"><span class="pre">data_urls</span></code> attribute.</p>
 <p class="rubric">Example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cmiputil</span> <span class="k">import</span> <span class="n">esgfsearch</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
@@ -109,87 +73,94 @@ or netCDF4.</p></li>
 <span class="gp">... </span>          <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
 <span class="gp">... </span>          <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">es</span> <span class="o">=</span> <span class="n">esgfsearch</span><span class="o">.</span><span class="n">ESGFSearch</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span><span class="o">.</span><span class="n">getCatURLs</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span><span class="o">.</span><span class="n">getDataURLs</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">es</span><span class="o">.</span><span class="n">data_urls</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-<span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>
-<span class="gp">... </span>        <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span><span class="o">.</span><span class="n">doSearch</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In above, <cite>es.cat_urls</cite> and <cite>es.data_urls</cite> are set as below:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;cat_urls&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;http://esgf-data2.diasjp.net/thredds/catalog/esgcet/1/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212.xml#CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.v20181212&#39;</span><span class="p">],</span>
-<span class="s1">&#39;data_urls&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;http://esgf-data2.diasjp.net/thredds/dodsC/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.tas.20181212.aggregation.1&#39;</span><span class="p">]}</span>
+<p>In above after <a class="reference internal" href="#esgfsearch.ESGFSearch.doSearch" title="esgfsearch.ESGFSearch.doSearch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">doSearch()</span></code></a>, <cite>es.data_urls</cite> is set as below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;data_urls&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;http://esgf-data2.diasjp.net/thredds/dodsC/CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.tas.gn.tas.20181212.aggregation.1&#39;</span><span class="p">]}</span>
 </pre></div>
+</div>
+<p>You can open in any kind of datasets from this URLs, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">es</span><span class="o">.</span><span class="n">data_urls</span><span class="p">:</span>
+   <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+       <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s1">&#39;by_coords&#39;</span><span class="p">))</span>
+   <span class="k">else</span><span class="p">:</span>
+       <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">decode_times</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="section" id="aggregated">
+<h3>“Aggregated”<a class="headerlink" href="#aggregated" title="Permalink to this headline">¶</a></h3>
+<p>One feature of OPenDAP is that a multi-files dataset can be accessed
+as an <em>aggregated</em> single file.  If you prefer to get aggregated
+dataset, set <code class="docutils literal notranslate"><span class="pre">aggregate</span></code> as <code class="docutils literal notranslate"><span class="pre">True</span></code> in config file (see below), or
+vice varsa.</p>
+<p>In case you choose not to use aggregation, netCDF4 (and the datatype
+that use it as a backend) can open multifile as a single dataset, as
+shown in above example.</p>
 </div>
 </div>
 <div class="section" id="config-file">
 <h2>Config File<a class="headerlink" href="#config-file" title="Permalink to this headline">¶</a></h2>
-<p>This module read in config file, sections below;</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>[cmiputil]</dt><dd><ul>
-<li><p><cite>cmip6_data_dir</cite>: the root of local data store (described below).</p></li>
-</ul>
+<p>This module reads in config file, sections below;</p>
+<ul>
+<li><p>[cmiputil]</p>
+<blockquote>
+<div><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">cmip6_data_dir</span></code> (str):</dt><dd><p>the root of local data store (described below).</p>
 </dd>
 </dl>
+</div></blockquote>
 </li>
-<li><dl class="simple">
-<dt>[ESGFSearch]</dt><dd><ul>
-<li><p><cite>search_service</cite>: the base URL of the search service at a ESGF Index Node</p></li>
-<li><p><cite>service_type</cite>: <code class="docutils literal notranslate"><span class="pre">search</span></code> or <code class="docutils literal notranslate"><span class="pre">wget</span></code></p></li>
-<li><p><cite>aggregate</cite> : <code class="xref py py-meth docutils literal notranslate"><span class="pre">getDataURLs()</span></code> returns aggregated datasets or not</p></li>
-</ul>
+<li><p>[ESGFSearch]</p>
+<blockquote>
+<div><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">search_service</span></code> (str):</dt><dd><p>the base URL of the search service at a ESGF Index Node</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">service_type</span></code> (str):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">search</span></code> or <code class="docutils literal notranslate"><span class="pre">wget</span></code></p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">aggregate</span></code> (bool):</dt><dd><p>retrieve OPeNDAP aggregated datasets or not</p>
 </dd>
 </dl>
+</div></blockquote>
 </li>
 <li><p>[ESGFSearch.keywords] : keyword parameters of RESTful API</p></li>
 <li><p>[ESGFSearch.facets] : facet parameters of RESTful API</p></li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">service_type='wget'</span></code> case is not implemented yet.</p>
 </div>
-<div class="section" id="local-data-store">
-<h2>Local data store<a class="headerlink" href="#local-data-store" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="local-files">
+<h2>Local files<a class="headerlink" href="#local-files" title="Permalink to this headline">¶</a></h2>
 <p>This module assumes that local data files are stored in the DRS
 complient directory structure. See <a class="reference internal" href="drs.html#module-drs" title="drs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">drs</span></code></a> module for the details
 of DRS.  If you use <cite>synda install</cite> for download and replication of
-CMIP6 data files from ESGF, files are stored in such way.  So you can
-use <a class="reference internal" href="#esgfsearch.ESGFSearch.getLocalDirs" title="esgfsearch.ESGFSearch.getLocalDirs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getLocalDirs()</span></code></a> and <a class="reference internal" href="#esgfsearch.ESGFSearch.getDataFiles" title="esgfsearch.ESGFSearch.getDataFiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getDataFiles()</span></code></a> with the same
-interface with <a class="reference internal" href="#esgfsearch.ESGFSearch.getCatURLs" title="esgfsearch.ESGFSearch.getCatURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getCatURLs()</span></code></a> and <a class="reference internal" href="#esgfsearch.ESGFSearch.getDataURLs" title="esgfsearch.ESGFSearch.getDataURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getDataURLs()</span></code></a>.</p>
+CMIP6 data files from ESGF, files are stored in such way.</p>
+<p><a class="reference internal" href="#esgfsearch.ESGFSearch.doSearch" title="esgfsearch.ESGFSearch.doSearch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">doSearch()</span></code></a> also searchs local files corresponding to the
+search result and set <a class="reference internal" href="#esgfsearch.ESGFSearch.local_files" title="esgfsearch.ESGFSearch.local_files"><code class="xref py py-meth docutils literal notranslate"><span class="pre">local_files()</span></code></a> property so that you can
+use local files instead of downloading them.</p>
 <p>Do not forget to set <a class="reference internal" href="#esgfsearch.ESGFSearch.base_dir" title="esgfsearch.ESGFSearch.base_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_dir</span></code></a> attribute or <cite>cmip6_data_dir</cite>
 in config file as the root of this directory structure.</p>
-<p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="s1">&#39;MIROC6&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span> <span class="s1">&#39;historical&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="s1">&#39;variable_id&#39;</span><span class="p">:</span> <span class="s1">&#39;tas&#39;</span><span class="p">,</span>
-<span class="gp">... </span>          <span class="s1">&#39;variant_label&#39;</span><span class="p">:</span> <span class="s1">&#39;r1i1p1f1&#39;</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span> <span class="o">=</span> <span class="n">ESGFSearch</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span><span class="o">.</span><span class="n">getLocalDirs</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="s1">&#39;/data&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">es</span><span class="o">.</span><span class="n">getDataFiles</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ds</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">es</span><span class="o">.</span><span class="n">data_files</span><span class="p">:</span>
-<span class="gp">... </span>    <span class="n">ds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">decode_cf</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>In above, <code class="docutils literal notranslate"><span class="pre">es.local_dirs</span></code> is set as below if they are exists:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span><span class="p">,</span>
- <span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/piControl/r1i1p1f1/Amon/tas/gn/v20181212&#39;</span><span class="p">]</span>
+<p>After <a class="reference internal" href="#esgfsearch.ESGFSearch.doSearch" title="esgfsearch.ESGFSearch.doSearch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">doSearch()</span></code></a> in above example, <code class="docutils literal notranslate"><span class="pre">es.local_files</span></code> is set as below if they are exists:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span><span class="n">PosixPath</span><span class="p">(</span><span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212/tas_Amon_MIROC6_historical_r1i1p1f1_gn_185001-194912.nc&#39;</span><span class="p">),</span>
+  <span class="n">PosixPath</span><span class="p">(</span><span class="s1">&#39;/data/CMIP6/CMIP/MIROC/MIROC6/historical/r1i1p1f1/Amon/tas/gn/v20181212/tas_Amon_MIROC6_historical_r1i1p1f1_gn_195001-201412.nc&#39;</span><span class="p">)]]</span>
 </pre></div>
 </div>
 <dl class="exception">
 <dt id="esgfsearch.NotFoundError">
-<em class="property">exception </em><code class="descclassname">esgfsearch.</code><code class="descname">NotFoundError</code><a class="reference internal" href="_modules/esgfsearch.html#NotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.NotFoundError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<em class="property">exception </em><code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">NotFoundError</code><a class="reference internal" href="_modules/esgfsearch.html#NotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.NotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="esgfsearch.ESGFSearch">
-<em class="property">class </em><code class="descclassname">esgfsearch.</code><code class="descname">ESGFSearch</code><span class="sig-paren">(</span><em>conffile=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Search by ESGF RESTful API, get via OPeNDAP.</p>
-<p>If <cite>conffile</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no config file is read and <em>blank</em> instance
+<em class="property">class </em><code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">ESGFSearch</code><span class="sig-paren">(</span><em class="sig-param">conffile=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Search CMIP6 datasets via <a class="reference external" href="https://earthsystemcog.org/projects/cog/esgf_search_restful_api">ESGF RESTful API</a>, get <a class="reference external" href="https://www.earthsystemcog.org/projects/cog/doc/opendap">OPeNDAP</a> URLs and
+other information of found datasets</p>
+<p>If <cite>conffile</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no config file is read and the <em>blank</em> instance
 is created.  If you want only default config files, set <code class="docutils literal notranslate"><span class="pre">conffile=&quot;&quot;</span></code>.
 See <a class="reference internal" href="config.html#module-config" title="config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">config</span></code></a> module for details.</p>
 <dl class="field-list simple">
@@ -199,90 +170,72 @@ See <a class="reference internal" href="config.html#module-config" title="config
 </dl>
 <dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.conf">
-<code class="descname">conf</code><a class="headerlink" href="#esgfsearch.ESGFSearch.conf" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">conf</code><a class="headerlink" href="#esgfsearch.ESGFSearch.conf" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="config.html#config.Conf" title="config.Conf"><code class="xref py py-class docutils literal notranslate"><span class="pre">config.Conf</span></code></a> instance</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="esgfsearch.ESGFSearch.datainfo">
+<code class="sig-name descname">datainfo</code><a class="headerlink" href="#esgfsearch.ESGFSearch.datainfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of <a class="reference internal" href="esgfdatainfo.html#esgfdatainfo.ESGFDataInfo" title="esgfdatainfo.ESGFDataInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">esgfdatainfo.ESGFDataInfo</span></code></a> instances</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.search_service">
-<code class="descname">search_service</code><a class="headerlink" href="#esgfsearch.ESGFSearch.search_service" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">search_service</code><a class="headerlink" href="#esgfsearch.ESGFSearch.search_service" title="Permalink to this definition">¶</a></dt>
 <dd><p>search service for RESTful API, eg.,
 <code class="docutils literal notranslate"><span class="pre">http://esgf-node.llnl.gov/esg-search/</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.service_type">
-<code class="descname">service_type</code><a class="headerlink" href="#esgfsearch.ESGFSearch.service_type" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">service_type</code><a class="headerlink" href="#esgfsearch.ESGFSearch.service_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>service type for RESTful API.
-currently <code class="docutils literal notranslate"><span class="pre">search</span></code> only allowed.</p>
+currently only <code class="docutils literal notranslate"><span class="pre">search</span></code> is allowed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.aggregate">
-<code class="descname">aggregate</code><a class="headerlink" href="#esgfsearch.ESGFSearch.aggregate" title="Permalink to this definition">¶</a></dt>
-<dd><p>access aggregated via OPeNDAP.</p>
+<code class="sig-name descname">aggregate</code><a class="headerlink" href="#esgfsearch.ESGFSearch.aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>get aggregated URL if <code class="docutils literal notranslate"><span class="pre">TRUE</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.params">
-<code class="descname">params</code><a class="headerlink" href="#esgfsearch.ESGFSearch.params" title="Permalink to this definition">¶</a></dt>
-<dd><p>keyword parameters and facet parameters for RESTful API</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="esgfsearch.ESGFSearch.cat_urls">
-<code class="descname">cat_urls</code><a class="headerlink" href="#esgfsearch.ESGFSearch.cat_urls" title="Permalink to this definition">¶</a></dt>
-<dd><p>obtained catalog URLs</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list(str)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="esgfsearch.ESGFSearch.data_urls">
-<code class="descname">data_urls</code><a class="headerlink" href="#esgfsearch.ESGFSearch.data_urls" title="Permalink to this definition">¶</a></dt>
-<dd><p>obtained dataset URLs</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list(str) or list of list(str)</p>
-</dd>
-</dl>
+<code class="sig-name descname">params</code><a class="headerlink" href="#esgfsearch.ESGFSearch.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>dict for keyword parameters and facet parameters for RESTful API</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="esgfsearch.ESGFSearch.base_dir">
-<code class="descname">base_dir</code><a class="headerlink" href="#esgfsearch.ESGFSearch.base_dir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">base_dir</code><a class="headerlink" href="#esgfsearch.ESGFSearch.base_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>base(root) path for local data directory structure</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="esgfsearch.ESGFSearch.local_dirs">
-<code class="descname">local_dirs</code><a class="headerlink" href="#esgfsearch.ESGFSearch.local_dirs" title="Permalink to this definition">¶</a></dt>
-<dd><p>obtained local directories for local dataset files.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="esgfsearch.ESGFSearch.data_files">
-<code class="descname">data_files</code><a class="headerlink" href="#esgfsearch.ESGFSearch.data_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>obtained local dataset files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="esgfsearch.ESGFSearch.getCatURLs">
-<code class="descname">getCatURLs</code><span class="sig-paren">(</span><em>params=None</em>, <em>base_url=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch.getCatURLs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch.getCatURLs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Using ESGF RESTful API, get URLs for OPeNDAP TDS catalog.</p>
-<p>Obtained catalog URLs are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.cat_urls" title="esgfsearch.ESGFSearch.cat_urls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cat_urls</span></code></a> attribute.</p>
+<dt id="esgfsearch.ESGFSearch.doSearch">
+<code class="sig-name descname">doSearch</code><span class="sig-paren">(</span><em class="sig-param">params=None</em>, <em class="sig-param">base_url=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch.doSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch.doSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do search via ESGF RESTful API.</p>
+<p>Search results are stored to the <a class="reference internal" href="#esgfsearch.ESGFSearch.datainfo" title="esgfsearch.ESGFSearch.datainfo"><code class="xref py py-attr docutils literal notranslate"><span class="pre">datainfo</span></code></a> attributes
+as a list of <a class="reference internal" href="esgfdatainfo.html#esgfdatainfo.ESGFDataInfo" title="esgfdatainfo.ESGFDataInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">esgfdatainfo.ESGFDataInfo</span></code></a> instances.</p>
+<p>If <a class="reference internal" href="#esgfsearch.ESGFSearch.aggregate" title="esgfsearch.ESGFSearch.aggregate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">aggregate</span></code></a> attribute is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this method
+obtains URLs of aggregated dataset, else URLs of all of files
+listed in the catalog.</p>
+<p>All of retrieved OPeNDAP URLs can be accessed by <a class="reference internal" href="#esgfsearch.ESGFSearch.data_urls" title="esgfsearch.ESGFSearch.data_urls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">data_urls()</span></code></a> attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>params</strong> (<em>dict</em>) – keyword parameters and facet parameters.</p></li>
+<li><p><strong>params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – keyword parameters and facet parameters.</p></li>
 <li><p><strong>base_url</strong> – base URL of the ESGF search service.</p></li>
 </ul>
 </dd>
@@ -297,7 +250,7 @@ currently <code class="docutils literal notranslate"><span class="pre">search</s
 <a class="reference internal" href="#esgfsearch.ESGFSearch.service_type" title="esgfsearch.ESGFSearch.service_type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">service_type</span></code></a> attributes.</p>
 <p><cite>params</cite> is to <em>update</em> (use <cite>update()</cite> method of python dict)
 to <a class="reference internal" href="#esgfsearch.ESGFSearch.params" title="esgfsearch.ESGFSearch.params"><code class="xref py py-attr docutils literal notranslate"><span class="pre">params</span></code></a> attribute.</p>
-<div class="admonition-todo admonition" id="index-0">
+<div class="admonition-todo admonition" id="id1">
 <p class="admonition-title">Todo</p>
 <ul class="simple">
 <li><p>How to enable <em>a negative facet</em> of RESTful API ?</p></li>
@@ -306,57 +259,46 @@ to <a class="reference internal" href="#esgfsearch.ESGFSearch.params" title="esg
 </dd></dl>
 
 <dl class="method">
-<dt id="esgfsearch.ESGFSearch.getDataFiles">
-<code class="descname">getDataFiles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch.getDataFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch.getDataFiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>From directories of local data store, obtain dataset files.</p>
-<p>Directories are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.local_dirs" title="esgfsearch.ESGFSearch.local_dirs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">local_dirs</span></code></a> attribute,
-that is obtained by, for example, <a class="reference internal" href="#esgfsearch.ESGFSearch.getLocalDirs" title="esgfsearch.ESGFSearch.getLocalDirs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getLocalDirs()</span></code></a>.</p>
-<p>Obtained dataset files are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.data_files" title="esgfsearch.ESGFSearch.data_files"><code class="xref py py-attr docutils literal notranslate"><span class="pre">data_files</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="esgfsearch.ESGFSearch.getDataURLs">
-<code class="descname">getDataURLs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch.getDataURLs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch.getDataURLs" title="Permalink to this definition">¶</a></dt>
-<dd><p>From URLs of TDS catalog, obtain URLs of dataset.</p>
-<p>Catalog URLs are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.cat_urls" title="esgfsearch.ESGFSearch.cat_urls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cat_urls</span></code></a> attribute,
-that is obtained by, for example, <a class="reference internal" href="#esgfsearch.ESGFSearch.getCatURLs" title="esgfsearch.ESGFSearch.getCatURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getCatURLs()</span></code></a>.</p>
-<p>If <a class="reference internal" href="#esgfsearch.ESGFSearch.aggregate" title="esgfsearch.ESGFSearch.aggregate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">aggregate</span></code></a> attribute is <code class="docutils literal notranslate"><span class="pre">True</span></code>, obtain URLs of
-aggregated dataset, else URLs of all of files listed in the
-catalog.</p>
-<p>Obtained dataset URLs are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.data_urls" title="esgfsearch.ESGFSearch.data_urls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">data_urls</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="esgfsearch.ESGFSearch.getLocalDirs">
-<code class="descname">getLocalDirs</code><span class="sig-paren">(</span><em>params=None</em>, <em>base_dir=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#ESGFSearch.getLocalDirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.ESGFSearch.getLocalDirs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get local path(s) to match given search condition.</p>
-<p>Using same interface with <a class="reference internal" href="#esgfsearch.ESGFSearch.getCatURLs" title="esgfsearch.ESGFSearch.getCatURLs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getCatURLs()</span></code></a>, obtained path
-are set as <a class="reference internal" href="#esgfsearch.ESGFSearch.local_dirs" title="esgfsearch.ESGFSearch.local_dirs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">local_dirs</span></code></a> attribute.</p>
-<p>Resulting paths (set as <code class="xref py py-attr docutils literal notranslate"><span class="pre">localpath</span></code>) are DRS compliant
-(see <a class="reference internal" href="#local-data-store">Local data store</a>) <strong>real existing</strong> ones, braces are
-expanded and asterisk are globed.</p>
+<dt id="esgfsearch.ESGFSearch.cat_urls">
+<em class="property">property </em><code class="sig-name descname">cat_urls</code><a class="headerlink" href="#esgfsearch.ESGFSearch.cat_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtained catalog URLs</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>params</strong> (<em>dict</em>) – keyword parameters and facet parameters.</p></li>
-<li><p><strong>base_dir</strong> (<em>str</em><em> or </em><em>path-like</em>) – base path for local data directory.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#esgfsearch.NotFoundError" title="esgfsearch.NotFoundError"><strong>NotFoundError</strong></a> – raised if no paths found.</p>
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>)</p>
 </dd>
 </dl>
-<p>If <cite>base_dir</cite> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, overrides <a class="reference internal" href="#esgfsearch.ESGFSearch.base_dir" title="esgfsearch.ESGFSearch.base_dir"><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_dir</span></code></a>.</p>
-<p><cite>params</cite> is to <em>update</em> (use <cite>update()</cite> method of python dict)
-to <a class="reference internal" href="#esgfsearch.ESGFSearch.params" title="esgfsearch.ESGFSearch.params"><code class="xref py py-attr docutils literal notranslate"><span class="pre">params</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfsearch.ESGFSearch.data_urls">
+<em class="property">property </em><code class="sig-name descname">data_urls</code><a class="headerlink" href="#esgfsearch.ESGFSearch.data_urls" title="Permalink to this definition">¶</a></dt>
+<dd><p>URLs of each dataset.</p>
+<p>If <a class="reference internal" href="#esgfsearch.ESGFSearch.aggregate" title="esgfsearch.ESGFSearch.aggregate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">aggregate</span></code></a> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, one dataset consists of
+multiple datafile, type of this is list of list(str).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>) or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="esgfsearch.ESGFSearch.local_files">
+<em class="property">property </em><code class="sig-name descname">local_files</code><a class="headerlink" href="#esgfsearch.ESGFSearch.local_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Paths of existing local file corresponding to the search result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>) or <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a>(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a>))</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="esgfsearch.getDefaultConf">
-<code class="descclassname">esgfsearch.</code><code class="descname">getDefaultConf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#getDefaultConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.getDefaultConf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return default values for config file.</p>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">getDefaultConf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/esgfsearch.html#getDefaultConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#esgfsearch.getDefaultConf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return default config values as a dict.</p>
 <p>Intended to be called before <a class="reference internal" href="config.html#config.Conf.writeConf" title="config.Conf.writeConf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">writeConf()</span></code></a> in
 <a class="reference internal" href="config.html#module-config" title="config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">config</span></code></a>.</p>
 <p class="rubric">Example</p>
@@ -372,25 +314,25 @@ to <a class="reference internal" href="#esgfsearch.ESGFSearch.params" title="esg
 
 <dl class="data">
 <dt id="esgfsearch.facets_default">
-<code class="descclassname">esgfsearch.</code><code class="descname">facets_default</code><em class="property"> = {'table_id': 'Amon'}</em><a class="headerlink" href="#esgfsearch.facets_default" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">facets_default</code><em class="property"> = {'table_id': 'Amon'}</em><a class="headerlink" href="#esgfsearch.facets_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default fasets for RESTful API.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="esgfsearch.keywords_default">
-<code class="descclassname">esgfsearch.</code><code class="descname">keywords_default</code><em class="property"> = {'fields': 'url', 'format': 'application/solr+json', 'latest': 'true', 'limit': 10000, 'replica': 'false', 'type': 'Dataset'}</em><a class="headerlink" href="#esgfsearch.keywords_default" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">keywords_default</code><em class="property"> = {'format': 'application/solr+json', 'latest': 'true', 'limit': 10000, 'replica': 'false', 'type': 'Dataset'}</em><a class="headerlink" href="#esgfsearch.keywords_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default keywords for RESTful API.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="esgfsearch.search_service_default">
-<code class="descclassname">esgfsearch.</code><code class="descname">search_service_default</code><em class="property"> = 'http://esgf-node.llnl.gov/esg-search/'</em><a class="headerlink" href="#esgfsearch.search_service_default" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">search_service_default</code><em class="property"> = 'http://esgf-node.llnl.gov/esg-search/'</em><a class="headerlink" href="#esgfsearch.search_service_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default search service URL</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="esgfsearch.service_type_default">
-<code class="descclassname">esgfsearch.</code><code class="descname">service_type_default</code><em class="property"> = 'search'</em><a class="headerlink" href="#esgfsearch.service_type_default" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">service_type_default</code><em class="property"> = 'search'</em><a class="headerlink" href="#esgfsearch.service_type_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default service type</p>
 </dd></dl>
 
@@ -401,29 +343,60 @@ to <a class="reference internal" href="#esgfsearch.ESGFSearch.params" title="esg
           </div>
         </div>
       </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cmiputil.esgfsearch module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aggregated">“Aggregated”</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#config-file">Config File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#local-files">Local files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esgfdatainfo.html">cmiputil.esgfdatainfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="drs.html">cmiputil.drs module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convoc.html">cmiputil.convoc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">cmiputil.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dds.html">cmiputil.dds module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">cmiputil.timer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="braceexpand.html">cmiputil.braceexpand module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="createSampleConf.html">createSampleConf program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="checkDRSname.html">checkDRSname program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="relocateFilesAsDRS.html">relocateFilesAsDRS program</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="draw-timeseries.html">draw-timeseries program</a></li>
+</ul>
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation index</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter"><cite>cmiputil</cite></a></li>
+      <li>Next: <a href="esgfdatainfo.html" title="next chapter">cmiputil.esgfdatainfo module</a></li>
+  </ul></li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="timer.html" title="cmiputil.timer module"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="drs.html" title="cmiputil.drs module"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">cmiputil  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, RIST.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
-    </div>
+  <div class="footer">
+    &copy; Copyright 2019, RIST.
+    Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+  </div>
+  
   </body>
 </html>
