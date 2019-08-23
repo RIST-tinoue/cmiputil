@@ -846,7 +846,7 @@ class DRS:
 
         Examples:
 
-            >>> url = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
+            >>> ourl = ('http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/'
             ...       'IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/'
             ...       'Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_'
             ...       'dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc')
@@ -953,12 +953,7 @@ class DRS:
             return True
 
         if attr == 'sub_experiment_id':
-            # TODO:
-            # Currently, value of <sub_experiment_id> used in
-            # published datasets is only 's1920', which is not in CVs.
-            # So avoid check tentatively
-            return (self._cvs.isValidValueForAttr(value, attr)
-                    or value == 's1920')
+            return (self._cvs.isValidValueForAttr(value, attr))
         elif attr in self._cvs.managedAttribs:
             return self._cvs.isValidValueForAttr(value, attr)
         elif attr == 'time_range':
