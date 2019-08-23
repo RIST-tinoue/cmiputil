@@ -340,9 +340,6 @@ class DRS:
         Returns:
             dict: whose keys are from :attr:`DRS.requiredAttribs`.
 
-        TODO:
-            Should this be the member of this class ??
-
         """
 
         with nc.Dataset(file, "r") as ds:
@@ -518,11 +515,6 @@ class DRS:
         Returns:
         list of str: filenames
 
-        Todo:
-            Since non-existent files are omitted, this method seems
-            useless. Implement pathNameList() to obtain a list of
-            path(dir/file)
-
         Examples:
 
             >>> attrs = {k: v for k, v in drs.sample_attrs.items()}
@@ -661,13 +653,6 @@ class DRS:
 
             The last example will return ``[]`` if expanded directories do
             not exist.
-
-        TODO:
-            Completely re-implment that
-
-            - get list use glob (asterisk expansion) only
-            - filter out using regex by brace list
-
         """
         dname = self.dirName(prefix=prefix)  # may contain '*' and braces
         plist = [glob.iglob(p) for p in braceexpand(str(dname))]

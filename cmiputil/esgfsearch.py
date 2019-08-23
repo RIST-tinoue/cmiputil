@@ -246,9 +246,6 @@ class ESGFSearch():
 
         `params` is to *update* (use `update()` method of python dict)
         to :attr:`params` attribute.
-
-        TODO:
-            - How to enable *a negative facet* of RESTful API ?
         """
         if params:
             self.params.update(params)

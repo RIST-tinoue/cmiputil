@@ -58,7 +58,8 @@ Indices and tables
 * :ref:`search`
 
 
-TODO list
-=========
+..
+   TODO list
+   =========
 
-.. todolist::
+   .. todolist::
