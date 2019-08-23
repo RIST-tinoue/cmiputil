@@ -327,14 +327,6 @@ braces</p>
 </div>
 <p>The last example will return <code class="docutils literal notranslate"><span class="pre">[]</span></code> if expanded directories do
 not exist.</p>
-<div class="admonition-todo admonition" id="id1">
-<p class="admonition-title">Todo</p>
-<p>Completely re-implment that</p>
-<ul class="simple">
-<li><p>get list use glob (asterisk expansion) only</p></li>
-<li><p>filter out using regex by brace list</p></li>
-</ul>
-</div>
 </dd></dl>
 
 <dl class="method">
@@ -454,12 +446,6 @@ want force &lt;time_range&gt; part to be omitted, set
 attributes that may contains ‘*’ and/or braces.</p>
 <p>Returns:
 list of str: filenames</p>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>Since non-existent files are omitted, this method seems
-useless. Implement pathNameList() to obtain a list of
-path(dir/file)</p>
-</div>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">drs</span><span class="o">.</span><span class="n">sample_attrs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;experiment_id&#39;</span><span class="p">:</span><span class="s1">&#39;amip, piControl&#39;</span><span class="p">})</span>
@@ -503,10 +489,6 @@ in a valid netCDF file.</p>
 <dd class="field-even"><p><em>dict</em> – whose keys are from <a class="reference internal" href="#drs.DRS.requiredAttribs" title="drs.DRS.requiredAttribs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">DRS.requiredAttribs</span></code></a>.</p>
 </dd>
 </dl>
-<div class="admonition-todo admonition" id="id3">
-<p class="admonition-title">Todo</p>
-<p>Should this be the member of this class ??</p>
-</div>
 </dd></dl>
 
 <dl class="method">
@@ -555,7 +537,7 @@ element is for the filename, second is for the directory name,
 both dicts’ key/value shows that each attributes are valid or
 not. If <cite>directory</cite> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, first elements is <code class="docutils literal notranslate"><span class="pre">{'all':</span> <span class="pre">True}</span></code>.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">url</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/&#39;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ourl</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;http://vesg.ipsl.upmc.fr/thredds/fileServer/cmip6/DCPP/&#39;</span>
 <span class="gp">... </span>      <span class="s1">&#39;IPSL/IPSL-CM6A-LR/dcppC-pac-pacemaker/s1920-r1i1p1f1/&#39;</span>
 <span class="gp">... </span>      <span class="s1">&#39;Amon/rsdscs/gr/v20190110/rsdscs_Amon_IPSL-CM6A-LR_&#39;</span>
 <span class="gp">... </span>      <span class="s1">&#39;dcppC-pac-pacemaker_s1920-r1i1p1f1_gr_192001-201412.nc&#39;</span><span class="p">)</span>
