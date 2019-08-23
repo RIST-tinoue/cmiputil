@@ -98,12 +98,6 @@ Document
 See `HTML
 Documentation <https://rist-tinoue.github.io/cmiputil/index.html>`__.
 
-Plan
-----
-
-- use config file
-- seamless collaboration with synda.
-
 
 Author
 ------
