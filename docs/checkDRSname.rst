@@ -10,8 +10,12 @@ Description
 Usage
 -----
 
-.. argparse::
-   :filename: ../bin/checkDRSname.py
-   :func: my_parser
-   :prog: checkDRSname
+.. autoprogram:: checkDRSname:my_parser()
+      :prog: checkDRSname.py
+
+..
+   .. argparse::
+      :filename: ../bin/checkDRSname.py
+      :func: my_parser
+      :prog: checkDRSname
 

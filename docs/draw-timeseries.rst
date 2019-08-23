@@ -1,17 +1,16 @@
 draw-timeseries program
 =======================
 
+
 Description
 -----------
 
 .. automodule:: draw-timeseries
+    :members:
 
 
 Usage
 -----
-
-.. argparse::
-   :filename: ../samples/draw-timeseries.py
-   :func: my_parser
-   :prog: draw-timeseries
+.. autoprogram:: draw-timeseries:my_parser()
+      :prog: draw-timeseries.py
 
