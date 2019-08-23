@@ -50,18 +50,21 @@ Requirement
 
 This package has been developed under this environment only:
 
-- python 3.6.7
+- python 3.7.3
 - siphon 0.8.0
-- xarray 0.11.3
-- netCDF4 1.3.1
+- netCDF4 1.5.1.2
 - urllib3 1.24.1
+
+For tests and examples:
+
+- xarray 0.11.3
 
 For creating documents:
 
-- sphinx 2.0.1
-- sphinx-rtd-theme 0.4.3
-
-
+- sphinx 2.1.2
+- sphinx-readable-theme 1.3.0
+- sphinxcontrib-fulltoc 1.2.0
+- sphinxcontrib-autoprogram 0.1.5
 
 Install
 -------
