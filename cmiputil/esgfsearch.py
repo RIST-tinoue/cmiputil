@@ -181,37 +181,34 @@ class ESGFSearch():
 
         self.conf = config.Conf(conffile)
 
-        sec = self.conf['ESGFSearch']
         try:
-            self.search_service = sec['search_service']
+            self.search_service = self.conf['ESGFSearch']['search_service']
         except KeyError:
             self.search_service = search_service_default
 
         try:
-            self.service_type = sec['service_type']
+            self.service_type = self.conf['ESGFSearch']['service_type']
         except KeyError:
             self.service_type = service_type_default
 
         try:
-            self.aggregate = sec.getboolean('aggregate')
+            self.aggregate = self.conf['ESGFSearch'].getboolean('aggregate')
         except KeyError:
             self.aggregate = aggregate_default
 
-        sec = self.conf['ESGFSearch.keywords']
         try:
-            self.params = dict(sec.items())
+            self.params = dict(self.conf['ESGFSearch.keywords'].items())
         except KeyError:
             self.params = {}
 
-        sec = self.conf['ESGFSearch.facets']
         try:
-            self.params.update(dict(sec.items()))
+            self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
         except KeyError:
             pass
 
         try:
             self.base_dir = self.conf.commonSection['cmip6_data_dir']
-        except KeyError:
+        except (KeyError, AttributeError):
             self.base_dir = None
 
         if self._debug:
