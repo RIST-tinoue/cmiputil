@@ -78,10 +78,7 @@ This module reads in config file, sections below;
 - [ESGFSearch]
 
     ``search_service`` (str):
-        the base URL of the search service at a ESGF Index Node
-
-    ``service_type`` (str):
-        ``search`` or ``wget``
+        the base URL of the search service at an ESGF Index Node
 
     ``aggregate`` (bool):
          retrieve OPeNDAP aggregated datasets or not
@@ -92,7 +89,8 @@ This module reads in config file, sections below;
 
 
 Warning:
-  ``service_type='wget'`` case is not implemented yet.
+  Currently `format`, `limit`, `type` keywords are not configurable.
+  Even if you specify them in your config file, they will be overriden.
 
 Local files
 ===========
@@ -181,37 +179,35 @@ class ESGFSearch():
 
         self.conf = config.Conf(conffile)
 
-        sec = self.conf['ESGFSearch']
         try:
-            self.search_service = sec['search_service']
+            self.search_service = self.conf['ESGFSearch']['search_service']
         except KeyError:
             self.search_service = search_service_default
 
         try:
-            self.service_type = sec['service_type']
+            self.service_type = self.conf['ESGFSearch']['service_type']
         except KeyError:
             self.service_type = service_type_default
 
         try:
-            self.aggregate = sec.getboolean('aggregate')
+            self.aggregate = self.conf['ESGFSearch'].getboolean('aggregate')
         except KeyError:
             self.aggregate = aggregate_default
 
-        sec = self.conf['ESGFSearch.keywords']
         try:
-            self.params = dict(sec.items())
+            self.params = dict(self.conf['ESGFSearch.keywords'].items())
         except KeyError:
             self.params = {}
+        self.params.update(keywords_non_configurable)
 
-        sec = self.conf['ESGFSearch.facets']
         try:
-            self.params.update(dict(sec.items()))
+            self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
         except KeyError:
             pass
 
         try:
             self.base_dir = self.conf.commonSection['cmip6_data_dir']
-        except KeyError:
+        except (KeyError, AttributeError):
             self.base_dir = None
 
         if self._debug:
@@ -339,16 +335,20 @@ class ESGFSearch():
 search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
 # search_service_default = 'http://esgf-data.dkrz.de/esg-search/'
 
-#: Default service type
+#: Default service type: Not configurable
 service_type_default = 'search'
 
 aggregate_default = True
 
 #: Default keywords for RESTful API.
 keywords_default = {
-    'format': r'application/solr+json',
     'replica': 'false',
     'latest': 'true',
+}
+
+#: Keywords not configurable for RESTful API.
+keywords_non_configurable = {
+    'format': r'application/solr+json',
     'limit': 10000,
     'type': 'Dataset',  # must be to get catalog
 }
@@ -381,7 +381,6 @@ def getDefaultConf():
     res = {}
     res['ESGFSearch'] = {
         'search_service': search_service_default,
-        'service_type': service_type_default,
         'aggregate': aggregate_default
     }
     res['ESGFSearch.keywords'] = keywords_default
