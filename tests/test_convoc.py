@@ -83,7 +83,7 @@ class test_ConVoc(unittest.TestCase):
         for k in ('PAMIP', 'C4MIP', 'LS3MIP'):
             self.assertIn(k, cv)
         cv = cvs.getAttrib('source_id')
-        for k in ('MIROC6', 'NICAM16-7S', 'MRI-AGCM3-2'):
+        for k in ('MIROC6', 'NICAM16-7S', 'MRI-AGCM3-2-H'):
             self.assertIn(k, cv)
         cv = cvs.getAttrib('grid_label')
         for k in ('gn', 'gr', 'grz'):
