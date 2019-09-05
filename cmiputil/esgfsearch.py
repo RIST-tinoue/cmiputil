@@ -200,6 +200,7 @@ class ESGFSearch():
             self.params = dict(self.conf['ESGFSearch.keywords'].items())
         except KeyError:
             self.params = {}
+        self.params.update(keywords_non_configurable)
 
         try:
             self.params.update(dict(self.conf['ESGFSearch.facets'].items()))
@@ -336,16 +337,20 @@ class ESGFSearch():
 search_service_default = 'http://esgf-node.llnl.gov/esg-search/'
 # search_service_default = 'http://esgf-data.dkrz.de/esg-search/'
 
-#: Default service type
+#: Default service type: Not configurable
 service_type_default = 'search'
 
 aggregate_default = True
 
 #: Default keywords for RESTful API.
 keywords_default = {
-    'format': r'application/solr+json',
     'replica': 'false',
     'latest': 'true',
+}
+
+#: Keywords not configurable for RESTful API.
+keywords_non_configurable = {
+    'format': r'application/solr+json',
     'limit': 10000,
     'type': 'Dataset',  # must be to get catalog
 }
@@ -378,7 +383,6 @@ def getDefaultConf():
     res = {}
     res['ESGFSearch'] = {
         'search_service': search_service_default,
-        'service_type': service_type_default,
         'aggregate': aggregate_default
     }
     res['ESGFSearch.keywords'] = keywords_default
