@@ -78,10 +78,7 @@ This module reads in config file, sections below;
 - [ESGFSearch]
 
     ``search_service`` (str):
-        the base URL of the search service at a ESGF Index Node
-
-    ``service_type`` (str):
-        ``search`` or ``wget``
+        the base URL of the search service at an ESGF Index Node
 
     ``aggregate`` (bool):
          retrieve OPeNDAP aggregated datasets or not
@@ -92,7 +89,8 @@ This module reads in config file, sections below;
 
 
 Warning:
-  ``service_type='wget'`` case is not implemented yet.
+  Currently `format`, `limit`, `type` keywords are not configurable.
+  Even if you specify them in your config file, they will be overriden.
 
 Local files
 ===========
