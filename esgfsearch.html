@@ -117,8 +117,6 @@ shown in above example.</p>
 <div><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">search_service</span></code> (str):</dt><dd><p>the base URL of the search service at a ESGF Index Node</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">service_type</span></code> (str):</dt><dd><p><code class="docutils literal notranslate"><span class="pre">search</span></code> or <code class="docutils literal notranslate"><span class="pre">wget</span></code></p>
-</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">aggregate</span></code> (bool):</dt><dd><p>retrieve OPeNDAP aggregated datasets or not</p>
 </dd>
 </dl>
@@ -129,7 +127,8 @@ shown in above example.</p>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p><code class="docutils literal notranslate"><span class="pre">service_type='wget'</span></code> case is not implemented yet.</p>
+<p>Currently <cite>format</cite>, <cite>limit</cite>, <cite>type</cite> keywords are not configurable.
+Even if you specify them in your config file, they will be overriden.</p>
 </div>
 </div>
 <div class="section" id="local-files">
@@ -314,8 +313,14 @@ multiple datafile, type of this is list of list(str).</p>
 
 <dl class="data">
 <dt id="esgfsearch.keywords_default">
-<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">keywords_default</code><em class="property"> = {'format': 'application/solr+json', 'latest': 'true', 'limit': 10000, 'replica': 'false', 'type': 'Dataset'}</em><a class="headerlink" href="#esgfsearch.keywords_default" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">keywords_default</code><em class="property"> = {'latest': 'true', 'replica': 'false'}</em><a class="headerlink" href="#esgfsearch.keywords_default" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default keywords for RESTful API.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="esgfsearch.keywords_non_configurable">
+<code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">keywords_non_configurable</code><em class="property"> = {'format': 'application/solr+json', 'limit': 10000, 'type': 'Dataset'}</em><a class="headerlink" href="#esgfsearch.keywords_non_configurable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keywords not configurable for RESTful API.</p>
 </dd></dl>
 
 <dl class="data">
@@ -327,7 +332,12 @@ multiple datafile, type of this is list of list(str).</p>
 <dl class="data">
 <dt id="esgfsearch.service_type_default">
 <code class="sig-prename descclassname">esgfsearch.</code><code class="sig-name descname">service_type_default</code><em class="property"> = 'search'</em><a class="headerlink" href="#esgfsearch.service_type_default" title="Permalink to this definition">¶</a></dt>
-<dd><p>Default service type</p>
+<dd><p>Not configurable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Default service type</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

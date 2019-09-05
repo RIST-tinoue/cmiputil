@@ -123,9 +123,6 @@
 <span class="sd">    ``search_service`` (str):</span>
 <span class="sd">        the base URL of the search service at a ESGF Index Node</span>
 
-<span class="sd">    ``service_type`` (str):</span>
-<span class="sd">        ``search`` or ``wget``</span>
-
 <span class="sd">    ``aggregate`` (bool):</span>
 <span class="sd">         retrieve OPeNDAP aggregated datasets or not</span>
 
@@ -135,7 +132,8 @@
 
 
 <span class="sd">Warning:</span>
-<span class="sd">  ``service_type=&#39;wget&#39;`` case is not implemented yet.</span>
+<span class="sd">  Currently `format`, `limit`, `type` keywords are not configurable.</span>
+<span class="sd">  Even if you specify them in your config file, they will be overriden.</span>
 
 <span class="sd">Local files</span>
 <span class="sd">===========</span>
@@ -224,37 +222,35 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Conf</span><span class="p">(</span><span class="n">conffile</span><span class="p">)</span>
 
-        <span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="n">sec</span><span class="p">[</span><span class="s1">&#39;search_service&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">][</span><span class="s1">&#39;search_service&#39;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">search_service</span> <span class="o">=</span> <span class="n">search_service_default</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="n">sec</span><span class="p">[</span><span class="s1">&#39;service_type&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">][</span><span class="s1">&#39;service_type&#39;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="n">service_type_default</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">sec</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;aggregate&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">&#39;aggregate&#39;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">aggregate</span> <span class="o">=</span> <span class="n">aggregate_default</span>
 
-        <span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sec</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">keywords_non_configurable</span><span class="p">)</span>
 
-        <span class="n">sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">sec</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.facets&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">pass</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">commonSection</span><span class="p">[</span><span class="s1">&#39;cmip6_data_dir&#39;</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
@@ -382,16 +378,20 @@
 <span class="n">search_service_default</span> <span class="o">=</span> <span class="s1">&#39;http://esgf-node.llnl.gov/esg-search/&#39;</span>
 <span class="c1"># search_service_default = &#39;http://esgf-data.dkrz.de/esg-search/&#39;</span>
 
-<span class="c1">#: Default service type</span>
+<span class="c1">#: Default service type: Not configurable</span>
 <span class="n">service_type_default</span> <span class="o">=</span> <span class="s1">&#39;search&#39;</span>
 
 <span class="n">aggregate_default</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="c1">#: Default keywords for RESTful API.</span>
 <span class="n">keywords_default</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;application/solr+json&#39;</span><span class="p">,</span>
     <span class="s1">&#39;replica&#39;</span><span class="p">:</span> <span class="s1">&#39;false&#39;</span><span class="p">,</span>
     <span class="s1">&#39;latest&#39;</span><span class="p">:</span> <span class="s1">&#39;true&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: Keywords not configurable for RESTful API.</span>
+<span class="n">keywords_non_configurable</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s1">&#39;application/solr+json&#39;</span><span class="p">,</span>
     <span class="s1">&#39;limit&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
     <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Dataset&#39;</span><span class="p">,</span>  <span class="c1"># must be to get catalog</span>
 <span class="p">}</span>
@@ -424,7 +424,6 @@
     <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;search_service&#39;</span><span class="p">:</span> <span class="n">search_service_default</span><span class="p">,</span>
-        <span class="s1">&#39;service_type&#39;</span><span class="p">:</span> <span class="n">service_type_default</span><span class="p">,</span>
         <span class="s1">&#39;aggregate&#39;</span><span class="p">:</span> <span class="n">aggregate_default</span>
     <span class="p">}</span>
     <span class="n">res</span><span class="p">[</span><span class="s1">&#39;ESGFSearch.keywords&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keywords_default</span>
