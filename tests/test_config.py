@@ -29,23 +29,28 @@ class test_Config(unittest.TestCase):
         pass
 
     def test_init00(self):
-        ref = ''
-
+        """Create a blank instance."""
         conf = config.Conf(None)
-        res = conf.files
         self.assertIsInstance(conf, config.Conf)
-        self.assertEqual(ref, res)
+        res = conf.file
+        self.assertIsNone(res)
 
     def test_init01(self):
-        ref = [Path(d).expanduser()/Path(config.conf_name)
+        """Try to read a default config file."""
+        files = [Path(d).expanduser()/Path(config.conf_name)
                for d in config.conf_dir]
+        try:
+            ref = [f for f in files[::-1] if f.is_file()][0]
+        except IndexError:
+            ref = ''
 
         conf = config.Conf()
         self.assertIsInstance(conf, config.Conf)
-        res = conf.files
+        res = conf.file
         self.assertEqual(ref, res)
 
     def test_init02(self):
+        """Specify `file` explicitly to Conf()."""
         Path(self.conffile).write_text(self.conftext)
         ref = self.confdict
 
@@ -55,6 +60,7 @@ class test_Config(unittest.TestCase):
             self.assertEqual(ref[k], res[k])
 
     def test_writeConf00(self):
+        """Write a config file."""
         ref = self.conftext
 
         conf = config.Conf(None)  # to create config file
